@@ -1,0 +1,38 @@
+{
+  "name": "inhost",
+  "version": "1.0.0",
+  "description": "Inhost - Multiplatform Chat Platform",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --parallel dev:*",
+    "dev:api": "bun --cwd apps/api-gateway dev",
+    "dev:db": "docker-compose up -d",
+    "dev:db:stop": "docker-compose down",
+    "build": "bun run build:*",
+    "build:api": "bun --cwd apps/api-gateway build",
+    "type-check": "bun --cwd apps/api-gateway type-check",
+    "clean": "bun run clean:modules && bun run clean:build",
+    "clean:modules": "rm -rf node_modules && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "clean:build": "find . -name 'dist' -type d -prune -exec rm -rf '{}' +",
+    "migrate": "bun run scripts/migrate.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.6",
+    "typescript": "^5.0.0"
+  },
+  "trustedDependencies": [
+    "@elysiajs/cors",
+    "@elysiajs/trpc",
+    "drizzle-orm",
+    "pg"
+  ],
+  "dependencies": {
+    "drizzle-orm": "^0.44.7",
+    "pg": "^8.16.3"
+  }
+}

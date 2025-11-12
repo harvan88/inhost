@@ -1,0 +1,13 @@
+{
+  "name": "@inhost/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "types": "src/index.ts",
+  "main": "src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+docs/
+*.log
+.env
+.DS_Store
+*.local
+.nyc_output
+coverage/
+.cache
+.parcel-cache

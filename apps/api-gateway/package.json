@@ -1,0 +1,17 @@
+{
+  "name": "@inhost/api-gateway",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "elysia": "^1.2.0",
+    "@inhost/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
