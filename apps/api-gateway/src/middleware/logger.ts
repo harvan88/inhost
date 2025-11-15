@@ -122,10 +122,11 @@ export const httpLogger = new Elysia()
     });
   })
   .onError(({ logger, error, request }) => {
-    logger.error(`Request failed`, {
+    const err = error as any;
+    logger?.error(`Request failed`, {
       method: request.method,
       url: request.url,
-      error: error.message,
-      stack: error.stack
+      error: err.message || 'Unknown error',
+      stack: err.stack
     });
   });

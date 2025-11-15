@@ -98,7 +98,7 @@ export const messagesRoutes = new Elysia({ prefix: '/messages' })
             channel: msg.channel,
             content: msg.content,
             metadata: msg.metadata,
-            createdAt: msg.createdAt!
+            createdAt: msg.metadata.timestamp
           })),
           storage: 'postgresql'
         };

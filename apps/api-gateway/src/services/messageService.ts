@@ -1,29 +1,28 @@
-import {
-  db,
-  messages,
-  type NewMessage,
-  type MessageContext,
-  MessageType,
-  MessageChannel
-} from '@inhost/shared';
-import { desc } from 'drizzle-orm';
+/**
+ * Message Service (Facade)
+ *
+ * Servicio de alto nivel que delega a MessageCore.
+ * Proporciona una interfaz simple para las rutas.
+ *
+ * Sprint 1.5: Ahora usa MessageCore como backend
+ */
+
+import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
+import { MessageType, MessageChannel, MessageStatus } from '@inhost/shared';
+import { messageCore, persistence } from './index';
 import { createError } from '../middleware/errorHandler';
 
 /**
  * Servicio de Mensajes
  *
  * Responsabilidades:
- * - Gestión de mensajes (crear, listar, actualizar estados)
- * - Aplicación de lógica de negocio
- * - Validaciones de dominio
- * - Interacción con la base de datos
+ * - Adaptar requests HTTP a MessageEnvelope
+ * - Delegar a MessageCore
+ * - Formatear respuestas para las rutas
  */
 export class MessageService {
   /**
    * Crea un nuevo mensaje en el sistema
-   *
-   * @param data - Datos del mensaje a crear
-   * @returns Mensaje creado con ID generado
    */
   async createMessage(data: {
     type: MessageType;
@@ -36,67 +35,62 @@ export class MessageService {
     };
     conversationId?: string;
   }) {
-    const newMessage: NewMessage = {
-      conversationId: data.conversationId || null,
+    // Crear MessageEnvelope
+    const envelope: MessageEnvelope = {
+      id: crypto.randomUUID(),
       type: data.type,
       channel: data.channel,
       content: data.content,
       metadata: data.metadata,
       statusChain: [{
-        status: 'received',
+        status: MessageStatus.RECEIVED,
         timestamp: new Date().toISOString(),
         messageId: crypto.randomUUID()
       }],
       context: {
         plan: 'free', // TODO: Obtener del usuario autenticado
-        timestamp: new Date().toISOString()
-      } as MessageContext
+        // timestamp added by MessageCore
+      }
     };
 
     try {
-      const [insertedMessage] = await db
-        .insert(messages)
-        .values(newMessage)
-        .returning();
-
-      console.log('💾 Message saved to PostgreSQL:', insertedMessage.id);
+      // Delegar a MessageCore según tipo
+      if (data.type === MessageType.INCOMING) {
+        // Mensaje entrante - receive
+        await messageCore.receive(envelope);
+      } else if (data.type === MessageType.OUTGOING) {
+        // Mensaje saliente - send
+        await messageCore.send(envelope);
+      } else {
+        // Otros tipos - solo receive
+        await messageCore.receive(envelope);
+      }
 
       return {
         success: true,
-        data: insertedMessage,
-        messageId: insertedMessage.id
+        data: envelope,
+        messageId: envelope.id
       };
     } catch (error) {
-      console.error('❌ Database error:', error);
+      console.error('❌ Error creating message:', error);
 
       throw createError.database(
         'Failed to create message',
-        error instanceof Error ? error.message : 'Unknown database error'
+        error instanceof Error ? error.message : 'Unknown error'
       );
     }
   }
 
   /**
    * Lista los mensajes más recientes
-   *
-   * @param limit - Número máximo de mensajes a retornar
-   * @param conversationId - ID de conversación para filtrar (opcional)
-   * @returns Lista de mensajes ordenados por fecha
    */
   async listMessages(limit: number = 10, conversationId?: string) {
     try {
-      let query = db
-        .select()
-        .from(messages)
-        .orderBy(desc(messages.createdAt))
-        .limit(limit);
-
-      // TODO: Agregar filtro por conversationId cuando se implemente
-      // if (conversationId) {
-      //   query = query.where(eq(messages.conversationId, conversationId));
-      // }
-
-      const allMessages = await query;
+      // Usar persistence para query
+      const allMessages = await persistence.query({
+        limit,
+        // conversationId // TODO: cuando se implemente en MessageEnvelope
+      });
 
       return {
         success: true,
@@ -108,25 +102,20 @@ export class MessageService {
 
       throw createError.database(
         'Failed to fetch messages',
-        error instanceof Error ? error.message : 'Unknown database error'
+        error instanceof Error ? error.message : 'Unknown error'
       );
     }
   }
 
   /**
    * Actualiza el estado de un mensaje
-   *
-   * @param messageId - ID del mensaje
-   * @param status - Nuevo estado del mensaje
-   * @returns Mensaje actualizado
    */
   async updateMessageStatus(
     messageId: string,
-    status: 'received' | 'processing' | 'sending' | 'sent' | 'delivered' | 'read' | 'failed'
+    status: MessageStatus
   ) {
     try {
-      // TODO: Implementar actualización de estado en statusChain
-      console.log(`🔄 Updating message ${messageId} to status: ${status}`);
+      await messageCore.updateStatus(messageId, status);
 
       return {
         success: true,
@@ -144,24 +133,21 @@ export class MessageService {
   }
 
   /**
-   * Verifica el estado de salud de la conexión a base de datos
-   *
-   * @returns Estado de la conexión
+   * Verifica el estado de salud del sistema
    */
   async checkHealth() {
     try {
-      await db.select().from(messages).limit(1);
+      const stats = await messageCore.getStats();
 
       return {
         success: true,
         status: 'healthy',
-        database: 'postgresql'
+        stats
       };
     } catch (error) {
       return {
         success: false,
         status: 'unhealthy',
-        database: 'disconnected',
         error: error instanceof Error ? error.message : 'Unknown error'
       };
     }

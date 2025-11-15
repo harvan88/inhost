@@ -1,3 +1,4 @@
+import { MessageChannel } from '@inhost/shared';
 /**
  * Services - Servicios centralizados del sistema
  *
@@ -18,8 +19,13 @@ import {
 import {
   MemoryRateLimiter,
   MemoryQueue,
-  SimpleValidator
+  SimpleValidator,
+  MemoryPersistence,
+  WebSocketNotification,
+  SimplePlanResolver,
+  ConnectionOwnerChecker
 } from '../implementations/v1';
+import { MessageCore } from '../core/MessageCore';
 import { logger } from '../middleware/logger';
 
 /**
@@ -43,6 +49,37 @@ export const messageQueue = new MemoryQueue();
 export const validator = new SimpleValidator();
 
 /**
+ * Persistence V1 - Almacenamiento en memoria
+ */
+export const persistence = new MemoryPersistence();
+
+/**
+ * Notification V1 - WebSocket broadcast
+ */
+export const notifications = new WebSocketNotification();
+
+/**
+ * Plan Resolver V1 - Planes estáticos
+ */
+export const planResolver = new SimplePlanResolver();
+
+/**
+ * Owner Checker V1 - Verificación de presencia
+ */
+export const ownerChecker = new ConnectionOwnerChecker();
+
+/**
+ * MESSAGE CORE - Núcleo de mensajería (orquestador ligero)
+ */
+export const messageCore = new MessageCore(
+  persistence,
+  notifications,
+  planResolver,
+  ownerChecker,
+  adapterManager
+);
+
+/**
  * Inicializar todos los servicios
  */
 export async function initializeServices(): Promise<void> {
@@ -63,29 +100,38 @@ export async function initializeServices(): Promise<void> {
   // 3. Iniciar adaptadores
   await adapterManager.startAll();
 
-  // 4. Configurar rate limiter (valores por defecto ya están configurados)
+  // 4. Configurar rate limiter
   rateLimiter.startCleanup();
 
   // 5. Configurar queue
   messageQueue.startAutoReset();
 
-  // 6. Configurar validator (valores por defecto ya están configurados)
-  // validator.configure({ ... }) si se necesita personalizar
+  // 6. Configurar owner checker
+  ownerChecker.startAutoCleanup(5); // Limpieza cada 5 minutos
 
   logger.info('✅ Services initialized successfully', {
     adapters: ['whatsapp', 'telegram', 'sms'],
     rateLimiter: 'MemoryRateLimiter (V1)',
     queue: 'MemoryQueue (V1)',
-    validator: 'SimpleValidator (V1)'
+    validator: 'SimpleValidator (V1)',
+    persistence: 'MemoryPersistence (V1)',
+    notifications: 'WebSocketNotification (V1)',
+    planResolver: 'SimplePlanResolver (V1)',
+    ownerChecker: 'ConnectionOwnerChecker (V1)',
+    messageCore: 'MessageCore (initialized)'
   });
 
   // Health check inicial
   const health = await adapterManager.healthCheckAll();
   logger.info('🏥 Adapters health check', {
-    whatsapp: health.get('whatsapp'),
-    telegram: health.get('telegram'),
-    sms: health.get('sms')
+    whatsapp: health.get(MessageChannel.WHATSAPP),
+    telegram: health.get(MessageChannel.TELEGRAM),
+    sms: health.get(MessageChannel.SMS)
   });
+
+  // Stats de MessageCore
+  const coreStats = await messageCore.getStats();
+  logger.info('📊 MessageCore stats', coreStats);
 }
 
 /**

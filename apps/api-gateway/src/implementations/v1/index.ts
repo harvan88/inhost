@@ -25,3 +25,9 @@
 export { MemoryRateLimiter } from './MemoryRateLimiter';
 export { MemoryQueue } from './MemoryQueue';
 export { SimpleValidator } from './SimpleValidator';
+
+// New services (Sprint 1.5)
+export { MemoryPersistence } from './MemoryPersistence';
+export { WebSocketNotification } from './WebSocketNotification';
+export { SimplePlanResolver } from './SimplePlanResolver';
+export { ConnectionOwnerChecker } from './ConnectionOwnerChecker';

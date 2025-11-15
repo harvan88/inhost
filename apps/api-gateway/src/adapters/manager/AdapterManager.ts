@@ -1,4 +1,4 @@
-import type { MessageChannel, MessageEnvelope } from '@inhost/shared';
+import type { MessageChannel, MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
 import type { IAdapter, SendResult } from '../../core/interfaces';
 import { logger } from '../../middleware/logger';
 

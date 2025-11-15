@@ -36,3 +36,32 @@ export type {
   ValidationError,
   ValidationRules
 } from './IValidator';
+
+// Persistence Service
+export type {
+  IPersistenceService,
+  PersistenceResult,
+  MessageQuery
+} from './IPersistenceService';
+
+// Notification Service
+export type {
+  INotificationService,
+  NotificationTarget,
+  StatusUpdate,
+  TypingIndicator
+} from './INotificationService';
+
+// Plan Resolver
+export type {
+  IPlanResolver,
+  PlanCapabilities,
+  PlanInfo
+} from './IPlanResolver';
+
+// Owner Checker
+export type {
+  IOwnerChecker,
+  DeviceInfo,
+  OwnerPresence
+} from './IOwnerChecker';
