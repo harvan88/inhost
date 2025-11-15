@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inhost - Chat Flow Test</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 13px;
+            background: #0d1117;
+            color: #c9d1d9;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-rows: auto 1fr 200px;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #58a6ff;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .stat-item {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #3fb950;
+        }
+
+        /* Main Content - 3 columns */
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 1px;
+            background: #21262d;
+            overflow: hidden;
+        }
+
+        /* Columnas laterales */
+        .sidebar {
+            background: #161b22;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 12px;
+            background: #0d1117;
+            border-bottom: 1px solid #21262d;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 8px;
+            min-height: 0;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px;
+        }
+
+        /* Cards de clientes/extensiones */
+        .card {
+            background: #0d1117;
+            border: 1px solid #21262d;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            border-color: #30363d;
+            background: #161b22;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .card-icon {
+            font-size: 16px;
+        }
+
+        .card-status {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .card-status.active {
+            background: #238636;
+            color: white;
+        }
+
+        .card-status.idle {
+            background: #6e7681;
+            color: white;
+        }
+
+        .card-status.disconnected {
+            background: #da3633;
+            color: white;
+        }
+
+        .card-meta {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .card-btn {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 10px;
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #c9d1d9;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .card-btn:hover:not(:disabled) {
+            background: #30363d;
+            border-color: #58a6ff;
+        }
+
+        .card-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Chat central */
+        .chat-center {
+            background: #0d1117;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 12px 16px;
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px;
+            min-height: 0;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .message.outgoing {
+            align-items: flex-end;
+        }
+
+        .message-header {
+            font-size: 10px;
+            opacity: 0.6;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .message-body {
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 8px;
+            padding: 8px 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        .message.outgoing .message-body {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: white;
+        }
+
+        .message-footer {
+            font-size: 9px;
+            opacity: 0.5;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .status-icon {
+            display: inline-flex;
+            gap: 2px;
+        }
+
+        .chat-input {
+            padding: 12px 16px;
+            background: #161b22;
+            border-top: 1px solid #21262d;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #c9d1d9;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #58a6ff;
+        }
+
+        .chat-input button {
+            padding: 8px 16px;
+            background: #238636;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-input button:hover:not(:disabled) {
+            background: #2ea043;
+        }
+
+        .chat-input button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Event Log */
+        .event-log {
+            background: #161b22;
+            border-top: 1px solid #21262d;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .event-log-header {
+            padding: 8px 16px;
+            background: #0d1117;
+            border-bottom: 1px solid #21262d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .event-log-title {
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+        }
+
+        .event-log-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .event-log-actions button {
+            padding: 4px 10px;
+            font-size: 10px;
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #c9d1d9;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .event-log-actions button:hover {
+            background: #30363d;
+            border-color: #58a6ff;
+        }
+
+        .event-log-actions button.active {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: white;
+        }
+
+        .event-log-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 8px 16px;
+            font-size: 11px;
+            line-height: 1.5;
+            min-height: 0;
+            scroll-behavior: smooth;
+        }
+
+        .event-log-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .event-log-content::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        .event-log-content::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px;
+        }
+
+        .event-line {
+            padding: 3px 0;
+            padding-left: 8px;
+            border-left: 2px solid transparent;
+            margin-left: -8px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .event-line.received { border-left-color: #58a6ff; }
+        .event-line.processing { border-left-color: #d29922; }
+        .event-line.ext-call { border-left-color: #a371f7; }
+        .event-line.sending { border-left-color: #f778ba; }
+        .event-line.sent { border-left-color: #3fb950; }
+        .event-line.error { border-left-color: #f85149; }
+
+        .event-time {
+            color: #6e7681;
+            flex-shrink: 0;
+            width: 80px;
+            font-size: 10px;
+        }
+
+        .event-badge {
+            flex-shrink: 0;
+            width: 90px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .event-message {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        /* Animaciones */
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            gap: 3px;
+            margin-left: 6px;
+        }
+
+        .typing-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #d29922;
+            animation: pulse 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">📬 Inhost - Chat Flow Test</div>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span>Mensajes:</span>
+                    <span class="stat-value" id="messageCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Extensiones activas:</span>
+                    <span class="stat-value" id="extensionCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Clientes conectados:</span>
+                    <span class="stat-value" id="clientCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+
+<!-- Clientes (Derecha) -->
+            <div class="sidebar">
+                <div class="sidebar-header">📱 Clientes</div>
+                <div class="sidebar-content" id="clientsList">
+                    <div class="card" data-client="whatsapp">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="card-icon">📱</span>
+                                <span>WhatsApp</span>
+                            </div>
+                            <span class="card-status disconnected">Offline</span>
+                        </div>
+                        <div class="card-meta">+52 1234 5678</div>
+                        <div class="card-actions">
+                            <button class="card-btn" onclick="toggleClient('whatsapp')">Conectar</button>
+                            <button class="card-btn" onclick="simulateClientMessage('whatsapp')" disabled>Simular</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-client="telegram">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="card-icon">✈️</span>
+                                <span>Telegram</span>
+                            </div>
+                            <span class="card-status disconnected">Offline</span>
+                        </div>
+                        <div class="card-meta">@usuario_test</div>
+                        <div class="card-actions">
+                            <button class="card-btn" onclick="toggleClient('telegram')">Conectar</button>
+                            <button class="card-btn" onclick="simulateClientMessage('telegram')" disabled>Simular</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-client="web">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="card-icon">🌐</span>
+                                <span>Web Chat</span>
+                            </div>
+                            <span class="card-status active">Online</span>
+                        </div>
+                        <div class="card-meta">Browser client</div>
+                        <div class="card-actions">
+                            <button class="card-btn" disabled>Conectado</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-client="sms">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="card-icon">📨</span>
+                                <span>SMS</span>
+                            </div>
+                            <span class="card-status idle">Disabled</span>
+                        </div>
+                        <div class="card-meta">+52 8765 4321</div>
+                        <div class="card-actions">
+                            <button class="card-btn" disabled>No disponible</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Chat Central -->
+            <div class="chat-center">
+                <div class="chat-header">💬 Conversación Unificada</div>
+                <div class="chat-messages" id="chatMessages">
+                    <div style="text-align: center; opacity: 0.5; margin-top: 40px;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
+                        <div>No hay mensajes todavía</div>
+                        <div style="font-size: 11px; margin-top: 4px;">
+                            Conecta un cliente y envía un mensaje para comenzar
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input
+                        type="text"
+                        id="messageInput"
+                        placeholder="Escribe un mensaje de prueba..."
+                        onkeypress="if(event.key==='Enter') sendTestMessage()"
+                    >
+                    <button onclick="sendTestMessage()">Enviar</button>
+                </div>
+            </div>
+            <!-- Extensiones (Izquierda) -->
+            <div class="sidebar">
+                <div class="sidebar-header">🤖 Extensiones</div>
+                <div class="sidebar-content" id="extensionsList">
+                    <div class="card" data-extension="echo">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="card-icon">📢</span>
+                                <span>Echo Bot</span>
+                            </div>
+                            <span class="card-status idle">Idle</span>
+                        </div>
+                        <div class="card-meta">Latency: <span id="latency-echo">-</span>ms</div>
+                        <div class="card-actions">
+                            <button class="card-btn" onclick="toggleExtension('echo')">Activar</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-extension="ai">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="card-icon">��</span>
+                                <span>AI Assistant</span>
+                            </div>
+                            <span class="card-status idle">Idle</span>
+                        </div>
+                        <div class="card-meta">Latency: <span id="latency-ai">-</span>ms</div>
+                        <div class="card-actions">
+                            <button class="card-btn" onclick="toggleExtension('ai')">Activar</button>
+                        </div>
+                    </div>
+
+                    <div class="card" data-extension="crm">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="card-icon">📊</span>
+                                <span>CRM Sync</span>
+                            </div>
+                            <span class="card-status idle">Idle</span>
+                        </div>
+                        <div class="card-meta">Latency: <span id="latency-crm">-</span>ms</div>
+                        <div class="card-actions">
+                            <button class="card-btn" onclick="toggleExtension('crm')">Activar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Event Log -->
+        <div class="event-log">
+            <div class="event-log-header">
+                <div class="event-log-title">📊 Event Log</div>
+                <div class="event-log-actions">
+                    <button id="autoscrollBtn" class="active" onclick="toggleAutoscroll()">Auto-scroll ON</button>
+                    <button onclick="clearEventLog()">Clear</button>
+                </div>
+            </div>
+            <div class="event-log-content" id="eventLog">
+                <div class="event-line info">
+                    <span class="event-time">--:--:--.---</span>
+                    <span class="event-badge">[SYSTEM]</span>
+                    <span class="event-message">Sistema inicializado. Esperando eventos...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WS_URL = 'ws://localhost:3000';
+        const API_URL = 'http://localhost:3000';
+
+        const state = {
+            ws: null,
+            messageCount: 0,
+            autoscroll: true,
+            extensions: {
+                echo: { active: false, latency: 45 },
+                ai: { active: false, latency: 120 },
+                crm: { active: false, latency: 200 }
+            },
+            clients: {
+                whatsapp: { connected: false },
+                telegram: { connected: false },
+                web: { connected: true },
+                sms: { connected: false }
+            }
+        };
+
+        // Event Log
+        function logEvent(type, badge, message) {
+            const logDiv = document.getElementById('eventLog');
+            const line = document.createElement('div');
+            line.className = `event-line ${type}`;
+
+            const now = new Date();
+            const time = now.toLocaleTimeString('en-US', { hour12: false }) + '.' + now.getMilliseconds().toString().padStart(3, '0');
+
+            line.innerHTML = `
+                <span class="event-time">${time}</span>
+                <span class="event-badge">[${badge}]</span>
+                <span class="event-message">${message}</span>
+            `;
+
+            logDiv.appendChild(line);
+
+            if (state.autoscroll) {
+                logDiv.scrollTop = logDiv.scrollHeight;
+            }
+        }
+
+        function clearEventLog() {
+            document.getElementById('eventLog').innerHTML = '';
+            logEvent('info', 'SYSTEM', 'Event log cleared');
+        }
+
+        function toggleAutoscroll() {
+            state.autoscroll = !state.autoscroll;
+            const btn = document.getElementById('autoscrollBtn');
+            if (state.autoscroll) {
+                btn.classList.add('active');
+                btn.textContent = 'Auto-scroll ON';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = 'Auto-scroll OFF';
+            }
+        }
+
+        // Chat
+        function addChatMessage(from, text, isOutgoing = false) {
+            const messagesDiv = document.getElementById('chatMessages');
+
+            // Limpiar placeholder
+            if (messagesDiv.querySelector('div[style*="text-align: center"]')) {
+                messagesDiv.innerHTML = '';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isOutgoing ? 'outgoing' : ''}`;
+
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const icon = getChannelIcon(from);
+
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span>${icon} ${from}</span>
+                    <span>${time}</span>
+                </div>
+                <div class="message-body">${text}</div>
+                <div class="message-footer">
+                    <span class="status-icon">✓✓</span>
+                    <span>Delivered</span>
+                </div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            state.messageCount++;
+            document.getElementById('messageCount').textContent = state.messageCount;
+        }
+
+        function getChannelIcon(channel) {
+            const icons = {
+                whatsapp: '📱',
+                telegram: '✈️',
+                web: '🌐',
+                sms: '📨',
+                echo: '📢',
+                ai: '🧠',
+                crm: '📊'
+            };
+            return icons[channel] || '💬';
+        }
+
+        function sendTestMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            // Mensaje entrante (simulado desde Web)
+            addChatMessage('web', text, false);
+            logEvent('received', 'RECEIVED', `Web → System: "${text}"`);
+
+            input.value = '';
+
+            // Simular procesamiento por extensiones activas
+            setTimeout(() => processMessageThroughExtensions(text), 100);
+        }
+
+        function processMessageThroughExtensions(text) {
+            const activeExtensions = Object.entries(state.extensions)
+                .filter(([_, ext]) => ext.active);
+
+            if (activeExtensions.length === 0) {
+                logEvent('info', 'INFO', 'No hay extensiones activas para procesar el mensaje');
+                return;
+            }
+
+            logEvent('processing', 'PROCESSING', `Routing to ${activeExtensions.length} extension(s)...`);
+
+            activeExtensions.forEach(([extId, ext]) => {
+                setTimeout(() => {
+                    logEvent('ext-call', 'EXT_CALL', `→ ${extId} bot (${ext.latency}ms latency)`);
+
+                    // Actualizar latencia en la UI
+                    document.getElementById(`latency-${extId}`).textContent = ext.latency;
+
+                    setTimeout(() => {
+                        const response = generateExtensionResponse(extId, text);
+                        addChatMessage(extId, response, true);
+                        logEvent('sent', 'SENT', `${extId} → Web: "${response}"`);
+                    }, ext.latency);
+                }, 50);
+            });
+        }
+
+        function generateExtensionResponse(extId, text) {
+            const responses = {
+                echo: `Echo: ${text}`,
+                ai: `¡Hola! Recibí tu mensaje: "${text}". ¿En qué puedo ayudarte?`,
+                crm: `[CRM] Contacto registrado. Mensaje: "${text}" guardado en el sistema.`
+            };
+            return responses[extId] || text;
+        }
+
+        // Extensions
+        function toggleExtension(extId) {
+            const ext = state.extensions[extId];
+            ext.active = !ext.active;
+
+            const card = document.querySelector(`[data-extension="${extId}"]`);
+            const statusEl = card.querySelector('.card-status');
+            const btn = card.querySelector('.card-btn');
+
+            if (ext.active) {
+                statusEl.className = 'card-status active';
+                statusEl.textContent = 'Active';
+                btn.textContent = 'Desactivar';
+                logEvent('info', 'EXTENSION', `${extId} activado`);
+            } else {
+                statusEl.className = 'card-status idle';
+                statusEl.textContent = 'Idle';
+                btn.textContent = 'Activar';
+                logEvent('info', 'EXTENSION', `${extId} desactivado`);
+            }
+
+            updateExtensionCount();
+        }
+
+        function updateExtensionCount() {
+            const count = Object.values(state.extensions).filter(e => e.active).length;
+            document.getElementById('extensionCount').textContent = count;
+        }
+
+        // Clients
+        function toggleClient(clientId) {
+            const client = state.clients[clientId];
+            client.connected = !client.connected;
+
+            const card = document.querySelector(`[data-client="${clientId}"]`);
+            const statusEl = card.querySelector('.card-status');
+            const buttons = card.querySelectorAll('.card-btn');
+
+            if (client.connected) {
+                statusEl.className = 'card-status active';
+                statusEl.textContent = 'Online';
+                buttons[0].textContent = 'Desconectar';
+                buttons[1].disabled = false;
+                logEvent('info', 'CLIENT', `${clientId} conectado`);
+            } else {
+                statusEl.className = 'card-status disconnected';
+                statusEl.textContent = 'Offline';
+                buttons[0].textContent = 'Conectar';
+                buttons[1].disabled = true;
+                logEvent('warning', 'CLIENT', `${clientId} desconectado`);
+            }
+
+            updateClientCount();
+        }
+
+        function updateClientCount() {
+            const count = Object.values(state.clients).filter(c => c.connected).length;
+            document.getElementById('clientCount').textContent = count;
+        }
+
+        function simulateClientMessage(clientId) {
+            const messages = {
+                whatsapp: '¡Hola! Mensaje desde WhatsApp',
+                telegram: 'Mensaje de prueba desde Telegram',
+                sms: 'SMS de prueba'
+            };
+
+            const text = messages[clientId] || 'Mensaje de prueba';
+            addChatMessage(clientId, text, false);
+            logEvent('received', 'RECEIVED', `${clientId} → System: "${text}"`);
+
+            setTimeout(() => processMessageThroughExtensions(text), 100);
+        }
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            try {
+                state.ws = new WebSocket(`${WS_URL}/realtime`);
+
+                state.ws.onopen = () => {
+                    logEvent('info', 'WEBSOCKET', 'Conectado al servidor');
+                };
+
+                state.ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleWebSocketMessage(data);
+                    } catch (e) {
+                        logEvent('error', 'ERROR', `Parse error: ${e.message}`);
+                    }
+                };
+
+                state.ws.onclose = () => {
+                    logEvent('warning', 'WEBSOCKET', 'Desconectado del servidor');
+                    setTimeout(connectWebSocket, 3000);
+                };
+
+                state.ws.onerror = () => {
+                    logEvent('error', 'WEBSOCKET', 'Error de conexión');
+                };
+            } catch (error) {
+                logEvent('error', 'ERROR', `WebSocket error: ${error.message}`);
+            }
+        }
+
+        function handleWebSocketMessage(data) {
+            logEvent('info', 'WS_MESSAGE', `Received: ${data.type}`);
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            logEvent('info', 'SYSTEM', 'Interface cargada');
+            connectWebSocket();
+            updateExtensionCount();
+            updateClientCount();
+        });
+    </script>
+</body>
+</html>

@@ -206,3 +206,53 @@ const progress = {
 **¡Felicidades!** 🎊 Has construido una base sólida y profesional. El proyecto está perfectamente estructurado para continuar con cualquier componente que elijas después.
 
 **¿Quieres que prepare algún resumen adicional o documentación específica antes de guardar?**
+```
+inhost
+├─ apps
+│  └─ api-gateway
+│     ├─ package.json
+│     ├─ src
+│     │  ├─ controllers
+│     │  ├─ index.ts
+│     │  ├─ middleware
+│     │  ├─ routes
+│     │  │  ├─ health.ts
+│     │  │  ├─ index.ts
+│     │  │  ├─ messages.ts
+│     │  │  └─ websocket.ts
+│     │  └─ services
+│     └─ tsconfig.json
+├─ bun.lock
+├─ cleanup-log.txt
+├─ docker-compose.yml
+├─ Docs
+│  ├─ contexto arquitectura.md
+│  ├─ diagrama completom.md
+│  ├─ Plan gratuito.md
+│  ├─ Plan premium.md
+│  ├─ planarquitectonico.md
+│  └─ stack tecnológico.md
+├─ nul
+├─ package.json
+├─ packages
+│  └─ shared
+│     ├─ package.json
+│     ├─ src
+│     │  ├─ database
+│     │  │  ├─ config.ts
+│     │  │  └─ schema.ts
+│     │  ├─ index.ts
+│     │  └─ types
+│     │     └─ message-envelope.ts
+│     └─ tsconfig.json
+├─ README.md
+├─ scripts
+│  ├─ cleanup-empty-ts.ts
+│  ├─ create-tables.sql
+│  └─ migrate.ts
+├─ tatus
+├─ test-simple.html
+├─ test-two-columns.html
+└─ websocket-test.html
+
+```

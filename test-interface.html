@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inhost Testing</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 12px;
+            background: #0d1117;
+            color: #c9d1d9;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 200px 1fr 200px 1fr;
+            height: 100vh;
+            gap: 1px;
+            background: #21262d;
+        }
+
+        .sidebar {
+            background: #161b22;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-badge {
+            padding: 8px;
+            background: #21262d;
+            border-radius: 4px;
+            border-left: 3px solid;
+            margin-bottom: 12px;
+        }
+
+        .user-badge.harold {
+            border-left-color: #58a6ff;
+        }
+
+        .user-badge.carlos {
+            border-left-color: #f778ba;
+        }
+
+        .user-badge .name {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .user-badge .status {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .user-badge .status.connected {
+            color: #3fb950;
+        }
+
+        .user-badge .status.disconnected {
+            color: #f85149;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .btn-group-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            opacity: 0.5;
+            margin-top: 12px;
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        button {
+            padding: 8px 10px;
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #c9d1d9;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-family: inherit;
+            text-align: left;
+            transition: all 0.15s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #30363d;
+            border-color: #58a6ff;
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        button.active {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: white;
+        }
+
+        .console {
+            background: #0d1117;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .console-header {
+            padding: 8px 12px;
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .console-title {
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .console-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .console-actions button {
+            padding: 4px 8px;
+            font-size: 10px;
+        }
+
+        .log-output {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 12px;
+            font-family: inherit;
+            line-height: 1.6;
+            min-height: 0; /* Fix para flex + scroll */
+            scroll-behavior: smooth;
+        }
+
+        .log-line {
+            display: flex;
+            gap: 8px;
+            padding: 2px 0;
+            border-left: 2px solid transparent;
+            padding-left: 8px;
+            margin-left: -8px;
+        }
+
+        .log-line.success { border-left-color: #3fb950; }
+        .log-line.error { border-left-color: #f85149; }
+        .log-line.warning { border-left-color: #d29922; }
+        .log-line.info { border-left-color: #58a6ff; }
+
+        .log-time {
+            color: #6e7681;
+            flex-shrink: 0;
+            width: 60px;
+        }
+
+        .log-message {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 2px;
+            margin-left: 4px;
+        }
+
+        .typing-dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: #d29922;
+            animation: pulse 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { opacity: 0.3; }
+            40% { opacity: 1; }
+        }
+
+        .log-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-output::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        .log-output::-webkit-scrollbar-thumb {
+            background: #21262d;
+            border-radius: 4px;
+        }
+
+        .log-output::-webkit-scrollbar-thumb:hover {
+            background: #30363d;
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #161b22;
+            border-top: 1px solid #21262d;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 11px;
+            gap: 16px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .status-dot.green { background: #3fb950; }
+        .status-dot.red { background: #f85149; }
+        .status-dot.yellow { background: #d29922; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Harold -->
+        <div class="sidebar">
+            <div class="user-badge harold">
+                <div class="name">Harold</div>
+                <div class="status disconnected" id="statusTextHarold">● offline</div>
+            </div>
+
+            <div class="btn-group-title">Connection</div>
+            <button onclick="connect('harold')">Connect</button>
+            <button onclick="disconnect('harold')" disabled>Disconnect</button>
+
+            <div class="btn-group-title">Messages</div>
+            <button onclick="sendMessage('harold')" disabled>Send Msg</button>
+            <button onclick="startTyping('harold')" disabled>Typing...</button>
+            <button onclick="stopTyping('harold')" disabled>Stop</button>
+
+            <div class="btn-group-title">API</div>
+            <button onclick="getMessagesAPI('harold')">GET /messages</button>
+            <button onclick="getHealthAPI('harold')">GET /health</button>
+            <button onclick="createMessageAPI('harold')" disabled>POST /messages</button>
+        </div>
+
+        <!-- Console Harold -->
+        <div class="console">
+            <div class="console-header">
+                <div class="console-title">
+                    <span>📟</span>
+                    <span>harold@inhost</span>
+                </div>
+                <div class="console-actions">
+                    <button onclick="clearLog('harold')">Clear</button>
+                    <button onclick="copyLog('harold')">Copy</button>
+                </div>
+            </div>
+            <div class="log-output" id="logHarold"></div>
+        </div>
+
+        <!-- Sidebar Carlos -->
+        <div class="sidebar">
+            <div class="user-badge carlos">
+                <div class="name">Carlos</div>
+                <div class="status disconnected" id="statusTextCarlos">● offline</div>
+            </div>
+
+            <div class="btn-group-title">Connection</div>
+            <button onclick="connect('carlos')">Connect</button>
+            <button onclick="disconnect('carlos')" disabled>Disconnect</button>
+
+            <div class="btn-group-title">Messages</div>
+            <button onclick="sendMessage('carlos')" disabled>Send Msg</button>
+            <button onclick="startTyping('carlos')" disabled>Typing...</button>
+            <button onclick="stopTyping('carlos')" disabled>Stop</button>
+
+            <div class="btn-group-title">API</div>
+            <button onclick="getMessagesAPI('carlos')">GET /messages</button>
+            <button onclick="getHealthAPI('carlos')">GET /health</button>
+            <button onclick="createMessageAPI('carlos')" disabled>POST /messages</button>
+        </div>
+
+        <!-- Console Carlos -->
+        <div class="console">
+            <div class="console-header">
+                <div class="console-title">
+                    <span>📟</span>
+                    <span>carlos@inhost</span>
+                </div>
+                <div class="console-actions">
+                    <button onclick="clearLog('carlos')">Clear</button>
+                    <button onclick="copyLog('carlos')">Copy</button>
+                </div>
+            </div>
+            <div class="log-output" id="logCarlos"></div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span class="status-dot" id="apiDot"></span>
+            <span id="apiStatusText">API</span>
+        </div>
+        <div class="status-item">
+            <span class="status-dot" id="dbDot"></span>
+            <span id="dbStatusText">Database</span>
+        </div>
+        <div class="status-item">
+            <span>Clients: <span id="clientCount">0</span></span>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        const WS_URL = 'ws://localhost:3000';
+
+        const state = {
+            harold: { ws: null, connected: false },
+            carlos: { ws: null, connected: false }
+        };
+
+        function log(user, message, type = 'info') {
+            const logDiv = document.getElementById(`log${user.charAt(0).toUpperCase() + user.slice(1)}`);
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            line.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-message">${message}</span>
+            `;
+
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog(user) {
+            document.getElementById(`log${user.charAt(0).toUpperCase() + user.slice(1)}`).innerHTML = '';
+        }
+
+        function copyLog(user) {
+            const text = document.getElementById(`log${user.charAt(0).toUpperCase() + user.slice(1)}`).innerText;
+            navigator.clipboard.writeText(text);
+            log(user, 'Log copied to clipboard', 'success');
+        }
+
+        function updateStatus(user, connected) {
+            state[user].connected = connected;
+            const statusEl = document.getElementById(`statusText${user.charAt(0).toUpperCase() + user.slice(1)}`);
+            const buttons = document.querySelectorAll(`button[onclick*="'${user}'"]`);
+
+            if (connected) {
+                statusEl.className = 'status connected';
+                statusEl.textContent = '● online';
+            } else {
+                statusEl.className = 'status disconnected';
+                statusEl.textContent = '● offline';
+            }
+
+            buttons.forEach(btn => {
+                const onclick = btn.getAttribute('onclick');
+                if (onclick.includes('connect(')) {
+                    btn.disabled = connected;
+                } else if (onclick.includes('disconnect(')) {
+                    btn.disabled = !connected;
+                } else if (onclick.includes('sendMessage(') || onclick.includes('Typing(') || onclick.includes('createMessageAPI(')) {
+                    btn.disabled = !connected;
+                }
+            });
+
+            updateClientCount();
+        }
+
+        function updateClientCount() {
+            const count = (state.harold.connected ? 1 : 0) + (state.carlos.connected ? 1 : 0);
+            document.getElementById('clientCount').textContent = count;
+        }
+
+        function connect(user) {
+            log(user, `Connecting to ${WS_URL}/realtime...`);
+
+            try {
+                const ws = new WebSocket(`${WS_URL}/realtime`);
+                state[user].ws = ws;
+
+                ws.onopen = () => {
+                    log(user, 'WebSocket connected', 'success');
+                    updateStatus(user, true);
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleMessage(user, data);
+                    } catch (e) {
+                        log(user, `Parse error: ${event.data}`, 'error');
+                    }
+                };
+
+                ws.onclose = () => {
+                    log(user, 'WebSocket disconnected', 'warning');
+                    updateStatus(user, false);
+                };
+
+                ws.onerror = () => {
+                    log(user, 'WebSocket error', 'error');
+                };
+            } catch (error) {
+                log(user, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function disconnect(user) {
+            if (state[user].ws) {
+                state[user].ws.close();
+                state[user].ws = null;
+                log(user, 'Disconnected manually');
+            }
+        }
+
+        function handleMessage(user, data) {
+            switch(data.type) {
+                case 'connection':
+                    log(user, `Connected (${data.clientId?.substring(0,8)})`, 'success');
+                    break;
+                case 'echo':
+                    log(user, `Echo: ${JSON.stringify(data.data)}`);
+                    break;
+                case 'typing':
+                    const dots = '<span class="typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span>';
+                    const action = data.isTyping ? `typing${dots}` : 'stopped typing';
+                    log(user, `${data.userId} ${action}`, 'warning');
+                    break;
+                case 'new_message':
+                    log(user, `${data.preview.from}: ${data.preview.text}`, 'success');
+                    break;
+                case 'user_joined':
+                    log(user, `User joined`, 'info');
+                    break;
+                case 'user_left':
+                    log(user, `User left`, 'info');
+                    break;
+                default:
+                    log(user, `${data.type}: ${JSON.stringify(data)}`);
+            }
+        }
+
+        function sendMessage(user) {
+            if (!state[user].connected) return;
+
+            const message = {
+                type: 'new_message',
+                messageId: crypto.randomUUID(),
+                conversationId: 'test',
+                preview: {
+                    from: user,
+                    text: `Test message from ${user}`
+                }
+            };
+            state[user].ws.send(JSON.stringify(message));
+            log(user, 'Message sent');
+        }
+
+        function startTyping(user) {
+            if (!state[user].connected) return;
+
+            const message = {
+                type: 'typing',
+                conversationId: 'test',
+                userId: user,
+                isTyping: true
+            };
+            state[user].ws.send(JSON.stringify(message));
+            log(user, 'Typing indicator ON', 'warning');
+        }
+
+        function stopTyping(user) {
+            if (!state[user].connected) return;
+
+            const message = {
+                type: 'typing',
+                conversationId: 'test',
+                userId: user,
+                isTyping: false
+            };
+            state[user].ws.send(JSON.stringify(message));
+            log(user, 'Typing indicator OFF');
+        }
+
+        async function createMessageAPI(user) {
+            log(user, 'POST /messages...');
+
+            try {
+                const response = await fetch(`${API_URL}/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'incoming',
+                        channel: 'web',
+                        content: { text: `API message from ${user}` },
+                        metadata: {
+                            from: user,
+                            to: 'test',
+                            timestamp: new Date().toISOString()
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    log(user, `Message created: ${data.data.messageId}`, 'success');
+                } else {
+                    log(user, `Error: ${data.error.message}`, 'error');
+                }
+            } catch (error) {
+                log(user, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getMessagesAPI(user) {
+            log(user, 'GET /messages...');
+
+            try {
+                const response = await fetch(`${API_URL}/messages`);
+                const data = await response.json();
+
+                if (data.success) {
+                    log(user, `Retrieved ${data.data.count} messages`, 'success');
+                } else {
+                    log(user, `Error: ${data.error.message}`, 'error');
+                }
+            } catch (error) {
+                log(user, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getHealthAPI(user) {
+            log(user, 'GET /health...');
+
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const status = data.data.status;
+                    const db = data.data.database;
+                    log(user, `Health: ${status}, DB: ${db}`, status === 'healthy' ? 'success' : 'warning');
+                }
+            } catch (error) {
+                log(user, `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_URL}/`);
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('apiDot').className = 'status-dot green';
+                    document.getElementById('apiStatusText').textContent = 'API Running';
+
+                    const healthRes = await fetch(`${API_URL}/health`);
+                    const healthData = await healthRes.json();
+
+                    if (healthData.success) {
+                        const db = healthData.data.database;
+                        if (db === 'postgresql') {
+                            document.getElementById('dbDot').className = 'status-dot green';
+                            document.getElementById('dbStatusText').textContent = 'DB Connected';
+                        } else {
+                            document.getElementById('dbDot').className = 'status-dot red';
+                            document.getElementById('dbStatusText').textContent = 'DB Disconnected';
+                        }
+                    }
+                }
+            } catch (error) {
+                document.getElementById('apiDot').className = 'status-dot red';
+                document.getElementById('apiStatusText').textContent = 'API Offline';
+                document.getElementById('dbDot').className = 'status-dot red';
+                document.getElementById('dbStatusText').textContent = 'DB Unknown';
+            }
+        }
+
+        // Init
+        setTimeout(() => {
+            log('harold', 'Terminal ready. Type connect to start.');
+            log('carlos', 'Terminal ready. Type connect to start.');
+        }, 100);
+
+        checkAPIStatus();
+        setInterval(checkAPIStatus, 10000);
+    </script>
+</body>
+</html>

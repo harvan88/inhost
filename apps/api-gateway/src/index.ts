@@ -1,124 +1,60 @@
-import { Elysia, t } from 'elysia';
-import { 
-  MessageType, 
-  MessageChannel, 
-  db, 
-  messages, 
-  type NewMessage,
-  type MessageContext 
-} from '@inhost/shared';
-import { desc } from 'drizzle-orm';
+import { Elysia } from 'elysia';
+import { cors } from '@elysiajs/cors';
+import { routes } from './routes';
+import { errorHandler } from './middleware/errorHandler';
+import { httpLogger, logger } from './middleware/logger';
+import { config } from './config';
+import { initializeServices, shutdownServices } from './services';
 
+/**
+ * Inhost API Gateway
+ *
+ * Punto único de entrada para todas las peticiones del sistema.
+ * Implementa una arquitectura modular basada en servicios.
+ */
 const app = new Elysia()
-  .get('/', () => 'Inhost API Gateway 🚀')
-  
-  .post('/message', 
-    async ({ body }) => {
-      console.log('📨 Message received:', body);
-      
-      // Crear un nuevo mensaje en PostgreSQL
-      const newMessage: NewMessage = {
-        type: body.type,
-        channel: body.channel,
-        content: body.content,
-        metadata: body.metadata,
-        statusChain: [{ 
-          status: 'received', 
-          timestamp: new Date().toISOString(), 
-          messageId: crypto.randomUUID() 
-        }],
-        context: {
-          plan: 'free',
-          timestamp: new Date().toISOString()
-        } as MessageContext
-      };
+  // CORS - Permitir peticiones desde el navegador
+  .use(cors({
+    origin: config.app.env === 'development' ? true : /^https?:\/\/(.*\.)?inhost\.com$/,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+  }))
 
-      try {
-        const [insertedMessage] = await db.insert(messages).values(newMessage).returning();
-        
-        console.log('💾 Message saved to PostgreSQL:', insertedMessage.id);
-        
-        return { 
-          status: 'received', 
-          messageId: insertedMessage.id,
-          timestamp: new Date().toISOString(),
-          storage: 'postgresql'
-        };
-      } catch (error) {
-        console.error('❌ Database error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        return { 
-          status: 'error', 
-          error: errorMessage,
-          timestamp: new Date().toISOString()
-        };
-      }
-    },
-    {
-      body: t.Object({
-        type: t.Enum(MessageType),
-        channel: t.Enum(MessageChannel),
-        content: t.Object({
-          text: t.String()
-        }),
-        metadata: t.Object({
-          from: t.String(),
-          to: t.String(),
-          timestamp: t.String()
-        })
-      })
-    }
-  )
-  
-  .get('/messages', async () => {
-    try {
-      const allMessages = await db.select().from(messages).orderBy(desc(messages.createdAt)).limit(10);
-      return {
-        count: allMessages.length,
-        messages: allMessages,
-        storage: 'postgresql'
-      };
-    } catch (error) {
-      console.error('❌ Error fetching messages:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return { error: 'Failed to fetch messages: ' + errorMessage };
-    }
-  })
-  
-  .get('/health', async () => {
-    try {
-      // Probar conexión a PostgreSQL
-      await db.select().from(messages).limit(1);
-      return { 
-        status: 'healthy', 
-        database: 'postgresql',
-        timestamp: new Date().toISOString()
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return { 
-        status: 'unhealthy', 
-        database: 'disconnected',
-        error: errorMessage,
-        timestamp: new Date().toISOString()
-      };
-    }
-  })
-  
-  .ws('/realtime', {
-    message(ws, message: any) {
-      ws.send(JSON.stringify({
-        type: 'echo',
-        data: message,
-        timestamp: new Date().toISOString()
-      }));
-    }
-  })
-  
-  .listen(3000);
+  // Middleware global
+  .use(errorHandler)
+  .use(httpLogger)
 
-console.log(`🦊 Elysia is running at http://localhost:3000`);
-console.log(`🗄️  PostgreSQL: CONECTADO Y OPERATIVO`);
-console.log(`📊 Tablas: conversations, messages`);
+  // Rutas de la aplicación
+  .use(routes)
+
+  // Iniciar servidor
+  .listen(config.app.port);
+
+// Inicializar servicios modularizados
+await initializeServices();
+
+// Log de inicio
+logger.info(`🦊 ${config.app.name} is running`, {
+  port: config.app.port,
+  env: config.app.env,
+  version: config.app.version
+});
+
+logger.info('🗄️  Database configuration', {
+  host: config.database.host,
+  port: config.database.port,
+  database: config.database.database
+});
+
+logger.info('📍 Available routes', {
+  routes: [
+    'GET  /              → API Information',
+    'GET  /health        → Health check with DB',
+    'POST /messages      → Create message',
+    'GET  /messages      → List messages',
+    'WS   /realtime      → WebSocket real-time'
+  ]
+});
 
 export type App = typeof app;
