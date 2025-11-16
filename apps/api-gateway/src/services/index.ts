@@ -97,17 +97,17 @@ export async function initializeServices(): Promise<void> {
   // 2. Inicializar adaptadores
   await adapterManager.initializeAll();
 
-  // 3. Iniciar adaptadores
-  await adapterManager.startAll();
-
-  // 4. Configurar rate limiter
+  // 3. Iniciar rate limiter cleanup
   rateLimiter.startCleanup();
 
-  // 5. Configurar queue
-  messageQueue.startAutoReset();
+  // 4. Iniciar owner checker cleanup
+  ownerChecker.startAutoCleanup(5);
 
-  // 6. Configurar owner checker
-  ownerChecker.startAutoCleanup(5); // Limpieza cada 5 minutos
+  // 5. Iniciar adaptadores
+  await adapterManager.startAll();
+
+  // 6. Configurar queue auto-reset
+  messageQueue.startAutoReset();
 
   logger.info('✅ Services initialized successfully', {
     adapters: ['whatsapp', 'telegram', 'sms'],

@@ -5,6 +5,10 @@ import { createSuccessResponse } from '../types/api';
 import type { MessageDTO } from '../types/api';
 import { httpLogger, logger } from '../middleware/logger';
 import { AppError, ErrorCodes } from '../middleware/errorHandler';
+import { rateLimiting } from '../middleware/rateLimiting';
+import { messageValidation, validateJSON } from '../middleware/validation';
+import { timeoutProtection } from '../middleware/timeout';
+import { rateLimiter, validator } from '../services';
 
 /**
  * Rutas de Mensajes
@@ -12,20 +16,38 @@ import { AppError, ErrorCodes } from '../middleware/errorHandler';
  * Endpoints:
  * - POST /messages - Crear un nuevo mensaje
  * - GET /messages - Listar mensajes recientes
+ *
+ * Protecciones:
+ * - Rate Limiting: 12 req/min (free), 30 req/min (premium)
+ * - Validation: Campos requeridos, tamaño máximo 16KB texto, 1MB total
+ * - Timeout: 5 segundos máximo por operación
  */
 export const messagesRoutes = new Elysia({ prefix: '/messages' })
   .use(httpLogger)
+  .use(validateJSON())
+  .use(rateLimiting({
+    rateLimiter,
+    getUserId: (req) => req.headers.get('x-user-id') || 'anonymous',
+    getPlan: (userId) => userId === 'anonymous' ? 'free' : 'premium'
+  }))
+  .use(timeoutProtection({ timeout: 5000 }))
+
   // POST /messages - Crear un nuevo mensaje
+  .use(messageValidation({ validator, sanitize: true }))
   .post(
     '/',
-    async ({ body, set }) => {
+    async ({ body, set, withProtection }: any) => {
       try {
         logger.info('Creating new message', {
           type: body.type,
           channel: body.channel
         });
 
-        const result = await messageService.createMessage(body);
+        // Crear mensaje con timeout protection
+        const result = await withProtection(
+          () => messageService.createMessage(body),
+          { messageId: 'fallback-timeout', success: false }
+        );
 
         const response: MessageDTO.CreateResponse = {
           status: 'received',
@@ -82,23 +104,27 @@ export const messagesRoutes = new Elysia({ prefix: '/messages' })
   // GET /messages - Obtener últimos mensajes
   .get(
     '/',
-    async ({ query, set }) => {
+    async ({ query, set, withProtection }: any) => {
       try {
         const limit = query.limit ? parseInt(query.limit) : 10;
 
         logger.info('Fetching messages', { limit });
 
-        const result = await messageService.listMessages(limit);
+        // Listar mensajes con timeout protection
+        const result = await withProtection(
+          () => messageService.listMessages(limit),
+          { count: 0, data: [] }
+        );
 
         const response: MessageDTO.ListResponse = {
           count: result.count,
-          messages: result.data.map((msg) => ({
+          messages: result.data.map((msg: any) => ({
             id: msg.id,
             type: msg.type,
             channel: msg.channel,
             content: msg.content,
             metadata: msg.metadata,
-            createdAt: msg.metadata.timestamp
+            createdAt: new Date(msg.metadata.timestamp)
           })),
           storage: 'postgresql'
         };
