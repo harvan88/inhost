@@ -305,3 +305,61 @@ All messages follow `MessageEnvelopeV2` schema:
   status?: MessageStatus;
 }
 ```
+
+## WebSocket Real-time (Sprint 3)
+
+### Endpoint
+- **WS** `/realtime` - Real-time communication with protections
+
+### Protections Implemented
+
+**1. Rate Limiting** (Same as HTTP)
+- Free: 12 messages/minute
+- Premium: 30 messages/minute
+- Error response: `{ type: 'error', code: 'RATE_LIMIT_EXCEEDED', retryAfter: 60 }`
+
+**2. Message Validation** (TypeBox schemas)
+- Valid message types: `typing`, `new_message`, `message_received`
+- Required fields validated
+- Error response: `{ type: 'error', code: 'INVALID_MESSAGE', errors: [...] }`
+
+**3. Size Validation**
+- Max message size: 1MB
+- Error response: `{ type: 'error', code: 'MESSAGE_TOO_LARGE', size: 1048576 }`
+
+### Testing WebSocket
+
+```bash
+# Automated testing script
+bun scripts/test-websocket.js
+
+# Expected output:
+# ✓ Connection test
+# ✓ Valid message accepted
+# ✓ Invalid message rejected
+# ✓ Large message rejected
+# ✓ Rate limiting enforced (~12 messages)
+```
+
+### WebSocket Message Flow
+
+```
+Client → WS /realtime
+  ↓
+[Size Check] → Reject if >1MB
+  ↓
+[Validation] → Reject if invalid schema
+  ↓
+[Rate Limit] → Reject if limit exceeded
+  ↓
+[Process] → Echo + Broadcast
+```
+
+### Key Implementation Details
+
+**File:** [apps/api-gateway/src/routes/websocket.ts](apps/api-gateway/src/routes/websocket.ts)
+- Rate limiting uses same `MemoryRateLimiter` as HTTP
+- Validation in [middleware/websocketValidation.ts](apps/api-gateway/src/middleware/websocketValidation.ts)
+- Plan resolution via `planResolver.getPlan(userId)`
+
+**Important:** WebSocket rate limit shares counter with HTTP endpoints (same userId, same counter)

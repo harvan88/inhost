@@ -2,13 +2,19 @@ import { Elysia } from 'elysia';
 import { logger } from '../middleware/logger';
 import type { WebSocketDTO } from '../types/api';
 import { setBroadcastFunction } from './simulation';
-import { notifications, ownerChecker, messageCore } from '../services';
+import { notifications, ownerChecker, messageCore, rateLimiter, planResolver } from '../services';
+import { validateWebSocketMessage, validateMessageSize } from '../middleware/websocketValidation';
 
 /**
- * Rutas de WebSocket (Sprint 1.5 - Integrado con MessageCore)
+ * Rutas de WebSocket (Sprint 3 - Real-time con Protección)
  *
  * Endpoints:
  * - WS /realtime - Comunicación en tiempo real
+ *
+ * Protecciones (Sprint 3):
+ * - ✅ Rate Limiting: Mismo límite que HTTP (12 free, 30 premium)
+ * - ✅ Validation: TypeBox schemas para mensajes
+ * - 🔄 Authentication: TODO (userId temporal)
  *
  * Tipos de mensajes soportados:
  * - connection: Notificación de conexión/desconexión
@@ -64,7 +70,7 @@ setBroadcastFunction(broadcastToAll);
 export const websocketRoutes = new Elysia()
   // WebSocket /realtime - Comunicación en tiempo real
   .ws('/realtime', {
-    message(ws, message: any) {
+    async message(ws, message: any) {
       const meta = wsMetadata.get(ws);
 
       logger.debug('WebSocket message received', {
@@ -73,12 +79,100 @@ export const websocketRoutes = new Elysia()
       });
 
       try {
-        const data = typeof message === 'string' ? JSON.parse(message) : message;
+        // ============================================
+        // VALIDACIÓN DE TAMAÑO (Sprint 3)
+        // ============================================
+        const sizeCheck = validateMessageSize(message, 1024 * 1024); // 1MB max
+        if (!sizeCheck.valid) {
+          const errorMessage = {
+            type: 'error',
+            code: 'MESSAGE_TOO_LARGE',
+            message: sizeCheck.error,
+            size: sizeCheck.size,
+            timestamp: new Date().toISOString()
+          };
+
+          ws.send(JSON.stringify(errorMessage));
+
+          logger.warn('WebSocket message too large', {
+            userId: meta?.userId,
+            size: sizeCheck.size,
+            error: sizeCheck.error
+          });
+
+          return;
+        }
+
+        // ============================================
+        // VALIDACIÓN DE ESTRUCTURA (Sprint 3)
+        // ============================================
+        const validation = validateWebSocketMessage(message);
+        if (!validation.valid) {
+          const errorMessage = {
+            type: 'error',
+            code: 'INVALID_MESSAGE',
+            message: 'Message validation failed',
+            errors: validation.errors,
+            timestamp: new Date().toISOString()
+          };
+
+          ws.send(JSON.stringify(errorMessage));
+
+          logger.warn('WebSocket message validation failed', {
+            userId: meta?.userId,
+            errors: validation.errors
+          });
+
+          return;
+        }
+
+        const data = validation.data;
 
         // Actualizar actividad del owner
         if (meta) {
           ownerChecker.updateActivity(meta.userId, meta.deviceId);
           notifications.updateActivity(meta.connectionId);
+        }
+
+        // ============================================
+        // RATE LIMITING (Sprint 3)
+        // ============================================
+        if (meta) {
+          const plan = await planResolver.getPlan(meta.userId);
+          const rateLimitResult = await rateLimiter.checkLimit(meta.userId, plan);
+
+          if (!rateLimitResult.allowed) {
+            // Rate limit excedido - enviar error al cliente
+            const errorMessage = {
+              type: 'error',
+              code: 'RATE_LIMIT_EXCEEDED',
+              message: 'Rate limit exceeded. Please slow down.',
+              retryAfter: rateLimitResult.retryAfter,
+              limit: rateLimitResult.limit,
+              resetAt: rateLimitResult.resetAt.toISOString(),
+              timestamp: new Date().toISOString()
+            };
+
+            ws.send(JSON.stringify(errorMessage));
+
+            logger.warn('WebSocket rate limit exceeded', {
+              userId: meta.userId,
+              plan,
+              limit: rateLimitResult.limit,
+              retryAfter: rateLimitResult.retryAfter
+            });
+
+            return; // No procesar el mensaje
+          }
+
+          // Registrar el mensaje en el rate limiter
+          await rateLimiter.recordRequest(meta.userId, plan);
+
+          logger.debug('WebSocket rate limit check passed', {
+            userId: meta.userId,
+            plan,
+            remaining: rateLimitResult.remaining
+          });
         }
 
         // Echo del mensaje al cliente que lo envió (desarrollo)

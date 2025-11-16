@@ -21,13 +21,13 @@ http://localhost:5500
 
 ## 📋 Current Status
 
-**Sprint 2 (Protection & Security)** - ✅ **COMPLETED**
+**Sprint 3 (WebSocket Real-time)** - ✅ **COMPLETED**
 
-- ✅ Rate Limiting (12 req/min free, 30 req/min premium)
-- ✅ Request Validation (Elysia + TypeBox)
-- ✅ Timeout Protection (30s)
-- ✅ HTTP Logger
-- 📄 [Sprint 2 Report](docs/sprints/sprint2-report.md)
+- ✅ WebSocket Real-time (`/realtime`)
+- ✅ WebSocket Rate Limiting (12 free, 30 premium)
+- ✅ WebSocket Message Validation (TypeBox)
+- ✅ WebSocket Size Validation (1MB max)
+- 📄 [Sprint 3 Report](docs/sprints/sprint3-report.md)
 
 ---
 
@@ -66,22 +66,29 @@ inhost/
 ## 🧪 Testing
 
 ### Automated Tests
-```bash
-# Health check
-curl http://localhost:3000/health
 
-# Rate limiting test
-for i in {1..15}; do
-  curl -X POST http://localhost:3000/messages \
-    -H "Content-Type: application/json" \
-    -H "X-User-Id: test" \
-    -d '{"type":"incoming","channel":"whatsapp","content":{"text":"Test"},"metadata":{"from":"+1","to":"+2","timestamp":"2025-11-16T10:00:00Z"}}'
-done
+**HTTP Endpoints:**
+```bash
+# Sprint 2 - HTTP protection tests
+scripts\test-sprint2-simple.bat
+```
+
+**WebSocket:**
+```bash
+# Sprint 3 - WebSocket protection tests
+bun scripts/test-websocket.js
+
+# Expected: 5/5 tests pass
+# - Connection
+# - Valid message
+# - Invalid message (rejected)
+# - Large message (rejected)
+# - Rate limiting (~12 messages accepted)
 ```
 
 ### Manual Testing
 1. Open `http://localhost:5500`
-2. Select "Sprint 2 Protection"
+2. Select test suite from sidebar
 3. Run tests
 
 **Guides**:
@@ -107,6 +114,7 @@ done
 - [CLAUDE.md](CLAUDE.md) - Development guide for AI assistants
 
 ### Sprint Reports
+- [Sprint 3 Report](docs/sprints/sprint3-report.md) - WebSocket Real-time (COMPLETED)
 - [Sprint 2 Report](docs/sprints/sprint2-report.md) - Protection & Security (COMPLETED)
 
 ### Architecture & Planning
@@ -138,8 +146,9 @@ done
 - ✅ **Sprint 1**: MessageCore + Basic Routes
 - ✅ **Sprint 1.5**: Support Services (Logger, Storage, RateLimiter)
 - ✅ **Sprint 2**: Protection & Security - [Report](docs/sprints/sprint2-report.md)
+- ✅ **Sprint 3**: WebSocket Real-time (Rate limiting + Validation)
 
-**Next**: Sprint 3 (WebSocket Real-time)
+**Next**: Sprint 4 (Persistence - Redis/PostgreSQL)
 
 ---
 
