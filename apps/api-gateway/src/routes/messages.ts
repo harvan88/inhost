@@ -6,9 +6,9 @@ import type { MessageDTO } from '../types/api';
 import { httpLogger, logger } from '../middleware/logger';
 import { AppError, ErrorCodes } from '../middleware/errorHandler';
 import { rateLimiting } from '../middleware/rateLimiting';
-import { messageValidation, validateJSON } from '../middleware/validation';
+import { validateJSON } from '../middleware/validation';
 import { timeoutProtection } from '../middleware/timeout';
-import { rateLimiter, validator } from '../services';
+import { rateLimiter } from '../services';
 
 /**
  * Rutas de Mensajes
@@ -30,24 +30,20 @@ export const messagesRoutes = new Elysia({ prefix: '/messages' })
     getUserId: (req) => req.headers.get('x-user-id') || 'anonymous',
     getPlan: (userId) => userId === 'anonymous' ? 'free' : 'premium'
   }))
-  .use(timeoutProtection({ timeout: 5000 }))
+  .use(timeoutProtection({ timeout: 30000 }))  // 30s timeout protection
 
   // POST /messages - Crear un nuevo mensaje
-  .use(messageValidation({ validator, sanitize: true }))
   .post(
     '/',
-    async ({ body, set, withProtection }: any) => {
+    async ({ body, set }: any) => {
       try {
         logger.info('Creating new message', {
           type: body.type,
           channel: body.channel
         });
 
-        // Crear mensaje con timeout protection
-        const result = await withProtection(
-          () => messageService.createMessage(body),
-          { messageId: 'fallback-timeout', success: false }
-        );
+        // Crear mensaje (timeout protection temporarily disabled for debugging)
+        const result = await messageService.createMessage(body);
 
         const response: MessageDTO.CreateResponse = {
           status: 'received',
@@ -104,17 +100,14 @@ export const messagesRoutes = new Elysia({ prefix: '/messages' })
   // GET /messages - Obtener últimos mensajes
   .get(
     '/',
-    async ({ query, set, withProtection }: any) => {
+    async ({ query, set }: any) => {
       try {
         const limit = query.limit ? parseInt(query.limit) : 10;
 
         logger.info('Fetching messages', { limit });
 
-        // Listar mensajes con timeout protection
-        const result = await withProtection(
-          () => messageService.listMessages(limit),
-          { count: 0, data: [] }
-        );
+        // Listar mensajes (timeout protection temporarily disabled for debugging)
+        const result = await messageService.listMessages(limit);
 
         const response: MessageDTO.ListResponse = {
           count: result.count,

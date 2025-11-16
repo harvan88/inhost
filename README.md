@@ -1,258 +1,146 @@
-# Inhost - Multiplatform Chat Platform
+# INHOST - API Gateway
 
-## Stack Tecnológico
-- **Runtime**: Bun 1.0+
-- **Backend**: Elysia.js + TypeScript
-- **Frontend**: EliSya Framework (próximamente)
-- **Database**: PostgreSQL + Redis (Docker)
-- **ORM**: Drizzle ORM
+Multi-channel messaging platform with WhatsApp, Telegram, Web, and SMS support.
 
-## Desarrollo rápido
+## 🚀 Quick Start
 
 ```bash
-# Instalar dependencias
-bun install
+# Terminal 1: API Server
+start-server.bat
 
-# Levantar bases de datos
-bun run dev:db
+# Terminal 2: Testing Dashboard
+start-testing.bat
 
-# Desarrollar API Gateway
-bun run dev:api
-
-
-# 💾 **PUNTO DE GUARDADO - RESUMEN DEL PROGRESO**
-
-¡Excelente decisión! Es el momento perfecto para guardar el progreso y documentar el estado actual del proyecto.
-
-## 📊 **ESTADO ACTUAL COMPLETO**
-
-### **✅ COMPONENTES IMPLEMENTADOS:**
-
-#### **🏗️ ARQUITECTURA BASE**
-- **Monorepo Bun** con workspaces funcionando
-- **Estructura completa** apps/packages
-- **Docker Compose** para desarrollo
-- **TypeScript** en todo el proyecto
-
-#### **🔷 BACKEND COMPLETO**
-- **API Gateway** con Elysia.js ✅ OPERATIVO
-- **PostgreSQL** con tablas configuradas ✅ OPERATIVO  
-- **Drizzle ORM** con type-safety ✅ OPERATIVO
-- **MessageEnvelope V2** ✅ IMPLEMENTADO
-- **WebSocket básico** ✅ FUNCIONANDO
-
-#### **📦 PAQUETES COMPARTIDOS**
-- **@inhost/shared** con tipos TypeScript ✅
-- **MessageEnvelope V2** con validación ✅
-- **Esquemas de base de datos** ✅
-
-### **🧪 ENDPOINTS OPERATIVOS:**
-
-| Endpoint | Método | Estado | Propósito |
-|----------|--------|--------|-----------|
-| `/` | GET | ✅ | Health check básico |
-| `/health` | GET | ✅ | Estado sistema + PostgreSQL |
-| `/message` | POST | ✅ | Recibir mensajes |
-| `/messages` | GET | ✅ | Listar mensajes |
-| `/realtime` | WS | ✅ | WebSocket básico |
-
-## 📁 **ESTADO DEL REPOSITORIO**
-
-### **Para guardar tu progreso:**
-
-```bash
-# En la raíz del proyecto inhost/
-git add .
-git commit -m "feat: Backend completo con API Gateway y PostgreSQL
-
-- ✅ API Gateway con Elysia.js + Bun
-- ✅ PostgreSQL con Drizzle ORM operativo
-- ✅ MessageEnvelope V2 con validación TypeBox
-- ✅ WebSocket básico funcionando
-- ✅ Estructura de monorepo con workspaces
-- ✅ Docker compose para desarrollo
-
-Estado: Backend 100% funcional con persistencia real"
+# Browser
+http://localhost:5500
 ```
 
-## 🎯 **LOGROS PRINCIPALES**
+**Full guide**: [QUICK-START.md](QUICK-START.md)
 
-### **1. Arquitectura Sólida**
-```typescript
-// Stack tecnológico confirmado
-const techStack = {
-  runtime: "Bun 1.2.17",
-  backend: "Elysia.js + TypeScript", 
-  database: "PostgreSQL + Drizzle ORM",
-  frontend: "EliSya (pendiente)",
-  infrastructure: "Docker + Docker Compose"
-}
-```
+---
 
-### **2. Funcionalidades Críticas**
-- ✅ **Persistencia** de mensajes en PostgreSQL
-- ✅ **Validación** de datos con TypeBox
-- ✅ **API REST** completamente funcional
-- ✅ **WebSocket** base para tiempo real
-- ✅ **Tipado TypeScript** end-to-end
+## 📋 Current Status
 
-### **3. Preparado para Escalar**
-- Monorepo con separación clara
-- Bases de datos containerizadas
-- ORM con type-safety
-- Protocolo de mensajes estandarizado
+**Sprint 2 (Protection & Security)** - ✅ **COMPLETED**
 
-## 🔄 **PRÓXIMOS PASOS DISPONIBLES**
+- ✅ Rate Limiting (12 req/min free, 30 req/min premium)
+- ✅ Request Validation (Elysia + TypeBox)
+- ✅ Timeout Protection (30s)
+- ✅ HTTP Logger
+- 📄 [Sprint 2 Report](docs/sprints/sprint2-report.md)
 
-### **PENDIENTES PARA VERSIÓN MVP:**
+---
 
-#### **🟡 WebSocket Avanzado**
-- [ ] Sistema de rooms por conversación
-- [ ] Broadcast multi-dispositivo
-- [ ] Estados de mensaje en tiempo real
-
-#### **🔴 Frontend EliSya** 
-- [ ] PWA con Web Components
-- [ ] Conexión WebSocket
-- [ ] Interfaz de chat
-
-#### **🔴 WhatsApp Adapter**
-- [ ] Integración con WhatsApp Business API
-- [ ] Webhooks entrantes/salientes
-- [ ] Gestión de estados
-
-#### **🔴 Autenticación**
-- [ ] JWT + usuarios
-- [ ] Middleware de auth
-- [ ] Gestión de planes
-
-## 💾 **ARCHIVOS CLAVE CREADOS:**
+## 🏗️ Architecture
 
 ```
 inhost/
-├── 🐳 docker-compose.yml
-├── 📦 package.json (workspaces)
 ├── apps/
-│   └── api-gateway/
-│       ├── 🚀 src/index.ts
-│       ├── 📦 package.json
-│       └── ⚙️ tsconfig.json
-└── packages/
-    └── shared/
-        ├── 📝 src/types/message-envelope.ts
-        ├── 🗄️ src/database/schema.ts
-        ├── 🔌 src/database/config.ts
-        ├── 📦 package.json
-        └── ⚙️ tsconfig.json
+│   └── api-gateway/          # Main API server (Elysia.js + Bun)
+│       ├── src/
+│       │   ├── core/         # Business logic & interfaces
+│       │   ├── middleware/   # Rate limiting, validation, timeout
+│       │   ├── routes/       # API endpoints
+│       │   └── index.ts      # Server entry point
+│       └── package.json
+│
+├── testing/                  # Testing dashboard
+│   ├── index.html           # Main dashboard
+│   ├── tests/               # Individual test files
+│   └── server.js            # HTTP server for testing
+│
+├── docs/                     # Documentation
+│   ├── architecture/        # System design & planning
+│   ├── guides/              # Testing & usage guides
+│   └── troubleshooting/     # Problem solving
+│
+├── scripts/                  # Utility scripts
+├── start-server.bat         # Start API server
+└── start-testing.bat        # Start testing dashboard
 ```
 
-## 🎉 **¡HAS LOGRADO UN BACKEND COMPLETO!**
+**Details**: [docs/architecture/plan-modular.md](docs/architecture/plan-modular.md)
 
-### **Para continuar desde este punto:**
+---
+
+## 🧪 Testing
+
+### Automated Tests
 ```bash
-# 1. Levantar bases de datos
-bun run dev:db
+# Health check
+curl http://localhost:3000/health
 
-# 2. Iniciar servidor
-bun run dev:api
-
-# 3. El sistema estará 100% operativo
+# Rate limiting test
+for i in {1..15}; do
+  curl -X POST http://localhost:3000/messages \
+    -H "Content-Type: application/json" \
+    -H "X-User-Id: test" \
+    -d '{"type":"incoming","channel":"whatsapp","content":{"text":"Test"},"metadata":{"from":"+1","to":"+2","timestamp":"2025-11-16T10:00:00Z"}}'
+done
 ```
 
-### **Para retomar el desarrollo:**
-- El código está listo para continuar con cualquier componente
-- La base de datos mantendrá los mensajes guardados
-- La arquitectura soporta las próximas features
+### Manual Testing
+1. Open `http://localhost:5500`
+2. Select "Sprint 2 Protection"
+3. Run tests
 
-## 📋 **CHECKLIST DE PROGRESO**
+**Guides**:
+- [Sprint 1 Testing](docs/guides/sprint1-testing.md)
+- [Sprint 2 Testing](docs/guides/sprint2-testing.md)
 
-```typescript
-const progress = {
-  phase1: {
-    name: "Backend Core",
-    status: "✅ COMPLETADO",
-    components: [
-      "Monorepo Bun",
-      "API Gateway", 
-      "PostgreSQL",
-      "Drizzle ORM",
-      "Message Protocol",
-      "WebSocket Base"
-    ]
-  },
-  phase2: {
-    name: "Frontend & Realtime", 
-    status: "🔜 PRÓXIMO",
-    components: [
-      "EliSya PWA",
-      "WebSocket Avanzado", 
-      "UI Components",
-      "State Management"
-    ]
-  },
-  phase3: {
-    name: "Integraciones",
-    status: "📅 PLANEADO", 
-    components: [
-      "WhatsApp Adapter",
-      "Telegram Adapter",
-      "Extension System",
-      "Authentication"
-    ]
-  }
-}
-```
+---
 
-**¡Felicidades!** 🎊 Has construido una base sólida y profesional. El proyecto está perfectamente estructurado para continuar con cualquier componente que elijas después.
+## 🚨 Troubleshooting
 
-**¿Quieres que prepare algún resumen adicional o documentación específica antes de guardar?**
-```
-inhost
-├─ apps
-│  └─ api-gateway
-│     ├─ package.json
-│     ├─ src
-│     │  ├─ controllers
-│     │  ├─ index.ts
-│     │  ├─ middleware
-│     │  ├─ routes
-│     │  │  ├─ health.ts
-│     │  │  ├─ index.ts
-│     │  │  ├─ messages.ts
-│     │  │  └─ websocket.ts
-│     │  └─ services
-│     └─ tsconfig.json
-├─ bun.lock
-├─ cleanup-log.txt
-├─ docker-compose.yml
-├─ Docs
-│  ├─ contexto arquitectura.md
-│  ├─ diagrama completom.md
-│  ├─ Plan gratuito.md
-│  ├─ Plan premium.md
-│  ├─ planarquitectonico.md
-│  └─ stack tecnológico.md
-├─ nul
-├─ package.json
-├─ packages
-│  └─ shared
-│     ├─ package.json
-│     ├─ src
-│     │  ├─ database
-│     │  │  ├─ config.ts
-│     │  │  └─ schema.ts
-│     │  ├─ index.ts
-│     │  └─ types
-│     │     └─ message-envelope.ts
-│     └─ tsconfig.json
-├─ README.md
-├─ scripts
-│  ├─ cleanup-empty-ts.ts
-│  ├─ create-tables.sql
-│  └─ migrate.ts
-├─ tatus
-├─ test-simple.html
-├─ test-two-columns.html
-└─ websocket-test.html
+| Problem | Solution |
+|---------|----------|
+| "Failed to fetch" | [docs/troubleshooting/failed-to-fetch.md](docs/troubleshooting/failed-to-fetch.md) |
+| Multiple instances | [docs/troubleshooting/multiple-instances.md](docs/troubleshooting/multiple-instances.md) |
+| Server won't start | Check processes → Kill all → Restart |
 
-```
+---
+
+## 📚 Documentation
+
+### Essential
+- [QUICK-START.md](QUICK-START.md) - Get started in 2 minutes
+- [CLAUDE.md](CLAUDE.md) - Development guide for AI assistants
+
+### Sprint Reports
+- [Sprint 2 Report](docs/sprints/sprint2-report.md) - Protection & Security (COMPLETED)
+
+### Architecture & Planning
+- [docs/architecture/plan-modular.md](docs/architecture/plan-modular.md) - Modular development plan
+- [docs/architecture/frontend-strategy.md](docs/architecture/frontend-strategy.md) - Frontend strategy
+
+### Testing Guides
+- [docs/guides/sprint1-testing.md](docs/guides/sprint1-testing.md) - MessageCore testing
+- [docs/guides/sprint2-testing.md](docs/guides/sprint2-testing.md) - Protection & Security testing
+
+### Troubleshooting
+- [docs/troubleshooting/failed-to-fetch.md](docs/troubleshooting/failed-to-fetch.md) - "Failed to fetch" errors
+- [docs/troubleshooting/multiple-instances.md](docs/troubleshooting/multiple-instances.md) - Multiple server instances
+
+---
+
+## 🛠️ Tech Stack
+
+- **Runtime**: Bun
+- **Framework**: Elysia.js
+- **Validation**: TypeBox
+- **Database**: PostgreSQL (Prisma)
+- **Testing**: Custom dashboard
+
+---
+
+## 📖 Sprints
+
+- ✅ **Sprint 1**: MessageCore + Basic Routes
+- ✅ **Sprint 1.5**: Support Services (Logger, Storage, RateLimiter)
+- ✅ **Sprint 2**: Protection & Security - [Report](docs/sprints/sprint2-report.md)
+
+**Next**: Sprint 3 (WebSocket Real-time)
+
+---
+
+**Last Updated**: 2025-11-16

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INHOST - Testing Dashboard</title>
+  <link rel="stylesheet" href="./assets/css/shared.css">
+  <style>
+    /* Estilos específicos del dashboard */
+    .dashboard-layout {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .dashboard-content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      overflow: hidden;
+    }
+
+    .test-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .test-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-sm);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .test-item:hover {
+      background: var(--bg-secondary);
+      border-color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    .test-item.active {
+      background: var(--info);
+      border-color: var(--info);
+      color: #fff;
+    }
+
+    .test-info {
+      flex: 1;
+    }
+
+    .test-name {
+      font-weight: 600;
+      font-size: var(--font-sm);
+      margin-bottom: 2px;
+    }
+
+    .test-desc {
+      font-size: var(--font-xs);
+      opacity: 0.7;
+    }
+
+    .test-icon {
+      font-size: 20px;
+      margin-right: var(--space-sm);
+    }
+
+    .test-frame {
+      width: 100%;
+      height: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-primary);
+    }
+
+    .category-header {
+      font-size: var(--font-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      padding: var(--space-sm) var(--space-xs);
+      margin-top: var(--space-sm);
+    }
+
+    .category-header:first-child {
+      margin-top: 0;
+    }
+
+    /* Server Status Indicator */
+    .server-status {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: var(--font-xs);
+      transition: all var(--transition);
+      cursor: help;
+      position: relative;
+    }
+
+    .server-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+
+    .server-status.online .server-status-dot {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+
+    .server-status.offline .server-status-dot {
+      background: var(--error);
+      animation: none;
+    }
+
+    .server-status.warning .server-status-dot {
+      background: var(--warning);
+      box-shadow: 0 0 6px var(--warning);
+    }
+
+    .server-status.online {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .server-status.offline {
+      border-color: var(--error);
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    .server-status.warning {
+      border-color: var(--warning);
+      background: rgba(245, 158, 11, 0.05);
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .server-status-label {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .server-status-info {
+      color: var(--text-secondary);
+      font-size: 10px;
+    }
+
+    .server-status-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      right: 0;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      min-width: 280px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+      font-size: var(--font-xs);
+    }
+
+    .server-status:hover .server-status-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tooltip-row:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .tooltip-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .tooltip-value {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .tooltip-command {
+      background: var(--bg-tertiary);
+      padding: 8px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      margin-top: 8px;
+      color: var(--accent);
+      word-break: break-all;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Header -->
+    <header class="header-main">
+      <h1 class="header-title">🧪 INHOST Testing</h1>
+      <div class="header-stats flex gap-sm">
+        <span class="text-xs text-muted">Tests: <span class="text-primary" id="testCount">0</span></span>
+
+        <!-- Server Status Indicator -->
+        <div class="server-status offline" id="serverStatus">
+          <div class="server-status-dot"></div>
+          <div>
+            <div class="server-status-label">Servidor: <span id="serverStatusText">Verificando...</span></div>
+            <div class="server-status-info">Puerto: 3000 | Manual</div>
+          </div>
+
+          <!-- Tooltip -->
+          <div class="server-status-tooltip">
+            <div class="tooltip-row">
+              <span class="tooltip-label">Estado:</span>
+              <span class="tooltip-value" id="tooltipStatus">Apagado</span>
+            </div>
+            <div class="tooltip-row">
+              <span class="tooltip-label">Puerto:</span>
+              <span class="tooltip-value">3000</span>
+            </div>
+            <div class="tooltip-row">
+              <span class="tooltip-label">Procesos:</span>
+              <span class="tooltip-value" id="tooltipProcesses">0</span>
+            </div>
+            <div class="tooltip-row">
+              <span class="tooltip-label">Modo:</span>
+              <span class="tooltip-value">Manual</span>
+            </div>
+            <div class="tooltip-command" id="tooltipCommand">
+              Iniciar manualmente:<br>
+              bun --cwd apps/api-gateway dev
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="dashboard-content">
+      <!-- Sidebar - Lista de pruebas -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">📋 Tests Disponibles</div>
+        </div>
+        <div class="panel-content p-0">
+          <div id="testList" class="test-list p-sm"></div>
+        </div>
+      </aside>
+
+      <!-- Main - Preview -->
+      <main class="flex flex-col gap-sm">
+        <!-- Preview Frame -->
+        <div class="panel flex-1">
+          <div class="panel-header">
+            <div class="panel-title" id="currentTestTitle">
+              <span>👁️</span>
+              <span>Preview</span>
+            </div>
+            <div class="panel-actions">
+              <button class="btn btn-sm" onclick="openInNewWindow()" id="openNewWindowBtn" disabled>
+                Abrir en Nueva Ventana
+              </button>
+              <button class="btn btn-sm" onclick="refreshFrame()">
+                🔄 Reload
+              </button>
+            </div>
+          </div>
+          <div class="panel-content no-padding">
+            <iframe id="testFrame" class="test-frame"></iframe>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    // Configuración de tests
+    const TESTS = {
+      'showcase': {
+        name: 'Components Showcase',
+        description: 'Catálogo visual de componentes',
+        icon: '🎨',
+        path: './components/showcase.html',
+        category: 'Docs'
+      },
+      'template': {
+        name: 'Test Template',
+        description: 'Plantilla base para nuevos tests',
+        icon: '📋',
+        path: './components/template.html',
+        category: 'Docs'
+      },
+      'chat-flow-improved': {
+        name: 'Chat Flow Improved',
+        description: 'Flujo de mensajes en tiempo real',
+        icon: '💬',
+        path: './tests/test-chat-flow-improved.html',
+        category: 'Sprint 1'
+      },
+      'chat-flow': {
+        name: 'Chat Flow',
+        description: 'Versión anterior del chat flow',
+        icon: '💬',
+        path: './tests/test-chat-flow.html',
+        category: 'Sprint 1'
+      },
+      'sprint2-protection': {
+        name: 'Sprint 2 Protection',
+        description: 'Protección y seguridad',
+        icon: '🛡️',
+        path: './tests/test-sprint2-protection.html',
+        category: 'Sprint 2'
+      },
+      'interface': {
+        name: 'Test Interface',
+        description: 'Interfaz de pruebas básica',
+        icon: '🖥️',
+        path: './tests/test-interface.html',
+        category: 'Legacy'
+      }
+    };
+
+    // Estado
+    let currentTest = null;
+
+    // DOM Cache
+    const DOM = {
+      testList: document.getElementById('testList'),
+      testFrame: document.getElementById('testFrame'),
+      currentTestTitle: document.getElementById('currentTestTitle'),
+      testCount: document.getElementById('testCount'),
+      openNewWindowBtn: document.getElementById('openNewWindowBtn'),
+      serverStatus: document.getElementById('serverStatus'),
+      serverStatusText: document.getElementById('serverStatusText'),
+      tooltipStatus: document.getElementById('tooltipStatus'),
+      tooltipProcesses: document.getElementById('tooltipProcesses'),
+      tooltipCommand: document.getElementById('tooltipCommand')
+    };
+
+    // Server Status Monitor
+    const SERVER_URL = 'http://localhost:3000';
+    let serverCheckInterval = null;
+    let consecutiveFailures = 0;
+
+    async function checkServerStatus() {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+        const response = await fetch(`${SERVER_URL}/health`, {
+          method: 'GET',
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          consecutiveFailures = 0;
+          updateServerStatus('online', 'Encendido', '1 proceso');
+        } else {
+          consecutiveFailures++;
+          updateServerStatus('offline', 'Error', 'Error de servidor');
+        }
+      } catch (error) {
+        consecutiveFailures++;
+
+        if (error.name === 'AbortError') {
+          updateServerStatus('offline', 'Timeout', 'No responde');
+        } else {
+          updateServerStatus('offline', 'Apagado', '0 procesos');
+        }
+      }
+    }
+
+    function updateServerStatus(status, statusText, processInfo) {
+      // Update main status
+      DOM.serverStatus.className = `server-status ${status}`;
+      DOM.serverStatusText.textContent = statusText;
+
+      // Update tooltip
+      if (status === 'online') {
+        DOM.tooltipStatus.textContent = '🟢 Encendido';
+        DOM.tooltipProcesses.textContent = processInfo;
+        DOM.tooltipCommand.innerHTML = `Servidor funcionando correctamente.<br>No es necesario reiniciar.`;
+      } else if (status === 'warning') {
+        DOM.tooltipStatus.textContent = '⚠️ Múltiples procesos';
+        DOM.tooltipProcesses.textContent = processInfo;
+        DOM.tooltipCommand.innerHTML = `
+          ⚠️ ADVERTENCIA: Múltiples procesos detectados<br><br>
+          1. Detener todos:<br>
+          <code>taskkill /F /IM bun.exe</code><br><br>
+          2. Reiniciar uno solo:<br>
+          <code>bun --cwd apps/api-gateway dev</code>
+        `;
+      } else {
+        DOM.tooltipStatus.textContent = '🔴 Apagado';
+        DOM.tooltipProcesses.textContent = processInfo;
+        DOM.tooltipCommand.innerHTML = `
+          Iniciar manualmente:<br>
+          <code>bun --cwd apps/api-gateway dev</code><br><br>
+          El servidor debe iniciarse desde la terminal,<br>
+          NO automáticamente desde el navegador.
+        `;
+      }
+    }
+
+    function startServerMonitoring() {
+      // Initial check
+      checkServerStatus();
+
+      // Check every 5 seconds
+      serverCheckInterval = setInterval(checkServerStatus, 5000);
+    }
+
+    function stopServerMonitoring() {
+      if (serverCheckInterval) {
+        clearInterval(serverCheckInterval);
+        serverCheckInterval = null;
+      }
+    }
+
+    // Inicializar
+    function init() {
+      renderTestList();
+      updateStats();
+      showWelcome();
+      startServerMonitoring(); // Start monitoring server status
+    }
+
+    // Renderizar lista de tests
+    function renderTestList() {
+      const categories = {};
+
+      // Agrupar por categoría
+      Object.entries(TESTS).forEach(([id, test]) => {
+        if (!categories[test.category]) {
+          categories[test.category] = [];
+        }
+        categories[test.category].push({ id, ...test });
+      });
+
+      // Renderizar
+      let html = '';
+      Object.entries(categories).forEach(([category, tests]) => {
+        html += `<div class="category-header">${category}</div>`;
+        tests.forEach(test => {
+          html += `
+            <div class="test-item" onclick="loadTest('${test.id}')" id="test-${test.id}">
+              <div class="test-icon">${test.icon}</div>
+              <div class="test-info">
+                <div class="test-name">${test.name}</div>
+                <div class="test-desc">${test.description}</div>
+              </div>
+            </div>
+          `;
+        });
+      });
+
+      DOM.testList.innerHTML = html;
+    }
+
+    // Cargar test
+    function loadTest(testId) {
+      const test = TESTS[testId];
+      if (!test) return;
+
+      // Actualizar UI
+      currentTest = testId;
+
+      // Marcar como activo
+      document.querySelectorAll('.test-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.getElementById(`test-${testId}`).classList.add('active');
+
+      // Actualizar título
+      DOM.currentTestTitle.innerHTML = `
+        <span>${test.icon}</span>
+        <span>${test.name}</span>
+      `;
+
+      // Cargar en iframe
+      DOM.testFrame.src = test.path;
+      DOM.openNewWindowBtn.disabled = false;
+
+      // Log
+      console.log(`Test loaded: ${test.name}`);
+    }
+
+    // Abrir en nueva ventana
+    function openInNewWindow() {
+      if (!currentTest) return;
+      const test = TESTS[currentTest];
+      window.open(test.path, '_blank', 'width=1400,height=900');
+    }
+
+    // Refrescar frame
+    function refreshFrame() {
+      if (DOM.testFrame.src) {
+        DOM.testFrame.src = DOM.testFrame.src;
+      }
+    }
+
+    // Actualizar estadísticas
+    function updateStats() {
+      DOM.testCount.textContent = Object.keys(TESTS).length;
+    }
+
+    // Mostrar mensaje de bienvenida
+    function showWelcome() {
+      const welcomeHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 40px;">
+          <div style="font-size: 64px; margin-bottom: 20px;">🧪</div>
+          <h2 style="font-size: 20px; margin-bottom: 12px; color: var(--accent);">Bienvenido al Testing Dashboard</h2>
+          <p style="font-size: 12px; color: var(--text-secondary); max-width: 400px;">
+            Selecciona un test del menú lateral para comenzar.<br>
+            Todas las pruebas están optimizadas para máximo aprovechamiento de pantalla.
+          </p>
+        </div>
+      `;
+
+      // Crear un documento temporal para el iframe
+      const doc = DOM.testFrame.contentDocument || DOM.testFrame.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <link rel="stylesheet" href="./assets/css/shared.css">
+        </head>
+        <body>${welcomeHTML}</body>
+        </html>
+      `);
+      doc.close();
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + O - Abrir en nueva ventana
+      if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+        e.preventDefault();
+        openInNewWindow();
+      }
+      // Ctrl/Cmd + R - Reload
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        refreshFrame();
+      }
+    });
+
+    // Iniciar
+    init();
+  </script>
+</body>
+</html>

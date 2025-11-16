@@ -17,8 +17,14 @@ const app = new Elysia()
   .use(cors({
     origin: config.app.env === 'development' ? true : /^https?:\/\/(.*\.)?inhost\.com$/,
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    exposeHeaders: [
+      'X-RateLimit-Limit',
+      'X-RateLimit-Remaining',
+      'X-RateLimit-Reset',
+      'Retry-After'
+    ]
   }))
 
   // Middleware global

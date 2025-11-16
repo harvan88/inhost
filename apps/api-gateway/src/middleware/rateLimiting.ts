@@ -44,20 +44,18 @@ export interface RateLimitConfig {
  */
 export function rateLimiting(config: RateLimitConfig) {
   return new Elysia()
-    .derive(async ({ request, set }) => {
-      // Obtener userId y plan
+    // Interceptar TODAS las requests ANTES de procesarlas
+    .onRequest(async ({ request, set }) => {
       const userId = config.getUserId(request) || 'anonymous';
       const plan = config.getPlan(userId);
 
-      // Verificar límite
       const result = await config.rateLimiter.checkLimit(userId, plan);
 
-      // Añadir headers de rate limit
+      // Añadir headers de rate limit SIEMPRE
       set.headers['X-RateLimit-Limit'] = result.limit.toString();
       set.headers['X-RateLimit-Remaining'] = result.remaining.toString();
       set.headers['X-RateLimit-Reset'] = Math.floor(result.resetAt.getTime() / 1000).toString();
 
-      // Si no está permitido, retornar 429
       if (!result.allowed) {
         logger.warn('Rate limit exceeded', {
           userId,
@@ -70,11 +68,15 @@ export function rateLimiting(config: RateLimitConfig) {
         set.headers['Retry-After'] = (result.retryAfter || 60).toString();
 
         return {
-          error: 'Rate limit exceeded',
-          code: 'RATE_LIMIT_EXCEEDED',
-          limit: result.limit,
-          retryAfter: result.retryAfter,
-          resetAt: result.resetAt.toISOString()
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Rate limit exceeded',
+            limit: result.limit,
+            retryAfter: result.retryAfter,
+            resetAt: result.resetAt.toISOString(),
+            timestamp: new Date().toISOString()
+          }
         };
       }
 
@@ -87,10 +89,6 @@ export function rateLimiting(config: RateLimitConfig) {
         remaining: result.remaining,
         limit: result.limit
       });
-
-      return {
-        rateLimitInfo: result
-      };
     });
 }
 

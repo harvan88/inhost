@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Showcase - Componentes Disponibles</title>
+  <link rel="stylesheet" href="../assets/css/shared.css">
+  <script src="../assets/js/components.js"></script>
+  <style>
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      height: calc(100vh - 48px);
+      overflow-y: auto;
+    }
+
+    .showcase-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: var(--space-md);
+    }
+
+    .showcase-title {
+      font-size: var(--font-lg);
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: var(--space-md);
+      padding-bottom: var(--space-sm);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .showcase-item {
+      margin-bottom: var(--space-md);
+    }
+
+    .showcase-label {
+      font-size: var(--font-xs);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .code-block {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: var(--space-sm);
+      font-size: var(--font-xs);
+      overflow-x: auto;
+      margin-top: var(--space-xs);
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="layout-main">
+    <!-- Header -->
+    <header class="header-main">
+      <h1 class="header-title">🎨 Showcase - Componentes</h1>
+      <div class="header-stats flex gap-md">
+        <div class="stat">
+          <span class="stat-label">Total:</span>
+          <span class="stat-value">25+</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="showcase-grid">
+      <!-- ATOMS -->
+      <section class="showcase-section">
+        <h2 class="showcase-title">⚛️ Atoms</h2>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Badges</div>
+          <div class="flex gap-xs">
+            <span class="badge badge-success">Success</span>
+            <span class="badge badge-error">Error</span>
+            <span class="badge badge-warning">Warning</span>
+            <span class="badge badge-info">Info</span>
+            <span class="badge badge-neutral">Neutral</span>
+          </div>
+          <div class="code-block">Atoms.badge('Text', 'success')</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Buttons</div>
+          <div class="flex gap-xs">
+            <button class="btn">Default</button>
+            <button class="btn btn-primary">Primary</button>
+            <button class="btn btn-success">Success</button>
+            <button class="btn btn-sm">Small</button>
+            <button class="btn" disabled>Disabled</button>
+          </div>
+          <div class="code-block">Atoms.button('Text', { type: 'primary' })</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Input</div>
+          <input type="text" class="input" placeholder="Ingresa texto...">
+          <div class="code-block">Atoms.input({ placeholder: 'Text' })</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Progress Bars</div>
+          <div class="mb-xs">
+            <div class="progress-mini">
+              <div class="progress-mini-bar" style="width: 75%;"></div>
+            </div>
+          </div>
+          <div class="mb-xs">
+            <div class="progress-mini">
+              <div class="progress-mini-bar success" style="width: 100%;"></div>
+            </div>
+          </div>
+          <div class="mb-xs">
+            <div class="progress-mini">
+              <div class="progress-mini-bar warning" style="width: 50%;"></div>
+            </div>
+          </div>
+          <div class="progress-mini">
+            <div class="progress-mini-bar error" style="width: 30%;"></div>
+          </div>
+          <div class="code-block">Atoms.progress(75, 'success')</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Stats</div>
+          <div class="flex gap-md">
+            <div class="stat">
+              <span class="stat-label">Total:</span>
+              <span class="stat-value">42</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Active:</span>
+              <span class="stat-value">12</span>
+            </div>
+          </div>
+          <div class="code-block">Atoms.stat('Total', '42')</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Log Lines</div>
+          <div>
+            <div class="log-line info">
+              <span class="log-time">12:34:56.789</span>
+              <span class="log-badge">[INFO]</span>
+              <span class="log-message">Sistema iniciado</span>
+            </div>
+            <div class="log-line success">
+              <span class="log-time">12:34:57.123</span>
+              <span class="log-badge">[SUCCESS]</span>
+              <span class="log-message">Operación completada</span>
+            </div>
+            <div class="log-line warning">
+              <span class="log-time">12:34:58.456</span>
+              <span class="log-badge">[WARNING]</span>
+              <span class="log-message">Advertencia detectada</span>
+            </div>
+            <div class="log-line error">
+              <span class="log-time">12:34:59.789</span>
+              <span class="log-badge">[ERROR]</span>
+              <span class="log-message">Error en proceso</span>
+            </div>
+          </div>
+          <div class="code-block">Atoms.logLine('info', 'TAG', 'Message')</div>
+        </div>
+      </section>
+
+      <!-- MOLECULES -->
+      <section class="showcase-section">
+        <h2 class="showcase-title">🧬 Molecules</h2>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Panel</div>
+          <div class="panel" style="height: 150px;">
+            <div class="panel-header">
+              <div class="panel-title">🎯 Panel Title</div>
+              <div class="panel-actions">
+                <button class="btn btn-sm">Action</button>
+              </div>
+            </div>
+            <div class="panel-content">
+              Panel content goes here
+            </div>
+          </div>
+          <div class="code-block">Molecules.panel('Title', 'Content', { actions: '...' })</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Card Micro</div>
+          <div class="card-micro">
+            <div class="card-micro-header">
+              <div class="card-micro-title">
+                <span>🎯</span>
+                <span>Card Title</span>
+              </div>
+              <span class="badge badge-success">Active</span>
+            </div>
+            <div class="card-micro-meta">Metadata: 123 events</div>
+            <div class="card-micro-actions">
+              <button class="btn btn-sm">Action 1</button>
+              <button class="btn btn-sm">Action 2</button>
+            </div>
+          </div>
+          <div class="code-block">Molecules.cardMicro('Title', { icon: '🎯', ... })</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Empty State</div>
+          <div style="height: 120px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 4px;">
+            <div class="flex flex-col items-center justify-center" style="height: 100%; opacity: 0.3; text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 8px;">📭</div>
+              <div class="text-sm">No hay datos</div>
+              <div class="text-xs text-muted">Los datos aparecerán aquí</div>
+            </div>
+          </div>
+          <div class="code-block">Molecules.emptyState('📭', 'No hay datos', 'Submessage')</div>
+        </div>
+      </section>
+
+      <!-- UTILITY CLASSES -->
+      <section class="showcase-section">
+        <h2 class="showcase-title">🔧 Utility Classes</h2>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Typography</div>
+          <div class="text-xs mb-xs">text-xs (10px)</div>
+          <div class="text-sm mb-xs">text-sm (11px)</div>
+          <div class="text-md mb-xs">text-md (12px)</div>
+          <div class="text-lg">text-lg (14px)</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Colors</div>
+          <div class="text-primary mb-xs">text-primary (accent)</div>
+          <div class="text-success mb-xs">text-success</div>
+          <div class="text-warning mb-xs">text-warning</div>
+          <div class="text-error mb-xs">text-error</div>
+          <div class="text-muted">text-muted</div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Spacing</div>
+          <div class="code-block">
+            mb-xs (4px), mb-sm (8px), mb-md (12px)<br>
+            mt-xs (4px), mt-sm (8px), mt-md (12px)<br>
+            p-xs (4px), p-sm (8px), p-md (12px)
+          </div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Flexbox</div>
+          <div class="code-block">
+            .flex .flex-col .flex-1<br>
+            .gap-xs .gap-sm .gap-md<br>
+            .items-center .justify-between
+          </div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Grid Layouts</div>
+          <div class="code-block">
+            .grid-compact.cols-2<br>
+            .grid-compact.cols-3<br>
+            .grid-compact.sidebar-left<br>
+            .grid-compact.sidebar-right<br>
+            .grid-compact.sidebar-both
+          </div>
+        </div>
+      </section>
+
+      <!-- JAVASCRIPT APIs -->
+      <section class="showcase-section">
+        <h2 class="showcase-title">⚡ JavaScript APIs</h2>
+
+        <div class="showcase-item">
+          <div class="showcase-label">LogManager</div>
+          <div class="panel" style="height: 150px;">
+            <div class="panel-header">
+              <div class="panel-title">Event Log Demo</div>
+              <div class="panel-actions">
+                <button class="btn btn-sm" onclick="addDemoLog()">Add Log</button>
+                <button class="btn btn-sm" onclick="demoLogger.clear()">Clear</button>
+              </div>
+            </div>
+            <div class="panel-content p-0">
+              <div id="demoLog" style="padding: var(--space-sm);"></div>
+            </div>
+          </div>
+          <div class="code-block">
+const logger = new LogManager('id');<br>
+logger.add('info', 'TAG', 'Message');<br>
+logger.clear();<br>
+await logger.copyAll();
+          </div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">StateManager</div>
+          <button class="btn btn-sm" onclick="incrementCounter()">Increment Counter</button>
+          <span class="badge badge-info" id="stateCounter">0</span>
+          <div class="code-block">
+const state = new StateManager({ count: 0 });<br>
+state.subscribe('count', (val) => { ... });<br>
+state.set('count', 5);
+          </div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">DOMCache</div>
+          <div class="code-block">
+const cache = new DOMCache();<br>
+const el = cache.get('id');<br>
+const els = cache.getAll(['id1', 'id2']);
+          </div>
+        </div>
+
+        <div class="showcase-item">
+          <div class="showcase-label">Utils</div>
+          <div class="code-block">
+Utils.escape(text)  // Sanitizar HTML<br>
+Utils.formatTime()  // 12:34:56.789<br>
+Utils.formatTimeShort()  // 12:34:56<br>
+Utils.uid()  // ID único
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const { LogManager, StateManager } = window.TestingFramework;
+
+    // Demo Logger
+    const demoLogger = new LogManager('demoLog', 5);
+    demoLogger.add('info', 'DEMO', 'Log manager inicializado');
+
+    function addDemoLog() {
+      const types = ['info', 'success', 'warning', 'error'];
+      const badges = ['INFO', 'SUCCESS', 'WARN', 'ERROR'];
+      const messages = [
+        'Operación completada',
+        'Proceso iniciado',
+        'Advertencia detectada',
+        'Error en proceso',
+        'Conexión establecida'
+      ];
+
+      const type = types[Math.floor(Math.random() * types.length)];
+      const badge = badges[Math.floor(Math.random() * badges.length)];
+      const message = messages[Math.floor(Math.random() * messages.length)];
+
+      demoLogger.add(type, badge, message);
+    }
+
+    // Demo State
+    const demoState = new StateManager({ counter: 0 });
+    demoState.subscribe('counter', (value) => {
+      document.getElementById('stateCounter').textContent = value;
+    });
+
+    function incrementCounter() {
+      demoState.set('counter', demoState.get('counter') + 1);
+    }
+  </script>
+</body>
+</html>

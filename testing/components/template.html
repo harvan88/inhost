@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Template</title>
+  <link rel="stylesheet" href="../assets/css/shared.css">
+  <script src="../assets/js/components.js"></script>
+  <style>
+    /* Estilos específicos del test (si son necesarios) */
+    .test-layout {
+      display: grid;
+      grid-template-columns: 250px 1fr 250px;
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      height: calc(100vh - 48px);
+    }
+  </style>
+</head>
+<body>
+  <div class="layout-main">
+    <!-- Header -->
+    <header class="header-main">
+      <h1 class="header-title">🎯 Test Template</h1>
+      <div class="header-stats flex gap-md">
+        <div class="stat">
+          <span class="stat-label">Status:</span>
+          <span class="stat-value" id="status">Ready</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Eventos:</span>
+          <span class="stat-value" id="eventCount">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="test-layout">
+      <!-- Sidebar Izquierdo - Controles -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">⚙️ Controles</div>
+        </div>
+        <div class="panel-content">
+          <div id="controls"></div>
+        </div>
+      </aside>
+
+      <!-- Centro - Contenido Principal -->
+      <main class="panel">
+        <div class="panel-header">
+          <div class="panel-title">📊 Área Principal</div>
+          <div class="panel-actions">
+            <button class="btn btn-sm" onclick="clearMain()">Limpiar</button>
+          </div>
+        </div>
+        <div class="panel-content">
+          <div id="mainContent"></div>
+        </div>
+      </main>
+
+      <!-- Sidebar Derecho - Logs -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">📝 Event Log</div>
+          <div class="panel-actions">
+            <button class="btn btn-sm" onclick="logger.copyAll()">📋</button>
+            <button class="btn btn-sm" onclick="logger.clear()">Clear</button>
+          </div>
+        </div>
+        <div class="panel-content p-0">
+          <div id="eventLog" style="padding: var(--space-sm);"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    // Importar componentes del framework
+    const { Utils, Atoms, Molecules, LogManager, StateManager, DOMCache } = window.TestingFramework;
+
+    // Inicializar managers
+    const logger = new LogManager('eventLog', 100);
+    const state = new StateManager({
+      eventCount: 0,
+      status: 'Ready'
+    });
+    const cache = new DOMCache();
+
+    // Cache de elementos DOM
+    const DOM = cache.getAll([
+      'controls',
+      'mainContent',
+      'eventLog',
+      'status',
+      'eventCount'
+    ]);
+
+    // Escuchar cambios de estado
+    state.subscribe('eventCount', (value) => {
+      DOM.eventCount.textContent = value;
+    });
+
+    state.subscribe('status', (value) => {
+      DOM.status.textContent = value;
+    });
+
+    // Función de ejemplo: Añadir control
+    function renderControls() {
+      const controls = [
+        Molecules.cardMicro('Test Button', {
+          icon: '🎯',
+          badge: Atoms.badge('Ready', 'success'),
+          meta: 'Click para ejecutar',
+          actions: Atoms.button('Ejecutar', {
+            onclick: 'runTest()',
+            type: 'primary',
+            size: 'sm'
+          })
+        }),
+        Molecules.cardMicro('Config', {
+          icon: '⚙️',
+          badge: Atoms.badge('Active', 'info'),
+          meta: 'Configuración del test',
+          actions: `
+            ${Atoms.button('Ver', { onclick: 'viewConfig()', size: 'sm' })}
+            ${Atoms.button('Editar', { onclick: 'editConfig()', size: 'sm' })}
+          `
+        }),
+        Molecules.cardMicro('Stats', {
+          icon: '📊',
+          meta: `
+            ${Atoms.stat('Total', '0')}<br>
+            ${Atoms.stat('Success', '0')}<br>
+            ${Atoms.stat('Errors', '0')}
+          `
+        })
+      ];
+
+      DOM.controls.innerHTML = controls.join('');
+    }
+
+    // Función de ejemplo: Ejecutar test
+    function runTest() {
+      logger.add('info', 'TEST', 'Iniciando test...');
+      state.set('status', 'Running');
+
+      setTimeout(() => {
+        logger.add('success', 'TEST', 'Test completado exitosamente');
+        state.set('status', 'Completed');
+        state.set('eventCount', state.get('eventCount') + 1);
+
+        // Mostrar resultado en contenido principal
+        const result = `
+          <div class="animate-slideUp">
+            ${Atoms.badge('Success', 'success')}
+            <p class="mt-sm">El test se ejecutó correctamente.</p>
+            ${Atoms.progress(100, 'success')}
+          </div>
+        `;
+        DOM.mainContent.innerHTML = result;
+      }, 1000);
+    }
+
+    // Función de ejemplo: Ver config
+    function viewConfig() {
+      logger.add('info', 'CONFIG', 'Mostrando configuración');
+
+      const config = {
+        timeout: '5000ms',
+        retries: 3,
+        endpoint: 'ws://localhost:8085'
+      };
+
+      const configHTML = `
+        <div class="animate-slideUp">
+          <h3 class="text-md mb-sm">Configuración</h3>
+          ${Object.entries(config).map(([key, value]) =>
+            `<div class="flex justify-between mb-xs">
+              <span class="text-muted">${key}:</span>
+              <span>${value}</span>
+            </div>`
+          ).join('')}
+        </div>
+      `;
+
+      DOM.mainContent.innerHTML = configHTML;
+    }
+
+    // Función de ejemplo: Editar config
+    function editConfig() {
+      logger.add('warning', 'CONFIG', 'Modo edición no implementado');
+    }
+
+    // Limpiar contenido principal
+    function clearMain() {
+      DOM.mainContent.innerHTML = Molecules.emptyState(
+        '📊',
+        'Sin datos',
+        'Ejecuta un test para ver resultados'
+      );
+      logger.add('info', 'UI', 'Contenido principal limpiado');
+    }
+
+    // Inicialización
+    function init() {
+      renderControls();
+      clearMain();
+      logger.add('success', 'SYSTEM', 'Sistema iniciado correctamente');
+
+      // Mostrar instrucciones
+      setTimeout(() => {
+        logger.add('info', 'HELP', 'Click en "Ejecutar" para correr el test');
+      }, 500);
+    }
+
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+      logger.add('info', 'SYSTEM', 'Cerrando...');
+    });
+
+    // Iniciar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

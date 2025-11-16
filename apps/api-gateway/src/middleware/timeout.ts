@@ -154,21 +154,9 @@ export function timeoutProtection(config: TimeoutConfig = { timeout: 5000 }) {
   );
 
   return new Elysia()
-    .derive(({ set }) => {
-      // Verificar circuit breaker
-      if (!circuitBreaker.canExecute()) {
-        logger.warn('Request blocked by circuit breaker', {
-          state: circuitBreaker.getState()
-        });
-
-        set.status = 503;
-        return {
-          error: 'Service temporarily unavailable',
-          code: 'CIRCUIT_BREAKER_OPEN',
-          retryAfter: Math.ceil(config.circuitBreakerResetTime! / 1000) || 30
-        };
-      }
-
+    // Siempre inyectar withProtection en el contexto
+    .derive(() => {
+      logger.info('🔧 Timeout middleware: injecting withProtection');
       return {
         circuitBreaker,
         timeout: config.timeout,
@@ -205,6 +193,25 @@ export function timeoutProtection(config: TimeoutConfig = { timeout: 5000 }) {
           }
         }
       };
+    })
+    // Verificar circuit breaker ANTES de procesar la request
+    .onBeforeHandle(({ set }) => {
+      if (!circuitBreaker.canExecute()) {
+        logger.warn('Request blocked by circuit breaker', {
+          state: circuitBreaker.getState()
+        });
+
+        set.status = 503;
+        return {
+          success: false,
+          error: {
+            code: 'CIRCUIT_BREAKER_OPEN',
+            message: 'Service temporarily unavailable',
+            retryAfter: Math.ceil(config.circuitBreakerResetTime! / 1000) || 30,
+            timestamp: new Date().toISOString()
+          }
+        };
+      }
     });
 }
 

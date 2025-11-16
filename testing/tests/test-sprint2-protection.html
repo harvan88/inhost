@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pruebas Sprint 2 - Dashboard</title>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --gray: #6b7280;
+      --dark: #1f2937;
+      --darker: #111827;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--darker);
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .dashboard {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 300px 1fr 1fr;
+      gap: 20px;
+      height: calc(100vh - 40px);
+    }
+
+    .panel {
+      background: var(--dark);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #374151;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: #111827;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--gray);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      background: var(--gray);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-warning { background: var(--warning); }
+    .btn-error { background: var(--error); }
+    .btn-success { background: var(--success); }
+
+    .log-container {
+      background: #111827;
+      border-radius: 8px;
+      padding: 15px;
+      flex: 1;
+      overflow-y: auto;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      position: relative;
+    }
+
+    .log-entry {
+      margin-bottom: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid #374151;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .log-time {
+      color: var(--gray);
+      font-size: 10px;
+      min-width: 70px;
+    }
+
+    .log-message {
+      flex: 1;
+    }
+
+    .log-success { color: var(--success); }
+    .log-error { color: var(--error); }
+    .log-info { color: #60a5fa; }
+    .log-warning { color: var(--warning); }
+
+    .log-actions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+    }
+
+    .icon-btn {
+      background: #374151;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .icon-btn:hover {
+      background: #4b5563;
+    }
+
+    .headers-display {
+      background: #111827;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      font-size: 11px;
+    }
+
+    .header-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .header-name {
+      color: var(--gray);
+    }
+
+    .header-value {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .input-group {
+      margin-bottom: 10px;
+    }
+
+    .input-group label {
+      display: block;
+      color: #d1d5db;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 8px 12px;
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .input-group input:focus, .input-group select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-active { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .status-active .status-dot { background: var(--success); }
+
+    .status-inactive { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+    .status-inactive .status-dot { background: var(--error); }
+
+    .status-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-warning .status-dot { background: var(--warning); }
+
+    .tutorial-panel {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #3b82f6;
+      overflow-y: auto;
+    }
+
+    .tutorial-header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tutorial-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 5px;
+    }
+
+    .tutorial-subtitle {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .test-step {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-left: 3px solid var(--primary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .test-step:hover {
+      transform: translateX(5px);
+      border-left-color: var(--success);
+    }
+
+    .test-step.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-left-color: var(--success);
+    }
+
+    .test-step.completed {
+      background: rgba(16, 185, 129, 0.1);
+      border-left-color: var(--success);
+      opacity: 0.7;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .test-step.completed .step-number {
+      background: var(--success);
+    }
+
+    .test-step.completed .step-number::after {
+      content: '✓';
+    }
+
+    .step-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 5px;
+    }
+
+    .step-description {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.4;
+    }
+
+    .step-action {
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: rgba(59, 130, 246, 0.3);
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      color: white;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-block;
+      transition: all 0.2s;
+    }
+
+    .step-action:hover {
+      background: var(--primary);
+    }
+
+    .progress-bar {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      height: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .tips-box {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 20px;
+    }
+
+    .tips-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--warning);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tip-item {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 6px;
+      padding-left: 12px;
+      position: relative;
+    }
+
+    .tip-item::before {
+      content: '💡';
+      position: absolute;
+      left: 0;
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 200px;
+      background-color: #1f2937;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -100px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 11px;
+      border: 1px solid #374151;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .quick-start {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px dashed var(--success);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .quick-start-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 8px;
+    }
+
+    .quick-start-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .quick-start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .refresh-banner {
+      background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      border-bottom: 3px solid #b91c1c;
+      animation: pulse 2s infinite;
+      cursor: pointer;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    .refresh-banner:hover {
+      background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+    }
+
+    .banner-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .banner-icon {
+      font-size: 20px;
+    }
+
+    .refresh-instructions {
+      font-size: 11px;
+      margin-top: 5px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <!-- Banner de instrucciones -->
+  <div class="refresh-banner" onclick="performHardRefresh()" id="refreshBanner" style="display: none;">
+    <div class="banner-text">
+      <span class="banner-icon">⚠️</span>
+      <span>¿Ves "Failed to fetch"? HAZ CLIC AQUÍ o presiona CTRL+SHIFT+R para refrescar</span>
+      <span class="banner-icon">🔄</span>
+    </div>
+    <div class="refresh-instructions">
+      El navegador puede tener código antiguo en caché. Un hard refresh resolverá el problema.
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <!-- Panel Tutorial/Guía -->
+    <div class="tutorial-panel">
+      <div class="tutorial-header">
+        <div class="tutorial-title">🧪 Guía de Pruebas</div>
+        <div class="tutorial-subtitle">Sprint 2 - Protecciones</div>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="quick-start">
+        <div class="quick-start-title">⚡ Inicio Rápido</div>
+        <button class="quick-start-btn" onclick="runQuickTest()">Ejecutar Test Completo</button>
+      </div>
+
+      <div class="test-step" id="step1" onclick="highlightStep(1)">
+        <div class="step-number">1</div>
+        <div class="step-title">Verificar Servidor</div>
+        <div class="step-description">Asegúrate de que el servidor esté corriendo en localhost:3000</div>
+        <div class="step-action" onclick="event.stopPropagation(); getAPIInfo()">✓ Verificar Health</div>
+      </div>
+
+      <div class="test-step" id="step2" onclick="highlightStep(2)">
+        <div class="step-number">2</div>
+        <div class="step-title">Test Rate Limiting</div>
+        <div class="step-description">Envía 15 requests para verificar el límite de 12/min (plan free)</div>
+        <div class="step-action" onclick="event.stopPropagation(); sendBurstRequests()">🚀 Ejecutar Burst</div>
+      </div>
+
+      <div class="test-step" id="step3" onclick="highlightStep(3)">
+        <div class="step-number">3</div>
+        <div class="step-title">Test Validación</div>
+        <div class="step-description">Prueba mensajes válidos e inválidos para verificar validación de esquema</div>
+        <div class="step-action" onclick="event.stopPropagation(); runValidationTests()">✅ Ejecutar Tests</div>
+      </div>
+
+      <div class="test-step" id="step4" onclick="highlightStep(4)">
+        <div class="step-number">4</div>
+        <div class="step-title">Test Headers</div>
+        <div class="step-description">Verifica que los headers X-RateLimit-* estén presentes</div>
+        <div class="step-action" onclick="event.stopPropagation(); sendSingleRequest()">📊 Ver Headers</div>
+      </div>
+
+      <div class="test-step" id="step5" onclick="highlightStep(5)">
+        <div class="step-number">5</div>
+        <div class="step-title">Stress Test</div>
+        <div class="step-description">Ejecuta test continuo de 5 RPS para verificar estabilidad</div>
+        <div class="step-action" onclick="event.stopPropagation(); toggleStressTest()">⚡ Iniciar Stress</div>
+      </div>
+
+      <div class="test-step" id="step6" onclick="highlightStep(6)">
+        <div class="step-number">6</div>
+        <div class="step-title">Verificar Resultados</div>
+        <div class="step-description">Revisa los logs y stats para confirmar que todo funciona correctamente</div>
+        <div class="step-action" onclick="event.stopPropagation(); showSummary()">📋 Ver Resumen</div>
+      </div>
+
+      <div class="tips-box">
+        <div class="tips-title">💡 Tips de Prueba</div>
+        <div class="tip-item">El rate limit free es 12 req/min</div>
+        <div class="tip-item">Los headers aparecen después de la 1ª request</div>
+        <div class="tip-item">Usa "Reset Contador" entre tests</div>
+        <div class="tip-item">El stress test es para pruebas prolongadas</div>
+      </div>
+    </div>
+
+    <!-- Columna Izquierda -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <!-- Rate Limiting -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🚦 Rate Limiting</div>
+          <div class="status-indicator status-active">
+            <div class="status-dot"></div>
+            <span>Activo</span>
+          </div>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-value" id="rateTotal">0</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--success);" id="rateSuccess">0</div>
+            <div class="stat-label">Éxitos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--error);" id="rateBlocked">0</div>
+            <div class="stat-label">Bloqueados</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--warning);" id="rateErrors">0</div>
+            <div class="stat-label">Errores</div>
+          </div>
+        </div>
+
+        <div class="headers-display">
+          <div class="header-item">
+            <span class="header-name">X-RateLimit-Limit:</span>
+            <span class="header-value" id="headerLimit">-</span>
+          </div>
+          <div class="header-item">
+            <span class="header-name">X-RateLimit-Remaining:</span>
+            <span class="header-value" id="headerRemaining">-</span>
+          </div>
+          <div class="header-item">
+            <span class="header-name">X-RateLimit-Reset:</span>
+            <span class="header-value" id="headerReset">-</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn tooltip" onclick="sendSingleRequest()">
+            Enviar 1 Request
+            <span class="tooltiptext">Envía una sola request para ver headers</span>
+          </button>
+          <button class="btn btn-warning tooltip" onclick="sendBurstRequests()">
+            Enviar 15 Requests
+            <span class="tooltiptext">Test de rate limiting: 12 deberían pasar, 3 bloquearse</span>
+          </button>
+          <button class="btn tooltip" onclick="resetRateCounter()">
+            Reset Contador
+            <span class="tooltiptext">Reinicia las estadísticas locales</span>
+          </button>
+          <button class="btn btn-error" onclick="clearLog('rateLog')">Limpiar Logs</button>
+        </div>
+
+        <div class="log-container" id="rateLog">
+          <div class="log-actions">
+            <button class="icon-btn" onclick="copyLog('rateLog')" title="Copiar logs">📋</button>
+          </div>
+          <div class="log-entry log-info">
+            <span class="log-time">--:--:--</span>
+            <span class="log-message">Listo para pruebas de rate limiting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Validación -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">✅ Validación</div>
+          <div class="status-indicator status-active">
+            <div class="status-dot"></div>
+            <span>Activo</span>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-value" id="valTotal">0</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--success);" id="valPassed">0</div>
+            <div class="stat-label">Válidos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--error);" id="valFailed">0</div>
+            <div class="stat-label">Inválidos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--warning);" id="valErrors">0</div>
+            <div class="stat-label">Errores</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn tooltip" onclick="testValidation('valid')">
+            Mensaje Válido
+            <span class="tooltiptext">Debería ser aceptado (200 OK)</span>
+          </button>
+          <button class="btn btn-warning tooltip" onclick="testValidation('missing_type')">
+            Sin Type
+            <span class="tooltiptext">Debería fallar - campo requerido</span>
+          </button>
+          <button class="btn btn-warning tooltip" onclick="testValidation('text_too_long')">
+            Texto Largo
+            <span class="tooltiptext">Debería fallar - máximo 16KB</span>
+          </button>
+          <button class="btn btn-warning tooltip" onclick="testValidation('invalid_channel')">
+            Channel Inválido
+            <span class="tooltiptext">Debería fallar - enum validation</span>
+          </button>
+          <button class="btn" onclick="resetValidationCounter()">Reset Contador</button>
+          <button class="btn btn-error" onclick="clearLog('valLog')">Limpiar Logs</button>
+        </div>
+
+        <div class="log-container" id="valLog">
+          <div class="log-actions">
+            <button class="icon-btn" onclick="copyLog('valLog')" title="Copiar logs">📋</button>
+          </div>
+          <div class="log-entry log-info">
+            <span class="log-time">--:--:--</span>
+            <span class="log-message">Listo para pruebas de validación</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna Derecha -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      <!-- Stress Test -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">⚡ Stress Test</div>
+          <div class="status-indicator status-inactive" id="stressStatus">
+            <div class="status-dot"></div>
+            <span>Inactivo</span>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-value" id="stressSent">0</div>
+            <div class="stat-label">Enviados</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--success);" id="stressSuccess">0</div>
+            <div class="stat-label">Éxitos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--error);" id="stressBlocked">0</div>
+            <div class="stat-label">Bloqueados</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" style="color: var(--warning);" id="stressInvalid">0</div>
+            <div class="stat-label">Inválidos</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn-success" id="stressBtn" onclick="toggleStressTest()">▶ Iniciar Test</button>
+          <button class="btn" onclick="resetStressCounter()">Reset Contador</button>
+          <button class="btn btn-error" onclick="clearLog('stressLog')">Limpiar Logs</button>
+        </div>
+
+        <div class="log-container" id="stressLog">
+          <div class="log-actions">
+            <button class="icon-btn" onclick="copyLog('stressLog')" title="Copiar logs">📋</button>
+          </div>
+          <div class="log-entry log-info">
+            <span class="log-time">--:--:--</span>
+            <span class="log-message">Stress test listo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- API & Circuit Breaker -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🔌 API & Circuit Breaker</div>
+          <div class="status-indicator status-active" id="circuitStatus">
+            <div class="status-dot"></div>
+            <span>CLOSED</span>
+          </div>
+        </div>
+
+        <div class="controls" style="grid-template-columns: 1fr;">
+          <button class="btn" onclick="getAPIInfo()">ℹ️ Info API</button>
+          <button class="btn" onclick="getMessages()">📋 Ver Mensajes</button>
+          <button class="btn btn-warning" onclick="simulateFailures()">🔌 Simular 5 Fallos</button>
+          <button class="btn" onclick="resetCircuit()">🔄 Reset Circuit</button>
+          <button class="btn btn-error" onclick="clearLog('apiLog')">Limpiar Logs</button>
+        </div>
+
+        <div class="log-container" id="apiLog">
+          <div class="log-actions">
+            <button class="icon-btn" onclick="copyLog('apiLog')" title="Copiar logs">📋</button>
+          </div>
+          <div class="log-entry log-info">
+            <span class="log-time">--:--:--</span>
+            <span class="log-message">API info y circuit breaker listos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+    let stressTestInterval = null;
+    let fetchErrorCount = 0;
+
+    // Estado global
+    const state = {
+      rate: { total: 0, success: 0, blocked: 0, errors: 0 },
+      validation: { total: 0, passed: 0, failed: 0, errors: 0 },
+      stress: { sent: 0, success: 0, blocked: 0, invalid: 0 },
+      circuit: 'CLOSED'
+    };
+
+    // Hard refresh handler
+    function performHardRefresh() {
+      // Clear all caches
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      // Force reload from server
+      window.location.reload(true);
+    }
+
+    // Show refresh banner on fetch errors
+    function showRefreshBanner() {
+      const banner = document.getElementById('refreshBanner');
+      if (banner) {
+        banner.style.display = 'block';
+      }
+    }
+
+    // Enhanced fetch wrapper with error detection
+    async function safeFetch(url, options) {
+      try {
+        const response = await fetch(url, options);
+        fetchErrorCount = 0; // Reset on success
+        return response;
+      } catch (error) {
+        fetchErrorCount++;
+        if (fetchErrorCount >= 2) {
+          showRefreshBanner();
+        }
+        throw error;
+      }
+    }
+
+    // Utilidades
+    function addLog(containerId, message, type = 'info') {
+      const container = document.getElementById(containerId);
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      
+      const time = document.createElement('span');
+      time.className = 'log-time';
+      time.textContent = new Date().toLocaleTimeString();
+      
+      const msg = document.createElement('span');
+      msg.className = 'log-message';
+      msg.textContent = message;
+      
+      entry.appendChild(time);
+      entry.appendChild(msg);
+      container.appendChild(entry);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function clearLog(containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `
+        <div class="log-actions">
+          <button class="icon-btn" onclick="copyLog('${containerId}')" title="Copiar logs">📋</button>
+        </div>
+      `;
+      addLog(containerId, 'Logs limpiados', 'info');
+    }
+
+    function copyLog(containerId) {
+      const container = document.getElementById(containerId);
+      const entries = container.querySelectorAll('.log-entry');
+      let text = '';
+      
+      entries.forEach(entry => {
+        const time = entry.querySelector('.log-time').textContent;
+        const message = entry.querySelector('.log-message').textContent;
+        text += `[${time}] ${message}\n`;
+      });
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = container.querySelector('.icon-btn');
+        const original = btn.innerHTML;
+        btn.innerHTML = '✅';
+        setTimeout(() => btn.innerHTML = original, 2000);
+      });
+    }
+
+    function updateStats() {
+      // Rate limiting
+      document.getElementById('rateTotal').textContent = state.rate.total;
+      document.getElementById('rateSuccess').textContent = state.rate.success;
+      document.getElementById('rateBlocked').textContent = state.rate.blocked;
+      document.getElementById('rateErrors').textContent = state.rate.errors;
+
+      // Validación
+      document.getElementById('valTotal').textContent = state.validation.total;
+      document.getElementById('valPassed').textContent = state.validation.passed;
+      document.getElementById('valFailed').textContent = state.validation.failed;
+      document.getElementById('valErrors').textContent = state.validation.errors;
+
+      // Stress test
+      document.getElementById('stressSent').textContent = state.stress.sent;
+      document.getElementById('stressSuccess').textContent = state.stress.success;
+      document.getElementById('stressBlocked').textContent = state.stress.blocked;
+      document.getElementById('stressInvalid').textContent = state.stress.invalid;
+    }
+
+    function updateRateLimitHeaders(headers) {
+      document.getElementById('headerLimit').textContent = headers.get('x-ratelimit-limit') || '-';
+      document.getElementById('headerRemaining').textContent = headers.get('x-ratelimit-remaining') || '-';
+      
+      const reset = headers.get('x-ratelimit-reset');
+      if (reset) {
+        const resetDate = new Date(parseInt(reset) * 1000);
+        document.getElementById('headerReset').textContent = resetDate.toLocaleTimeString();
+      } else {
+        document.getElementById('headerReset').textContent = '-';
+      }
+    }
+
+    // Rate Limiting
+    async function sendSingleRequest() {
+      try {
+        state.rate.total++;
+
+        const response = await safeFetch(`${API_URL}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': 'test-user'
+          },
+          body: JSON.stringify({
+            type: 'incoming',
+            channel: 'whatsapp',
+            content: { text: 'Test rate limiting' },
+            metadata: {
+              from: '+1234567890',
+              to: '+0987654321',
+              timestamp: new Date().toISOString()
+            }
+          })
+        });
+
+        updateRateLimitHeaders(response.headers);
+
+        if (response.status === 429) {
+          state.rate.blocked++;
+          addLog('rateLog', '🚫 Rate limit excedido', 'error');
+        } else if (response.ok) {
+          state.rate.success++;
+          addLog('rateLog', `✅ Request exitoso (${state.rate.success}/12)`, 'success');
+        } else {
+          state.rate.errors++;
+          addLog('rateLog', `⚠️ Error: ${response.status}`, 'warning');
+        }
+      } catch (error) {
+        state.rate.errors++;
+        addLog('rateLog', `💥 Error de red: ${error.message}`, 'error');
+      }
+      
+      updateStats();
+    }
+
+    async function sendBurstRequests() {
+      addLog('rateLog', '🧪 Enviando 15 requests rápidos...', 'warning');
+
+      for (let i = 0; i < 15; i++) {
+        setTimeout(async () => {
+          try {
+            state.rate.total++;
+
+            const response = await safeFetch(`${API_URL}/messages`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': 'burst-test-user'
+              },
+              body: JSON.stringify({
+                type: 'incoming',
+                channel: 'whatsapp',
+                content: { text: `Burst test ${i}` },
+                metadata: {
+                  from: '+1234567890',
+                  to: '+0987654321',
+                  timestamp: new Date().toISOString()
+                }
+              })
+            });
+
+            if (response.status === 429) {
+              state.rate.blocked++;
+              addLog('rateLog', `🚫 Request ${i+1} bloqueado`, 'error');
+            } else if (response.ok) {
+              state.rate.success++;
+              addLog('rateLog', `✅ Request ${i+1} exitoso`, 'success');
+            }
+          } catch (error) {
+            state.rate.errors++;
+            addLog('rateLog', `💥 Request ${i+1} error`, 'error');
+          }
+          
+          updateStats();
+          updateRateLimitHeaders(response.headers);
+        }, i * 100);
+      }
+    }
+
+    function resetRateCounter() {
+      state.rate = { total: 0, success: 0, blocked: 0, errors: 0 };
+      updateStats();
+      addLog('rateLog', '🔄 Contador de rate limiting reseteado', 'info');
+    }
+
+    // Validación
+    function getTestMessage(testType) {
+      const base = {
+        type: 'incoming',
+        channel: 'whatsapp',
+        content: { text: 'Mensaje de prueba válido' },
+        metadata: {
+          from: '+1234567890',
+          to: '+0987654321',
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      switch (testType) {
+        case 'missing_type':
+          delete base.type;
+          return base;
+        case 'text_too_long':
+          base.content.text = 'A'.repeat(17000);
+          return base;
+        case 'invalid_channel':
+          base.channel = 'invalid-channel';
+          return base;
+        case 'missing_metadata':
+          delete base.metadata;
+          return base;
+        default:
+          return base;
+      }
+    }
+
+    async function testValidation(testType) {
+      const message = getTestMessage(testType);
+      state.validation.total++;
+
+      try {
+        const response = await safeFetch(`${API_URL}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': 'validation-test'
+          },
+          body: JSON.stringify(message)
+        });
+
+        if (response.status === 400) {
+          state.validation.failed++;
+          addLog('valLog', `❌ Validación falló (esperado): ${testType}`, 'error');
+        } else if (response.ok) {
+          if (testType === 'valid') {
+            state.validation.passed++;
+            addLog('valLog', '✅ Mensaje válido aceptado', 'success');
+          } else {
+            state.validation.errors++;
+            addLog('valLog', `⚠️ Mensaje inválido fue aceptado: ${testType}`, 'warning');
+          }
+        }
+      } catch (error) {
+        state.validation.errors++;
+        addLog('valLog', `💥 Error: ${error.message}`, 'error');
+      }
+
+      updateStats();
+    }
+
+    function resetValidationCounter() {
+      state.validation = { total: 0, passed: 0, failed: 0, errors: 0 };
+      updateStats();
+      addLog('valLog', '🔄 Contador de validación reseteado', 'info');
+    }
+
+    // Stress Test
+    async function sendStressMessage() {
+      const message = {
+        type: 'incoming',
+        channel: ['whatsapp', 'telegram', 'sms'][Math.floor(Math.random() * 3)],
+        content: { text: `Stress test ${Date.now()}` },
+        metadata: {
+          from: '+1111111111',
+          to: '+9999999999',
+          timestamp: new Date().toISOString()
+        }
+      };
+
+      state.stress.sent++;
+
+      try {
+        const response = await safeFetch(`${API_URL}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-Id': 'stress-test'
+          },
+          body: JSON.stringify(message)
+        });
+
+        if (response.status === 429) {
+          state.stress.blocked++;
+        } else if (response.status === 400) {
+          state.stress.invalid++;
+        } else if (response.ok) {
+          state.stress.success++;
+        }
+      } catch (error) {
+        // Error silencioso en stress test
+      }
+
+      updateStats();
+    }
+
+    function toggleStressTest() {
+      const btn = document.getElementById('stressBtn');
+      const status = document.getElementById('stressStatus');
+
+      if (stressTestInterval) {
+        clearInterval(stressTestInterval);
+        stressTestInterval = null;
+        btn.textContent = '▶ Iniciar Test';
+        status.className = 'status-indicator status-inactive';
+        status.querySelector('span').textContent = 'Inactivo';
+        addLog('stressLog', '⏹️ Stress test detenido', 'info');
+      } else {
+        stressTestInterval = setInterval(sendStressMessage, 200); // 5 RPS
+        btn.textContent = '⏸️ Detener Test';
+        status.className = 'status-indicator status-warning';
+        status.querySelector('span').textContent = 'Ejecutando';
+        addLog('stressLog', '⚡ Stress test iniciado (5 RPS)', 'warning');
+      }
+    }
+
+    function resetStressCounter() {
+      state.stress = { sent: 0, success: 0, blocked: 0, invalid: 0 };
+      updateStats();
+      addLog('stressLog', '🔄 Contador de stress test reseteado', 'info');
+    }
+
+    // API & Circuit Breaker
+    async function getAPIInfo() {
+      try {
+        const response = await safeFetch(`${API_URL}/health`);
+        const data = await response.json();
+        addLog('apiLog', `🏥 Health: ${JSON.stringify(data, null, 2)}`, 'success');
+      } catch (error) {
+        addLog('apiLog', `💥 Error: ${error.message}`, 'error');
+      }
+    }
+
+    async function getMessages() {
+      try {
+        const response = await safeFetch(`${API_URL}/messages?limit=3`);
+        const data = await response.json();
+        addLog('apiLog', `📨 Mensajes: ${JSON.stringify(data, null, 2)}`, 'success');
+      } catch (error) {
+        addLog('apiLog', `💥 Error: ${error.message}`, 'error');
+      }
+    }
+
+    function simulateFailures() {
+      state.circuit = 'OPEN';
+      const status = document.getElementById('circuitStatus');
+      status.className = 'status-indicator status-inactive';
+      status.querySelector('span').textContent = 'OPEN';
+      addLog('apiLog', '🔌 Circuit breaker: 5 fallos simulados → OPEN', 'error');
+    }
+
+    function resetCircuit() {
+      state.circuit = 'CLOSED';
+      const status = document.getElementById('circuitStatus');
+      status.className = 'status-indicator status-active';
+      status.querySelector('span').textContent = 'CLOSED';
+      addLog('apiLog', '🔄 Circuit breaker reseteado → CLOSED', 'info');
+    }
+
+    // Tutorial y navegación
+    let currentStep = 0;
+    const totalSteps = 6;
+    let completedSteps = new Set();
+
+    function highlightStep(stepNum) {
+      currentStep = stepNum;
+      document.querySelectorAll('.test-step').forEach((step, index) => {
+        step.classList.remove('active');
+        if (index + 1 === stepNum) {
+          step.classList.add('active');
+        }
+      });
+    }
+
+    function markStepCompleted(stepNum) {
+      completedSteps.add(stepNum);
+      const step = document.getElementById(`step${stepNum}`);
+      if (step) {
+        step.classList.add('completed');
+        step.classList.remove('active');
+      }
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const progress = (completedSteps.size / totalSteps) * 100;
+      document.getElementById('progressFill').style.width = `${progress}%`;
+    }
+
+    async function runQuickTest() {
+      addLog('apiLog', '🚀 Iniciando test completo automatizado...', 'warning');
+      highlightStep(1);
+
+      // Step 1: Health check
+      await getAPIInfo();
+      await new Promise(r => setTimeout(r, 1000));
+      markStepCompleted(1);
+
+      // Step 2: Rate limiting
+      highlightStep(2);
+      await sendBurstRequests();
+      await new Promise(r => setTimeout(r, 3000));
+      markStepCompleted(2);
+
+      // Step 3: Validation
+      highlightStep(3);
+      await runValidationTests();
+      await new Promise(r => setTimeout(r, 2000));
+      markStepCompleted(3);
+
+      // Step 4: Headers
+      highlightStep(4);
+      await sendSingleRequest();
+      await new Promise(r => setTimeout(r, 1000));
+      markStepCompleted(4);
+
+      addLog('apiLog', '✅ Test completo finalizado - Revisa los resultados', 'success');
+      markStepCompleted(5);
+
+      setTimeout(() => {
+        highlightStep(6);
+        showSummary();
+      }, 1000);
+    }
+
+    async function runValidationTests() {
+      addLog('valLog', '🧪 Ejecutando suite de validación...', 'info');
+
+      await testValidation('valid');
+      await new Promise(r => setTimeout(r, 300));
+
+      await testValidation('missing_type');
+      await new Promise(r => setTimeout(r, 300));
+
+      await testValidation('text_too_long');
+      await new Promise(r => setTimeout(r, 300));
+
+      await testValidation('invalid_channel');
+
+      addLog('valLog', '✅ Suite de validación completada', 'success');
+    }
+
+    function showSummary() {
+      const summary = `
+📊 RESUMEN DE PRUEBAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Rate Limiting:
+  ✓ Total: ${state.rate.total}
+  ✓ Éxitos: ${state.rate.success}
+  ✓ Bloqueados: ${state.rate.blocked}
+  ${state.rate.blocked >= 3 ? '✅ Rate limiting funcionando' : '⚠️ Verificar rate limiting'}
+
+Validación:
+  ✓ Total: ${state.validation.total}
+  ✓ Válidos: ${state.validation.passed}
+  ✓ Inválidos: ${state.validation.failed}
+  ${state.validation.failed >= 2 ? '✅ Validación funcionando' : '⚠️ Verificar validación'}
+
+Stress Test:
+  ✓ Enviados: ${state.stress.sent}
+  ✓ Éxitos: ${state.stress.success}
+  ✓ Bloqueados: ${state.stress.blocked}
+
+Estado General:
+  ${completedSteps.size === totalSteps ? '✅ TODAS LAS PRUEBAS COMPLETADAS' : `⏳ ${completedSteps.size}/${totalSteps} pasos completados`}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+      `;
+
+      addLog('apiLog', summary, 'info');
+    }
+
+    // Inicialización
+    updateStats();
+    addLog('rateLog', '🚦 Rate limiting listo - Haz clic en "Enviar 15 Requests" para probar', 'info');
+    addLog('valLog', '✅ Validación lista - Prueba diferentes tipos de mensajes', 'info');
+    addLog('stressLog', '⚡ Stress test listo - Inicia para probar carga continua', 'info');
+    addLog('apiLog', '🔌 API lista - Haz clic en "Info API" para verificar el servidor', 'info');
+
+    // Highlight first step
+    highlightStep(1);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+Shift+R - Hard refresh
+      if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+        e.preventDefault();
+        performHardRefresh();
+      }
+    });
+
+    // Auto-test connectivity on load
+    setTimeout(async () => {
+      try {
+        addLog('apiLog', '🔍 Verificando conectividad con el servidor...', 'info');
+        const response = await safeFetch(`${API_URL}/health`);
+        if (response.ok) {
+          addLog('apiLog', '✅ Servidor conectado y funcionando correctamente', 'success');
+        } else {
+          addLog('apiLog', `⚠️ Servidor respondió con status ${response.status}`, 'warning');
+          showRefreshBanner();
+        }
+      } catch (error) {
+        addLog('apiLog', `❌ No se pudo conectar al servidor: ${error.message}`, 'error');
+        showRefreshBanner();
+      }
+    }, 500);
+  </script>
+</body>
+</html>
