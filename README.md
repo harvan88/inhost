@@ -117,9 +117,14 @@ bun scripts/test-websocket.js
 - [Sprint 3 Report](docs/sprints/sprint3-report.md) - WebSocket Real-time (COMPLETED)
 - [Sprint 2 Report](docs/sprints/sprint2-report.md) - Protection & Security (COMPLETED)
 
-### Architecture & Planning
-- [docs/architecture/plan-modular.md](docs/architecture/plan-modular.md) - Modular development plan
-- [docs/architecture/frontend-strategy.md](docs/architecture/frontend-strategy.md) - Frontend strategy
+### Planning
+- [Sprint 4 Planning](docs/sprints/sprint4-planning.md) - Persistencia (Redis + PostgreSQL) - NEXT
+- [Session Summary 2025-11-16](SESSION-SUMMARY-2025-11-16.md) - Sprint 3 completion
+
+### Architecture & Design
+- [Frontend/Backend Separation](docs/architecture/frontend-backend-separation.md) - Architectural principles
+- [Modular Development Plan](docs/architecture/plan-modular.md) - Interface-based architecture
+- [Frontend Strategy](docs/architecture/frontend-strategy.md) - Frontend approach
 
 ### Testing Guides
 - [docs/guides/sprint1-testing.md](docs/guides/sprint1-testing.md) - MessageCore testing
