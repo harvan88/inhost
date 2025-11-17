@@ -10,7 +10,8 @@
   "dependencies": {
     "@elysiajs/cors": "^1.4.0",
     "@inhost/shared": "workspace:*",
-    "elysia": "^1.2.0"
+    "elysia": "^1.2.0",
+    "ioredis": "^5.8.2"
   },
   "devDependencies": {
     "@types/bun": "latest"

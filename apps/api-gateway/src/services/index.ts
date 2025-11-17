@@ -25,8 +25,10 @@ import {
   SimplePlanResolver,
   ConnectionOwnerChecker
 } from '../implementations/v1';
+import { RedisRateLimiter } from '../implementations/v2';
 import { MessageCore } from '../core/MessageCore';
 import { logger } from '../middleware/logger';
+import { shouldUseRedis, checkRedisConnection } from '../config/redis';
 
 /**
  * Adapter Manager - Gestión centralizada de adaptadores
@@ -34,9 +36,12 @@ import { logger } from '../middleware/logger';
 export const adapterManager = new AdapterManager();
 
 /**
- * Rate Limiter V1 - Control de tasa en memoria
+ * Rate Limiter - Control de tasa
+ * V1 (memory) o V2 (Redis) según RATE_LIMIT_BACKEND env var
  */
-export const rateLimiter = new MemoryRateLimiter();
+export const rateLimiter = shouldUseRedis()
+  ? new RedisRateLimiter()
+  : new MemoryRateLimiter();
 
 /**
  * Message Queue V1 - Cola en memoria
@@ -85,6 +90,18 @@ export const messageCore = new MessageCore(
 export async function initializeServices(): Promise<void> {
   logger.info('🔧 Initializing services...');
 
+  // 0. Verificar Redis si está configurado
+  const usingRedis = shouldUseRedis();
+  if (usingRedis) {
+    logger.info('🔴 Redis backend configured - checking connection...');
+    const redisOk = await checkRedisConnection();
+    if (!redisOk) {
+      logger.error('❌ Redis connection failed - rate limiter will fallback to allow mode');
+    } else {
+      logger.info('✅ Redis connection successful');
+    }
+  }
+
   // 1. Registrar adaptadores simulados
   const whatsapp = new SimulatedWhatsAppAdapter();
   const telegram = new SimulatedTelegramAdapter();
@@ -111,7 +128,7 @@ export async function initializeServices(): Promise<void> {
 
   logger.info('✅ Services initialized successfully', {
     adapters: ['whatsapp', 'telegram', 'sms'],
-    rateLimiter: 'MemoryRateLimiter (V1)',
+    rateLimiter: usingRedis ? 'RedisRateLimiter (V2)' : 'MemoryRateLimiter (V1)',
     queue: 'MemoryQueue (V1)',
     validator: 'SimpleValidator (V1)',
     persistence: 'MemoryPersistence (V1)',
