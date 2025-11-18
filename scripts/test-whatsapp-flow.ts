@@ -252,6 +252,38 @@ async function toggleExtension(extensionId: string): Promise<boolean> {
   }
 }
 
+// Conectar/desconectar un cliente
+async function toggleClient(clientId: string): Promise<boolean> {
+  try {
+    logInfo(`Conectando cliente: ${clientId}`);
+
+    const response = await fetch(`${API_BASE}/simulate/client-toggle`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      logSuccess(`Cliente ${clientId} → ${result.data.connected ? 'CONECTADO' : 'DESCONECTADO'}`);
+      return result.data.connected;
+    } else {
+      throw new Error(result.error?.message || 'Unknown error');
+    }
+  } catch (error) {
+    logError(`Error conectando cliente ${clientId}`, {
+      error: error instanceof Error ? error.message : 'Unknown'
+    });
+    testState.errors.push(`Failed to toggle client: ${clientId}`);
+    return false;
+  }
+}
+
 // Obtener estado del sistema
 async function getSimulationStatus() {
   try {
@@ -412,16 +444,21 @@ async function main() {
     await toggleExtension('crm');
     await wait(1000); // Esperar a recibir notificaciones de toggle
 
-    // Paso 4: Enviar mensaje de WhatsApp
-    console.log(colors.bright + '\n📍 PASO 4: Enviar mensaje de WhatsApp' + colors.reset);
+    // Paso 4: Conectar cliente WhatsApp
+    console.log(colors.bright + '\n📍 PASO 4: Conectar cliente WhatsApp' + colors.reset);
+    await toggleClient('whatsapp');
+    await wait(500);
+
+    // Paso 5: Enviar mensaje de WhatsApp
+    console.log(colors.bright + '\n📍 PASO 5: Enviar mensaje de WhatsApp' + colors.reset);
     await sendWhatsAppMessage('Hola! Necesito ayuda con mi pedido #1234');
 
-    // Paso 5: Esperar respuestas
-    console.log(colors.bright + '\n📍 PASO 5: Esperando respuestas de extensiones...' + colors.reset);
+    // Paso 6: Esperar respuestas
+    console.log(colors.bright + '\n📍 PASO 6: Esperando respuestas de extensiones...' + colors.reset);
     await wait(5000); // Esperar 5 segundos para recibir todas las respuestas
 
-    // Paso 6: Verificar estado final
-    console.log(colors.bright + '\n📍 PASO 6: Verificar estado final' + colors.reset);
+    // Paso 7: Verificar estado final
+    console.log(colors.bright + '\n📍 PASO 7: Verificar estado final' + colors.reset);
     await getSimulationStatus();
 
     // Cerrar WebSocket
