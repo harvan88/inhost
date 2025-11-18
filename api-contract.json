@@ -6,7 +6,7 @@
     "development": "http://localhost:3000",
     "production": "https://api.inhost.com"
   },
-  "websocket": {
+  "websocketURL": {
     "development": "ws://localhost:3000/realtime",
     "production": "wss://api.inhost.com/realtime"
   },
