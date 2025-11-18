@@ -76,7 +76,9 @@ export function validateWebSocketMessage(message: unknown): {
 
       logger.warn('WebSocket message validation failed', {
         errors,
-        message: data
+        messageType: typeof data,
+        messageKeys: data && typeof data === 'object' ? Object.keys(data) : [],
+        messagePreview: JSON.stringify(data).substring(0, 200)
       });
 
       return { valid: false, errors };
