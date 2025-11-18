@@ -1,13 +1,15 @@
 #!/usr/bin/env bun
 /**
- * Test WhatsApp Flow - Simulación Completa
+ * Test WhatsApp Flow - Simulación Completa con Agrupación de Conversaciones
  *
- * Este script simula todo el flujo de un mensaje desde WhatsApp:
+ * Este script simula todo el flujo de mensajes desde WhatsApp:
  * 1. Conecta al WebSocket /realtime
  * 2. Activa extensiones (echo, ai, crm)
- * 3. Envía mensaje de WhatsApp
- * 4. Escucha notificaciones en tiempo real
- * 5. Muestra estado de entrega
+ * 3. Conecta cliente WhatsApp
+ * 4. Envía MÚLTIPLES mensajes
+ * 5. Verifica que se agrupen en la MISMA conversación
+ * 6. Escucha notificaciones en tiempo real
+ * 7. Muestra conversationId para verificar agrupación
  *
  * Uso:
  *   bun scripts/test-whatsapp-flow.ts
@@ -70,7 +72,8 @@ const testState = {
   messageReceived: false,
   extensionResponses: [] as string[],
   notifications: [] as any[],
-  errors: [] as string[]
+  errors: [] as string[],
+  conversationIds: new Set<string>()
 };
 
 // Conectar al WebSocket
@@ -139,8 +142,15 @@ function handleWebSocketMessage(data: any) {
 
     case 'message:new':
       const envelope = data.data;
+
+      // Rastrear conversationId
+      if (envelope.conversationId) {
+        testState.conversationIds.add(envelope.conversationId);
+      }
+
       logMessage(`Nuevo mensaje: ${envelope.type}`, {
         id: envelope.id,
+        conversationId: envelope.conversationId,
         type: envelope.type,
         channel: envelope.channel,
         from: envelope.metadata.from,
@@ -383,6 +393,7 @@ function showSummary() {
   console.log(`  Mensaje Enviado: ${testState.messageSent ? colors.green + '✓' : colors.red + '✗'} ${colors.reset}`);
   console.log(`  Mensaje Recibido: ${testState.messageReceived ? colors.green + '✓' : colors.red + '✗'} ${colors.reset}`);
   console.log(`  Respuestas de Extensiones: ${testState.extensionResponses.length} ${colors.dim}(${testState.extensionResponses.join(', ')})${colors.reset}`);
+  console.log(`  Conversaciones Únicas: ${colors.cyan}${testState.conversationIds.size}${colors.reset} ${colors.dim}(${Array.from(testState.conversationIds).join(', ')})${colors.reset}`);
 
   console.log('\n' + colors.bright + 'Notificaciones Recibidas:' + colors.reset);
   const notificationTypes = testState.notifications.reduce((acc, n) => {
@@ -421,8 +432,8 @@ function showSummary() {
 
 // Función principal
 async function main() {
-  console.log('\n' + colors.bright + colors.cyan + '🚀 INICIANDO SIMULACIÓN DE WHATSAPP' + colors.reset);
-  console.log(colors.dim + 'Simulando flujo completo: envío → procesamiento → respuestas → notificaciones\n' + colors.reset);
+  console.log('\n' + colors.bright + colors.cyan + '🚀 INICIANDO SIMULACIÓN DE WHATSAPP (MULTI-MENSAJE)' + colors.reset);
+  console.log(colors.dim + 'Enviando 2 mensajes - Verificando agrupación en MISMA conversación\n' + colors.reset);
 
   try {
     // Paso 1: Conectar WebSocket
@@ -449,16 +460,22 @@ async function main() {
     await toggleClient('whatsapp');
     await wait(500);
 
-    // Paso 5: Enviar mensaje de WhatsApp
-    console.log(colors.bright + '\n📍 PASO 5: Enviar mensaje de WhatsApp' + colors.reset);
-    await sendWhatsAppMessage('Hola! Necesito ayuda con mi pedido #1234');
+    // Paso 5: Enviar primer mensaje de WhatsApp
+    console.log(colors.bright + '\n📍 PASO 5: Enviar primer mensaje de WhatsApp' + colors.reset);
+    const firstMessage = await sendWhatsAppMessage('Hola! Necesito ayuda con mi pedido #1234');
+    await wait(2000); // Esperar respuestas del primer mensaje
 
-    // Paso 6: Esperar respuestas
-    console.log(colors.bright + '\n📍 PASO 6: Esperando respuestas de extensiones...' + colors.reset);
-    await wait(5000); // Esperar 5 segundos para recibir todas las respuestas
+    // Paso 6: Enviar segundo mensaje (misma conversación)
+    console.log(colors.bright + '\n📍 PASO 6: Enviar segundo mensaje (misma conversación)' + colors.reset);
+    const secondMessage = await sendWhatsAppMessage('¿Cuánto tiempo tarda el envío?');
+    await wait(2000); // Esperar respuestas del segundo mensaje
 
-    // Paso 7: Verificar estado final
-    console.log(colors.bright + '\n📍 PASO 7: Verificar estado final' + colors.reset);
+    // Paso 7: Esperar que todas las respuestas se procesen
+    console.log(colors.bright + '\n📍 PASO 7: Esperando todas las respuestas...' + colors.reset);
+    await wait(3000);
+
+    // Paso 8: Verificar estado final
+    console.log(colors.bright + '\n📍 PASO 8: Verificar estado final' + colors.reset);
     await getSimulationStatus();
 
     // Cerrar WebSocket

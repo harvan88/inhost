@@ -68,10 +68,15 @@ export const simulatedClients: Record<string, SimulatedClient> = {
 
 /**
  * Crea un MessageEnvelope desde un cliente simulado
+ *
+ * @param clientId - ID del cliente simulado
+ * @param text - Texto del mensaje
+ * @param conversationId - (Opcional) ID de conversación. Si no se provee, se genera basado en from+to
  */
 export function createClientMessage(
   clientId: string,
-  text: string
+  text: string,
+  conversationId?: string
 ): MessageEnvelope {
   const client = simulatedClients[clientId];
 
@@ -83,9 +88,15 @@ export function createClientMessage(
     throw new Error(`Cliente no conectado: ${clientId}`);
   }
 
+  // Generar conversationId basado en participantes (from + to)
+  // Esto agrupa todos los mensajes entre los mismos participantes
+  const from = client.metadata.phone || client.metadata.username || 'unknown';
+  const to = 'inhost';
+  const defaultConversationId = `conv-${client.channel}-${from.replace(/\s+/g, '')}-${to}`;
+
   const envelope: MessageEnvelope = {
     id: crypto.randomUUID(),
-    conversationId: `conv-${client.channel}-${Date.now()}`,
+    conversationId: conversationId || defaultConversationId,
     type: MessageType.INCOMING as MessageType,
     channel: client.channel,
     content: {
@@ -93,8 +104,8 @@ export function createClientMessage(
       contentType: 'text'
     },
     metadata: {
-      from: client.metadata.phone || client.metadata.username || 'unknown',
-      to: 'inhost',
+      from,
+      to,
       timestamp: new Date().toISOString(),
       clientId: client.id,
       ...client.metadata
