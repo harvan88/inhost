@@ -11,6 +11,11 @@
  * 6. Escucha notificaciones en tiempo real
  * 7. Muestra conversationId para verificar agrupación
  *
+ * IMPORTANTE - Rate Limiting:
+ * - El script tiene delays largos (800-1500ms) entre peticiones para evitar rate limit
+ * - Si ejecutas el script múltiples veces seguidas, espera 60 segundos entre ejecuciones
+ * - Sin header X-User-Id, todas las peticiones cuentan como "anonymous" (límite: 12 req/min)
+ *
  * Uso:
  *   bun scripts/test-whatsapp-flow.ts
  */
@@ -444,21 +449,21 @@ async function main() {
     // Paso 2: Obtener estado inicial
     console.log(colors.bright + '\n📍 PASO 2: Obtener estado del sistema' + colors.reset);
     await getSimulationStatus();
-    await wait(500);
+    await wait(1000); // Delay para evitar rate limit
 
     // Paso 3: Activar extensiones
     console.log(colors.bright + '\n📍 PASO 3: Activar extensiones' + colors.reset);
     await toggleExtension('echo');
-    await wait(300);
+    await wait(800); // Delay para evitar rate limit
     await toggleExtension('ai');
-    await wait(300);
+    await wait(800); // Delay para evitar rate limit
     await toggleExtension('crm');
-    await wait(1000); // Esperar a recibir notificaciones de toggle
+    await wait(1500); // Esperar notificaciones + evitar rate limit
 
     // Paso 4: Conectar cliente WhatsApp
     console.log(colors.bright + '\n📍 PASO 4: Conectar cliente WhatsApp' + colors.reset);
     await toggleClient('whatsapp');
-    await wait(500);
+    await wait(1000); // Delay para evitar rate limit
 
     // Paso 5: Enviar primer mensaje de WhatsApp
     console.log(colors.bright + '\n📍 PASO 5: Enviar primer mensaje de WhatsApp' + colors.reset);
@@ -474,9 +479,9 @@ async function main() {
     console.log(colors.bright + '\n📍 PASO 7: Esperando todas las respuestas...' + colors.reset);
     await wait(3000);
 
-    // Paso 8: Verificar estado final
-    console.log(colors.bright + '\n📍 PASO 8: Verificar estado final' + colors.reset);
-    await getSimulationStatus();
+    // Paso 8: Verificación final (omitimos getStatus para evitar rate limit)
+    console.log(colors.bright + '\n📍 PASO 8: Finalizando test' + colors.reset);
+    logInfo(`Test completado. Conversaciones detectadas: ${testState.conversationIds.size}`);
 
     // Cerrar WebSocket
     logInfo('Cerrando conexión WebSocket...');
