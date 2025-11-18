@@ -12,14 +12,24 @@ import {
   getExtensionsStatus,
   setExtensionLatency
 } from '../simulators/extensions';
+import { messageCore } from '../services';
 
 /**
- * Rutas de Simulación
+ * Rutas de Simulación (Production-Ready)
  *
- * Endpoints para simular el flujo completo de mensajería:
- * - Mensajes entrantes de clientes
- * - Procesamiento por extensiones
- * - Respuestas simuladas
+ * Endpoints para simular el flujo completo de mensajería con persistencia real:
+ * - Mensajes entrantes de clientes → MessageCore.receive() → PostgreSQL + WebSocket
+ * - Procesamiento por extensiones → Respuestas simuladas
+ * - Respuestas de extensiones → MessageCore.send() → PostgreSQL + Adapter + WebSocket
+ *
+ * FLUJO COMPLETO:
+ * 1. POST /simulate/client-message → Crea mensaje del cliente
+ * 2. messageCore.receive() → Persiste + Notifica (message:new)
+ * 3. processMessageThroughExtensions() → Genera respuestas
+ * 4. messageCore.send() para cada respuesta → Persiste + Envía + Notifica
+ * 5. Broadcast eventos de control (message_processing, extension_response)
+ *
+ * Este sistema está listo para coordinarse con un chat real en producción.
  */
 
 // Variable para almacenar el WebSocket broadcast function (se inyectará desde websocket.ts)
@@ -34,7 +44,7 @@ export const simulationRoutes = new Elysia({ prefix: '/simulate' })
   .post(
     '/client-message',
     async ({ body }) => {
-      logger.info('Simulating client message', {
+      logger.info('🎬 Simulating client message', {
         clientId: body.clientId,
         text: body.text
       });
@@ -42,50 +52,83 @@ export const simulationRoutes = new Elysia({ prefix: '/simulate' })
       try {
         // 1. Crear mensaje del cliente
         const clientMessage = createClientMessage(body.clientId, body.text);
-
-        // Broadcast: mensaje recibido
-        broadcastToAll?.({
-          type: 'message_received',
-          data: clientMessage,
-          timestamp: new Date().toISOString()
-        });
-
         logger.debug('Client message created', { messageId: clientMessage.id });
 
-        // 2. Procesar a través de extensiones
-        const extensionResponses = await processMessageThroughExtensions(clientMessage);
-
-        // Broadcast: procesamiento completado
-        broadcastToAll?.({
-          type: 'message_processing',
-          extensionCount: extensionResponses.length,
-          timestamp: new Date().toISOString()
+        // 2. Recibir mensaje a través de MessageCore
+        // Esto automáticamente:
+        // - Persiste en PostgreSQL
+        // - Broadcast vía WebSocketNotification (message:new)
+        // - Actualiza estado a 'received'
+        await messageCore.receive(clientMessage);
+        logger.info('✅ Message received through MessageCore', {
+          messageId: clientMessage.id
         });
 
+        // 3. Procesar a través de extensiones
+        const extensionResponses = await processMessageThroughExtensions(clientMessage);
         logger.debug('Extensions processed', {
           count: extensionResponses.length
         });
 
-        // 3. Broadcast de cada respuesta de extensión
+        // Broadcast manual: procesamiento iniciado (evento de control)
+        broadcastToAll?.({
+          type: 'message_processing',
+          messageId: clientMessage.id,
+          extensionCount: extensionResponses.length,
+          timestamp: new Date().toISOString()
+        });
+
+        // 4. Enviar cada respuesta de extensión a través de MessageCore
+        // Esto automáticamente:
+        // - Persiste en PostgreSQL
+        // - Envía vía adapter
+        // - Broadcast vía WebSocketNotification
+        // - Actualiza estado a 'sent'
+        const sendResults = [];
         for (const response of extensionResponses) {
-          broadcastToAll?.({
-            type: 'extension_response',
-            data: response,
-            timestamp: new Date().toISOString()
+          const result = await messageCore.send(response);
+          sendResults.push(result);
+
+          logger.debug('Extension response sent through MessageCore', {
+            extensionId: response.metadata.extensionId,
+            success: result.success,
+            status: result.status
           });
 
-          logger.debug('Extension response broadcasted', {
-            extensionId: response.metadata.extensionId
+          // Broadcast manual: evento de control de extensión
+          broadcastToAll?.({
+            type: 'extension_response',
+            extensionId: response.metadata.extensionId,
+            messageId: response.id,
+            success: result.success,
+            timestamp: new Date().toISOString()
           });
         }
 
         return createSuccessResponse({
-          clientMessage,
-          extensionResponses,
-          processedCount: extensionResponses.length
+          clientMessage: {
+            id: clientMessage.id,
+            type: clientMessage.type,
+            channel: clientMessage.channel,
+            text: clientMessage.content.text,
+            persisted: true
+          },
+          extensionResponses: sendResults.map((result, i) => ({
+            extensionId: extensionResponses[i].metadata.extensionId,
+            messageId: result.messageId,
+            success: result.success,
+            status: result.status,
+            persisted: true
+          })),
+          processedCount: extensionResponses.length,
+          summary: {
+            clientMessagePersisted: true,
+            extensionResponsesSent: sendResults.filter(r => r.success).length,
+            totalExtensions: extensionResponses.length
+          }
         });
       } catch (error) {
-        logger.error('Error simulating client message', {
+        logger.error('❌ Error simulating client message', {
           error: error instanceof Error ? error.message : 'Unknown error'
         });
         throw error;
