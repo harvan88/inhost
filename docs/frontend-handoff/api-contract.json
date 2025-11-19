@@ -1,0 +1,394 @@
+{
+  "version": "1.0.0",
+  "name": "INHOST API Contract",
+  "description": "Contrato de integración entre frontend y backend - importa este archivo en tu frontend",
+  "baseURL": {
+    "development": "http://localhost:3000",
+    "production": "https://api.inhost.com"
+  },
+  "websocketURL": {
+    "development": "ws://localhost:3000/realtime",
+    "production": "wss://api.inhost.com/realtime"
+  },
+  "headers": {
+    "required": [
+      {
+        "name": "Content-Type",
+        "value": "application/json",
+        "description": "Requerido para POST/PUT/PATCH"
+      },
+      {
+        "name": "X-User-Id",
+        "value": "<userId>",
+        "description": "Requerido para rate limiting. Obtener del auth context o storage"
+      }
+    ],
+    "optional": [
+      {
+        "name": "Authorization",
+        "value": "Bearer <token>",
+        "description": "JWT token (futuro, no implementado aún)"
+      }
+    ]
+  },
+  "endpoints": {
+    "health": {
+      "method": "GET",
+      "path": "/health",
+      "description": "Verifica que el backend esté funcionando",
+      "headers": [],
+      "response": {
+        "success": true,
+        "data": {
+          "status": "healthy",
+          "database": "postgresql",
+          "timestamp": "2025-11-18T12:00:00Z",
+          "version": "1.0.0"
+        }
+      }
+    },
+    "sendMessage": {
+      "method": "POST",
+      "path": "/simulate/client-message",
+      "description": "Envía un mensaje desde el chat (cliente web)",
+      "headers": ["Content-Type", "X-User-Id"],
+      "body": {
+        "clientId": "web",
+        "text": "string"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "clientMessage": {
+            "id": "uuid",
+            "type": "incoming",
+            "channel": "web",
+            "text": "string",
+            "persisted": true
+          },
+          "extensionResponses": [
+            {
+              "extensionId": "echo|ai|crm",
+              "messageId": "uuid",
+              "success": true,
+              "status": "sent",
+              "persisted": true
+            }
+          ],
+          "processedCount": 2,
+          "summary": {
+            "clientMessagePersisted": true,
+            "extensionResponsesSent": 2,
+            "totalExtensions": 2
+          }
+        }
+      },
+      "errors": {
+        "429": {
+          "code": "RATE_LIMIT_EXCEEDED",
+          "message": "Rate limit exceeded",
+          "headers": {
+            "X-RateLimit-Limit": "12",
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Reset": "1700308800",
+            "Retry-After": "60"
+          }
+        },
+        "400": {
+          "code": "VALIDATION_ERROR",
+          "message": "Validation failed",
+          "details": "Field 'text' is required"
+        }
+      }
+    },
+    "getMessages": {
+      "method": "GET",
+      "path": "/messages",
+      "description": "Obtiene los últimos mensajes",
+      "headers": ["X-User-Id"],
+      "query": {
+        "limit": {
+          "type": "number",
+          "default": 10,
+          "max": 100
+        }
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "count": 10,
+          "messages": [
+            {
+              "id": "uuid",
+              "type": "incoming|outgoing",
+              "channel": "web|whatsapp|telegram|sms",
+              "content": {
+                "text": "string"
+              },
+              "metadata": {
+                "from": "string",
+                "to": "string",
+                "timestamp": "ISO8601"
+              },
+              "createdAt": "Date"
+            }
+          ],
+          "storage": "postgresql"
+        }
+      }
+    },
+    "toggleExtension": {
+      "method": "POST",
+      "path": "/simulate/extension-toggle",
+      "description": "Activa/desactiva una extensión (bot)",
+      "headers": ["Content-Type"],
+      "body": {
+        "extensionId": "echo|ai|crm"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "extensionId": "ai",
+          "active": true
+        }
+      }
+    },
+    "getSimulationStatus": {
+      "method": "GET",
+      "path": "/simulate/status",
+      "description": "Obtiene estado del sistema (extensiones, clientes)",
+      "headers": [],
+      "response": {
+        "success": true,
+        "data": {
+          "clients": [
+            {
+              "id": "web-sim",
+              "name": "Web Chat",
+              "icon": "🌐",
+              "channel": "web",
+              "connected": true
+            }
+          ],
+          "extensions": [
+            {
+              "id": "echo",
+              "name": "Echo Bot",
+              "icon": "📢",
+              "active": false,
+              "latency": 45,
+              "subscriptions": ["incoming"]
+            },
+            {
+              "id": "ai",
+              "name": "AI Assistant",
+              "icon": "🧠",
+              "active": true,
+              "latency": 120,
+              "subscriptions": ["incoming"]
+            },
+            {
+              "id": "crm",
+              "name": "CRM Sync",
+              "icon": "📊",
+              "active": false,
+              "latency": 200,
+              "subscriptions": ["incoming"]
+            }
+          ],
+          "stats": {
+            "activeExtensions": 1,
+            "connectedClients": 1,
+            "totalClients": 4,
+            "totalExtensions": 3
+          }
+        }
+      }
+    }
+  },
+  "websocket": {
+    "endpoint": "/realtime",
+    "protocol": "ws (desarrollo) | wss (producción)",
+    "messageTypes": {
+      "connection": {
+        "direction": "server → client",
+        "description": "Enviado al conectarse",
+        "payload": {
+          "type": "connection",
+          "status": "connected",
+          "timestamp": "ISO8601",
+          "clientId": "uuid"
+        }
+      },
+      "echo": {
+        "direction": "server → client",
+        "description": "Echo de cada mensaje enviado (desarrollo)",
+        "payload": {
+          "type": "echo",
+          "data": "any",
+          "timestamp": "ISO8601"
+        }
+      },
+      "message:new": {
+        "direction": "server → client",
+        "description": "Nuevo mensaje (incoming del cliente o outgoing de bot)",
+        "payload": {
+          "type": "message:new",
+          "data": {
+            "id": "uuid",
+            "conversationId": "uuid",
+            "type": "incoming|outgoing",
+            "channel": "web|whatsapp|telegram|sms",
+            "content": {
+              "text": "string",
+              "contentType": "text"
+            },
+            "metadata": {
+              "from": "string",
+              "to": "string",
+              "timestamp": "ISO8601",
+              "extensionId": "echo|ai|crm (si es respuesta de bot)"
+            },
+            "statusChain": [
+              {
+                "status": "received|sending|sent|delivered|read|failed",
+                "timestamp": "ISO8601",
+                "messageId": "uuid"
+              }
+            ]
+          },
+          "timestamp": "ISO8601"
+        }
+      },
+      "message:status": {
+        "direction": "server → client",
+        "description": "Cambio de estado de un mensaje",
+        "payload": {
+          "type": "message:status",
+          "data": {
+            "messageId": "uuid",
+            "status": "received|sending|sent|delivered|read|failed",
+            "timestamp": "ISO8601"
+          },
+          "timestamp": "ISO8601"
+        }
+      },
+      "typing:indicator": {
+        "direction": "server → client",
+        "description": "Alguien está escribiendo",
+        "payload": {
+          "type": "typing:indicator",
+          "data": {
+            "userId": "string",
+            "conversationId": "uuid",
+            "isTyping": true,
+            "timestamp": "ISO8601"
+          },
+          "timestamp": "ISO8601"
+        }
+      },
+      "message_processing": {
+        "direction": "server → client",
+        "description": "Evento de control: extensiones procesando",
+        "payload": {
+          "type": "message_processing",
+          "messageId": "uuid",
+          "extensionCount": 2,
+          "timestamp": "ISO8601"
+        }
+      },
+      "extension_response": {
+        "direction": "server → client",
+        "description": "Evento de control: extensión respondió",
+        "payload": {
+          "type": "extension_response",
+          "extensionId": "echo|ai|crm",
+          "messageId": "uuid",
+          "success": true,
+          "timestamp": "ISO8601"
+        }
+      },
+      "error": {
+        "direction": "server → client",
+        "description": "Error del servidor (rate limit, validación, etc.)",
+        "payload": {
+          "type": "error",
+          "code": "RATE_LIMIT_EXCEEDED|INVALID_MESSAGE|MESSAGE_TOO_LARGE",
+          "message": "string",
+          "retryAfter": 60,
+          "timestamp": "ISO8601"
+        }
+      }
+    }
+  },
+  "rateLimiting": {
+    "free": {
+      "messagesPerMinute": 12,
+      "windowMs": 60000
+    },
+    "premium": {
+      "messagesPerMinute": 30,
+      "windowMs": 60000
+    },
+    "headers": {
+      "X-RateLimit-Limit": "Límite máximo de requests",
+      "X-RateLimit-Remaining": "Requests restantes en la ventana actual",
+      "X-RateLimit-Reset": "Unix timestamp cuando se resetea el contador",
+      "Retry-After": "Segundos que debes esperar (solo si excediste el límite)"
+    }
+  },
+  "messageStatuses": {
+    "received": "Mensaje recibido por el servidor",
+    "processing": "Siendo procesado por extensiones",
+    "sending": "Enviándose vía adapter",
+    "sent": "Enviado exitosamente",
+    "delivered": "Entregado al destinatario",
+    "read": "Leído por el destinatario",
+    "failed": "Error en el envío"
+  },
+  "extensions": {
+    "echo": {
+      "id": "echo",
+      "name": "Echo Bot",
+      "icon": "📢",
+      "description": "Devuelve el mensaje con prefijo 'Echo: '",
+      "latency": "~45ms",
+      "subscriptions": ["incoming"]
+    },
+    "ai": {
+      "id": "ai",
+      "name": "AI Assistant",
+      "icon": "🧠",
+      "description": "Respuestas inteligentes basadas en keywords",
+      "latency": "~120ms",
+      "subscriptions": ["incoming"]
+    },
+    "crm": {
+      "id": "crm",
+      "name": "CRM Sync",
+      "icon": "📊",
+      "description": "Registra contacto en CRM simulado",
+      "latency": "~200ms",
+      "subscriptions": ["incoming"]
+    }
+  },
+  "cors": {
+    "enabled": true,
+    "development": {
+      "allowedOrigins": "*",
+      "credentials": true
+    },
+    "production": {
+      "allowedOrigins": ["https://app.inhost.com", "https://inhost.com"],
+      "credentials": true
+    },
+    "allowedMethods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    "allowedHeaders": ["Content-Type", "Authorization", "X-User-Id"],
+    "exposedHeaders": ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After"]
+  },
+  "testing": {
+    "healthCheck": "curl http://localhost:3000/health",
+    "sendMessage": "curl -X POST http://localhost:3000/simulate/client-message -H 'Content-Type: application/json' -H 'X-User-Id: test-user' -d '{\"clientId\":\"web\",\"text\":\"Hola\"}'",
+    "integrationTest": "bun test:whatsapp"
+  }
+}
