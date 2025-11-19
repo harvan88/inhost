@@ -27,9 +27,16 @@
       {
         "name": "Authorization",
         "value": "Bearer <token>",
-        "description": "JWT token (futuro, no implementado aún)"
+        "description": "JWT token - REQUERIDO para endpoints /admin/*"
       }
     ]
+  },
+  "authentication": {
+    "type": "JWT",
+    "header": "Authorization: Bearer <token>",
+    "tokenExpiry": "7 days",
+    "refreshTokenExpiry": "30 days",
+    "description": "Autenticación JWT implementada para endpoints admin"
   },
   "endpoints": {
     "health": {
@@ -202,6 +209,462 @@
             "totalClients": 4,
             "totalExtensions": 3
           }
+        }
+      }
+    }
+  },
+  "adminEndpoints": {
+    "auth": {
+      "signup": {
+        "method": "POST",
+        "path": "/admin/auth/signup",
+        "description": "Crear nueva cuenta de tenant con usuario owner",
+        "headers": ["Content-Type"],
+        "body": {
+          "companyName": "string (2-255 chars)",
+          "name": "string (2-255 chars)",
+          "email": "string (email format)",
+          "password": "string (min 8 chars, uppercase, lowercase, number)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "uuid",
+              "email": "user@example.com",
+              "name": "John Doe",
+              "role": "owner",
+              "tenantId": "uuid",
+              "tenantName": "My Company",
+              "tenantSlug": "my-company"
+            },
+            "tokens": {
+              "accessToken": "jwt-token",
+              "refreshToken": "jwt-refresh-token",
+              "expiresIn": 604800
+            }
+          }
+        },
+        "errors": {
+          "409": "EMAIL_EXISTS or TENANT_EXISTS",
+          "422": "VALIDATION_ERROR - weak password"
+        }
+      },
+      "login": {
+        "method": "POST",
+        "path": "/admin/auth/login",
+        "description": "Autenticarse con email y contraseña",
+        "headers": ["Content-Type"],
+        "body": {
+          "email": "string (email format)",
+          "password": "string"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "uuid",
+              "email": "user@example.com",
+              "name": "John Doe",
+              "role": "owner|admin|agent|viewer",
+              "tenantId": "uuid",
+              "tenantName": "My Company",
+              "tenantSlug": "my-company"
+            },
+            "tokens": {
+              "accessToken": "jwt-token",
+              "refreshToken": "jwt-refresh-token",
+              "expiresIn": 604800
+            }
+          }
+        },
+        "errors": {
+          "401": "INVALID_CREDENTIALS",
+          "403": "ACCOUNT_DISABLED"
+        }
+      },
+      "me": {
+        "method": "GET",
+        "path": "/admin/auth/me",
+        "description": "Obtener información del usuario autenticado",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "email": "user@example.com",
+            "name": "John Doe",
+            "role": "owner|admin|agent|viewer",
+            "isActive": true,
+            "lastLoginAt": "ISO8601",
+            "createdAt": "ISO8601",
+            "tenant": {
+              "id": "uuid",
+              "name": "My Company",
+              "slug": "my-company",
+              "plan": "starter|professional|enterprise",
+              "subscriptionStatus": "trialing|active|cancelled",
+              "trialEndsAt": "ISO8601"
+            }
+          }
+        },
+        "errors": {
+          "401": "UNAUTHORIZED or INVALID_TOKEN"
+        }
+      }
+    },
+    "tenant": {
+      "get": {
+        "method": "GET",
+        "path": "/admin/tenant",
+        "description": "Obtener información del tenant actual",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "name": "My Company",
+            "slug": "my-company",
+            "plan": "starter|professional|enterprise",
+            "settings": {},
+            "subscriptionStatus": "trialing|active|cancelled",
+            "trialEndsAt": "ISO8601",
+            "createdAt": "ISO8601"
+          }
+        }
+      },
+      "update": {
+        "method": "PATCH",
+        "path": "/admin/tenant",
+        "description": "Actualizar tenant (owner/admin only)",
+        "headers": ["Authorization", "Content-Type"],
+        "requiredRoles": ["owner", "admin"],
+        "body": {
+          "name": "string (optional)",
+          "settings": "object (optional)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "name": "Updated Company Name",
+            "settings": {},
+            "updatedAt": "ISO8601"
+          }
+        }
+      },
+      "stats": {
+        "method": "GET",
+        "path": "/admin/tenant/stats",
+        "description": "Obtener estadísticas del tenant",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "conversations": {
+              "active": 15,
+              "total": 150
+            },
+            "endUsers": {
+              "total": 87
+            },
+            "team": {
+              "active": 5
+            }
+          }
+        }
+      }
+    },
+    "conversations": {
+      "list": {
+        "method": "GET",
+        "path": "/admin/conversations",
+        "description": "Listar conversaciones con filtros",
+        "headers": ["Authorization"],
+        "query": {
+          "status": "active|closed|archived (optional)",
+          "channel": "whatsapp|telegram|web|sms|instagram (optional)",
+          "assignedTo": "uuid (optional)",
+          "limit": "number (default 50)",
+          "offset": "number (default 0)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "conversations": [
+              {
+                "id": "uuid",
+                "status": "active",
+                "channel": "whatsapp",
+                "endUser": {
+                  "id": "uuid",
+                  "name": "John Customer",
+                  "email": "customer@example.com",
+                  "phone": "+1234567890"
+                },
+                "assignedTo": {
+                  "id": "uuid",
+                  "name": "Agent Name",
+                  "email": "agent@example.com"
+                },
+                "messageCount": 25,
+                "createdAt": "ISO8601",
+                "updatedAt": "ISO8601"
+              }
+            ],
+            "pagination": {
+              "limit": 50,
+              "offset": 0,
+              "total": 150
+            }
+          }
+        }
+      },
+      "get": {
+        "method": "GET",
+        "path": "/admin/conversations/:id",
+        "description": "Obtener detalles de conversación con mensajes",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "status": "active",
+            "channel": "whatsapp",
+            "endUser": {
+              "id": "uuid",
+              "name": "John Customer",
+              "metadata": {}
+            },
+            "assignedTo": {
+              "id": "uuid",
+              "name": "Agent Name",
+              "role": "agent"
+            },
+            "messages": [
+              {
+                "id": "uuid",
+                "type": "incoming|outgoing",
+                "content": {},
+                "createdAt": "ISO8601",
+                "sentByAdminUser": {
+                  "id": "uuid",
+                  "name": "Agent Name"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "update": {
+        "method": "PATCH",
+        "path": "/admin/conversations/:id",
+        "description": "Actualizar conversación (asignar, cerrar, etc.)",
+        "headers": ["Authorization", "Content-Type"],
+        "body": {
+          "status": "active|closed|archived (optional)",
+          "assignedToId": "uuid or null (optional)",
+          "metadata": "object (optional)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "status": "closed",
+            "assignedToId": "uuid",
+            "updatedAt": "ISO8601",
+            "closedAt": "ISO8601"
+          }
+        }
+      }
+    },
+    "endUsers": {
+      "list": {
+        "method": "GET",
+        "path": "/admin/end-users",
+        "description": "Listar end users (clientes) con filtros",
+        "headers": ["Authorization"],
+        "query": {
+          "channel": "whatsapp|telegram|web|sms|instagram (optional)",
+          "search": "string (busca en name, email, phone)",
+          "isBlocked": "true|false (optional)",
+          "limit": "number (default 50)",
+          "offset": "number (default 0)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "endUsers": [
+              {
+                "id": "uuid",
+                "externalId": "whatsapp-phone-number",
+                "channel": "whatsapp",
+                "name": "John Customer",
+                "email": "customer@example.com",
+                "phone": "+1234567890",
+                "tags": ["vip", "support"],
+                "isBlocked": false,
+                "conversationCount": 5,
+                "createdAt": "ISO8601"
+              }
+            ],
+            "pagination": {
+              "limit": 50,
+              "offset": 0,
+              "total": 87
+            }
+          }
+        }
+      },
+      "get": {
+        "method": "GET",
+        "path": "/admin/end-users/:id",
+        "description": "Obtener detalles de end user con conversaciones",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "externalId": "whatsapp-phone",
+            "channel": "whatsapp",
+            "name": "John Customer",
+            "email": "customer@example.com",
+            "phone": "+1234567890",
+            "metadata": {},
+            "tags": ["vip"],
+            "isBlocked": false,
+            "conversations": [
+              {
+                "id": "uuid",
+                "status": "active",
+                "channel": "whatsapp",
+                "assignedTo": {
+                  "id": "uuid",
+                  "name": "Agent Name"
+                },
+                "createdAt": "ISO8601"
+              }
+            ]
+          }
+        }
+      },
+      "update": {
+        "method": "PATCH",
+        "path": "/admin/end-users/:id",
+        "description": "Actualizar end user (tags, metadata, block)",
+        "headers": ["Authorization", "Content-Type"],
+        "body": {
+          "name": "string (optional)",
+          "email": "string (optional)",
+          "phone": "string (optional)",
+          "tags": "string[] (optional)",
+          "metadata": "object (optional)",
+          "isBlocked": "boolean (optional)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "name": "Updated Name",
+            "tags": ["vip", "priority"],
+            "isBlocked": false,
+            "updatedAt": "ISO8601"
+          }
+        }
+      }
+    },
+    "team": {
+      "list": {
+        "method": "GET",
+        "path": "/admin/team",
+        "description": "Listar miembros del equipo",
+        "headers": ["Authorization"],
+        "query": {
+          "includeInactive": "true|false (default false)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "team": [
+              {
+                "id": "uuid",
+                "email": "agent@example.com",
+                "name": "Agent Name",
+                "role": "owner|admin|agent|viewer",
+                "isActive": true,
+                "lastLoginAt": "ISO8601",
+                "createdAt": "ISO8601"
+              }
+            ]
+          }
+        }
+      },
+      "create": {
+        "method": "POST",
+        "path": "/admin/team",
+        "description": "Agregar miembro al equipo (owner/admin only)",
+        "headers": ["Authorization", "Content-Type"],
+        "requiredRoles": ["owner", "admin"],
+        "body": {
+          "name": "string (2-255 chars)",
+          "email": "string (email format)",
+          "password": "string (min 8 chars)",
+          "role": "owner|admin|agent|viewer"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "email": "newagent@example.com",
+            "name": "New Agent",
+            "role": "agent",
+            "isActive": true,
+            "createdAt": "ISO8601"
+          }
+        },
+        "errors": {
+          "409": "EMAIL_EXISTS",
+          "403": "FORBIDDEN - only owners can create owners"
+        }
+      },
+      "update": {
+        "method": "PATCH",
+        "path": "/admin/team/:id",
+        "description": "Actualizar miembro del equipo (owner/admin only)",
+        "headers": ["Authorization", "Content-Type"],
+        "requiredRoles": ["owner", "admin"],
+        "body": {
+          "role": "owner|admin|agent|viewer (optional)",
+          "isActive": "boolean (optional)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "role": "admin",
+            "isActive": true,
+            "updatedAt": "ISO8601"
+          }
+        },
+        "errors": {
+          "403": "FORBIDDEN - cannot modify yourself or insufficient permissions"
+        }
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/admin/team/:id",
+        "description": "Eliminar miembro del equipo (owner only)",
+        "headers": ["Authorization"],
+        "requiredRoles": ["owner"],
+        "response": {
+          "success": true,
+          "data": {
+            "message": "Team member removed successfully",
+            "id": "uuid"
+          }
+        },
+        "errors": {
+          "403": "FORBIDDEN - cannot delete yourself"
         }
       }
     }
