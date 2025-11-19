@@ -23,7 +23,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "migrate": "bun run scripts/migrate.ts",
-    "test:whatsapp": "bun scripts/test-whatsapp-flow.ts"
+    "test:whatsapp": "bun scripts/test-whatsapp-flow.ts",
+    "test:messaging": "bun scripts/test-messaging-flow.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
