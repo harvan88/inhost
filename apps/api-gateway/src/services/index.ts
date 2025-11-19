@@ -23,7 +23,8 @@ import {
   MemoryPersistence,
   WebSocketNotification,
   SimplePlanResolver,
-  ConnectionOwnerChecker
+  ConnectionOwnerChecker,
+  CapabilityBasedServiceGate
 } from '../implementations/v1';
 import { RedisRateLimiter } from '../implementations/v2';
 import { MessageCore } from '../core/MessageCore';
@@ -74,6 +75,12 @@ export const planResolver = new SimplePlanResolver();
 export const ownerChecker = new ConnectionOwnerChecker();
 
 /**
+ * Service Gate V1 - Sistema de capacidades
+ * (Reemplaza la lógica hardcodeada de planes)
+ */
+export const serviceGate = new CapabilityBasedServiceGate();
+
+/**
  * MESSAGE CORE - Núcleo de mensajería (orquestador ligero)
  */
 export const messageCore = new MessageCore(
@@ -81,7 +88,8 @@ export const messageCore = new MessageCore(
   notifications,
   planResolver,
   ownerChecker,
-  adapterManager
+  adapterManager,
+  serviceGate // Opcional: nuevo sistema de capacidades
 );
 
 /**
@@ -135,7 +143,8 @@ export async function initializeServices(): Promise<void> {
     notifications: 'WebSocketNotification (V1)',
     planResolver: 'SimplePlanResolver (V1)',
     ownerChecker: 'ConnectionOwnerChecker (V1)',
-    messageCore: 'MessageCore (initialized)'
+    serviceGate: 'CapabilityBasedServiceGate (V1)',
+    messageCore: 'MessageCore (initialized with ServiceGate)'
   });
 
   // Health check inicial
