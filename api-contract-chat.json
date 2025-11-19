@@ -1,0 +1,499 @@
+{
+  "version": "2.0.0-multi-tenancy",
+  "name": "INHOST Chat API Contract",
+  "description": "API para servicios externos (WhatsApp, Instagram, UIs desacopladas) - End Users",
+  "audience": "External services and decoupled UIs",
+  "baseURL": {
+    "development": "http://localhost:3000/chat",
+    "production": "https://api.inhost.com/chat"
+  },
+  "authentication": {
+    "type": "Headers",
+    "description": "Identificación por tenant_id + end_user context",
+    "requiredHeaders": [
+      {
+        "name": "X-Tenant-Id",
+        "value": "<tenant_uuid>",
+        "description": "ID de la organización (tenant)",
+        "example": "00000000-0000-0000-0000-000000000001"
+      },
+      {
+        "name": "X-End-User-Phone",
+        "value": "<phone_number>",
+        "description": "Teléfono del end-user (para WhatsApp, SMS)",
+        "example": "+5215512345678",
+        "optional": "Requerido para WhatsApp/SMS"
+      },
+      {
+        "name": "X-End-User-Id",
+        "value": "<external_id>",
+        "description": "ID externo del end-user (para Instagram, UI propia)",
+        "example": "instagram_123456",
+        "optional": "Requerido para Instagram/UI propia"
+      },
+      {
+        "name": "X-Channel",
+        "value": "whatsapp|instagram|web|telegram|sms",
+        "description": "Canal de comunicación",
+        "example": "whatsapp"
+      }
+    ],
+    "note": "Backend auto-crea end_user si no existe basándose en tenant_id + phone/external_id"
+  },
+  "endpoints": {
+    "webhook": {
+      "whatsappIncoming": {
+        "method": "POST",
+        "path": "/webhook/whatsapp",
+        "description": "Webhook para mensajes entrantes de WhatsApp Business API",
+        "public": true,
+        "headers": [
+          "X-Tenant-Id"
+        ],
+        "body": {
+          "from": "+5215512345678",
+          "to": "+5215500000000",
+          "text": "Hola, ¿dónde está mi pedido?",
+          "timestamp": "2025-11-19T10:00:00Z",
+          "messageId": "whatsapp_msg_id",
+          "media": {
+            "type": "image|video|document",
+            "url": "https://...",
+            "filename": "image.jpg"
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "messageId": "uuid",
+            "conversationId": "uuid",
+            "endUserId": "uuid",
+            "status": "received",
+            "aiResponse": {
+              "enabled": true,
+              "text": "Hola Juan, tu pedido #123 está en camino"
+            }
+          }
+        }
+      },
+      "instagramIncoming": {
+        "method": "POST",
+        "path": "/webhook/instagram",
+        "description": "Webhook para mensajes de Instagram Direct",
+        "public": true,
+        "headers": [
+          "X-Tenant-Id"
+        ],
+        "body": {
+          "senderId": "instagram_user_id",
+          "recipientId": "instagram_page_id",
+          "text": "Hola",
+          "timestamp": "2025-11-19T10:00:00Z",
+          "messageId": "instagram_msg_id"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "messageId": "uuid",
+            "conversationId": "uuid",
+            "endUserId": "uuid",
+            "status": "received"
+          }
+        }
+      }
+    },
+    "messages": {
+      "send": {
+        "method": "POST",
+        "path": "/messages/send",
+        "description": "Enviar mensaje desde UI externa o servicio",
+        "headers": [
+          "X-Tenant-Id",
+          "X-End-User-Phone (o X-End-User-Id)",
+          "X-Channel"
+        ],
+        "body": {
+          "text": "Hola, necesito ayuda",
+          "attachments": [
+            {
+              "type": "image",
+              "url": "https://...",
+              "filename": "photo.jpg"
+            }
+          ]
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "messageId": "uuid",
+            "conversationId": "uuid",
+            "status": "received",
+            "aiResponse": {
+              "enabled": true,
+              "text": "Hola, ¿en qué puedo ayudarte?",
+              "messageId": "uuid"
+            },
+            "createdAt": "2025-11-19T10:00:00Z"
+          }
+        }
+      },
+      "getHistory": {
+        "method": "GET",
+        "path": "/messages/history",
+        "description": "Obtener historial de mensajes para un end-user",
+        "headers": [
+          "X-Tenant-Id",
+          "X-End-User-Phone (o X-End-User-Id)"
+        ],
+        "query": {
+          "limit": {
+            "type": "number",
+            "default": 50,
+            "max": 100
+          },
+          "before": {
+            "type": "string",
+            "description": "Message ID - cargar mensajes anteriores",
+            "optional": true
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "endUser": {
+              "id": "uuid",
+              "phone": "+5215512345678",
+              "name": "Juan Pérez"
+            },
+            "conversationId": "uuid",
+            "count": 15,
+            "messages": [
+              {
+                "id": "uuid",
+                "type": "incoming",
+                "content": {
+                  "text": "Hola",
+                  "attachments": []
+                },
+                "timestamp": "2025-11-19T09:00:00Z"
+              },
+              {
+                "id": "uuid",
+                "type": "outgoing",
+                "content": {
+                  "text": "Hola Juan, ¿en qué puedo ayudarte?",
+                  "aiGenerated": true
+                },
+                "timestamp": "2025-11-19T09:00:30Z"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "status": {
+      "updateMessageStatus": {
+        "method": "POST",
+        "path": "/status/:messageId",
+        "description": "Actualizar estado de mensaje (delivered, read, failed)",
+        "headers": [
+          "X-Tenant-Id"
+        ],
+        "body": {
+          "status": "delivered|read|failed",
+          "timestamp": "2025-11-19T10:01:00Z",
+          "error": {
+            "code": "DELIVERY_FAILED",
+            "message": "User blocked bot"
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "messageId": "uuid",
+            "status": "delivered",
+            "updatedAt": "2025-11-19T10:01:00Z"
+          }
+        }
+      }
+    },
+    "typing": {
+      "sendTypingIndicator": {
+        "method": "POST",
+        "path": "/typing",
+        "description": "Enviar indicador de 'typing' desde UI externa",
+        "headers": [
+          "X-Tenant-Id",
+          "X-End-User-Phone (o X-End-User-Id)"
+        ],
+        "body": {
+          "isTyping": true
+        },
+        "response": {
+          "success": true,
+          "message": "Typing indicator sent"
+        }
+      }
+    },
+    "endUser": {
+      "identify": {
+        "method": "POST",
+        "path": "/end-user/identify",
+        "description": "Identificar/actualizar información de end-user",
+        "headers": [
+          "X-Tenant-Id",
+          "X-End-User-Phone (o X-End-User-Id)"
+        ],
+        "body": {
+          "name": "Juan Pérez",
+          "email": "juan@example.com",
+          "customFields": {
+            "customer_id": "CUST-123",
+            "vip": true
+          },
+          "tags": ["vip", "frequent"]
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "endUserId": "uuid",
+            "created": false,
+            "updated": true
+          }
+        }
+      },
+      "getInfo": {
+        "method": "GET",
+        "path": "/end-user",
+        "description": "Obtener información del end-user actual",
+        "headers": [
+          "X-Tenant-Id",
+          "X-End-User-Phone (o X-End-User-Id)"
+        ],
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "phone": "+5215512345678",
+            "name": "Juan Pérez",
+            "email": "juan@example.com",
+            "primaryChannel": "whatsapp",
+            "customFields": {
+              "customer_id": "CUST-123"
+            },
+            "tags": ["vip"],
+            "conversationCount": 5,
+            "lastInteractionAt": "2025-11-19T09:00:00Z"
+          }
+        }
+      }
+    }
+  },
+  "websocket": {
+    "endpoint": "/chat/realtime",
+    "protocol": "wss",
+    "description": "WebSocket para UIs externas que necesiten real-time updates",
+    "authentication": {
+      "method": "headers",
+      "headers": [
+        "X-Tenant-Id",
+        "X-End-User-Phone (o X-End-User-Id)"
+      ],
+      "example": {
+        "url": "wss://api.inhost.com/chat/realtime",
+        "headers": {
+          "X-Tenant-Id": "uuid",
+          "X-End-User-Phone": "+5215512345678",
+          "X-Channel": "web"
+        }
+      }
+    },
+    "events": {
+      "client_to_server": {
+        "send_message": {
+          "description": "Enviar mensaje via WebSocket",
+          "payload": {
+            "type": "send_message",
+            "text": "Hola",
+            "attachments": []
+          }
+        },
+        "typing": {
+          "description": "Indicar que está escribiendo",
+          "payload": {
+            "type": "typing",
+            "isTyping": true
+          }
+        }
+      },
+      "server_to_client": {
+        "connection": {
+          "description": "Conexión establecida",
+          "payload": {
+            "type": "connection",
+            "status": "connected",
+            "endUserId": "uuid",
+            "conversationId": "uuid"
+          }
+        },
+        "message:new": {
+          "description": "Nuevo mensaje (respuesta de agente o AI)",
+          "payload": {
+            "type": "message:new",
+            "data": {
+              "messageId": "uuid",
+              "type": "outgoing",
+              "text": "Hola, ¿en qué puedo ayudarte?",
+              "aiGenerated": true,
+              "timestamp": "2025-11-19T10:00:00Z"
+            }
+          }
+        },
+        "message:status": {
+          "description": "Cambio de estado del mensaje",
+          "payload": {
+            "type": "message:status",
+            "data": {
+              "messageId": "uuid",
+              "status": "delivered|read",
+              "timestamp": "2025-11-19T10:01:00Z"
+            }
+          }
+        },
+        "agent:typing": {
+          "description": "Agente está escribiendo",
+          "payload": {
+            "type": "agent:typing",
+            "data": {
+              "agentName": "María (Agente)",
+              "isTyping": true
+            }
+          }
+        },
+        "error": {
+          "description": "Error en procesamiento",
+          "payload": {
+            "type": "error",
+            "code": "RATE_LIMIT_EXCEEDED|INVALID_MESSAGE",
+            "message": "...",
+            "retryAfter": 60
+          }
+        }
+      }
+    }
+  },
+  "integration_examples": {
+    "whatsapp_business_api": {
+      "description": "Integración con WhatsApp Business API (Cloud API o On-Premise)",
+      "flow": {
+        "1_webhook_setup": {
+          "url": "https://api.inhost.com/chat/webhook/whatsapp",
+          "headers": {
+            "X-Tenant-Id": "tenant_uuid (configurado en WhatsApp Business)"
+          },
+          "verify_token": "configurar en INHOST settings"
+        },
+        "2_incoming_message": {
+          "description": "WhatsApp envía mensaje a tu webhook",
+          "payload": "Ver endpoint webhook.whatsappIncoming"
+        },
+        "3_ai_response": {
+          "description": "INHOST verifica capabilities del tenant y genera respuesta AI si está habilitado",
+          "response": "Backend envía respuesta directamente a WhatsApp API"
+        }
+      },
+      "note": "End-user nunca toca INHOST frontend, solo interactúa via WhatsApp"
+    },
+    "instagram_direct": {
+      "description": "Integración con Instagram Messaging API",
+      "flow": {
+        "1_webhook_setup": {
+          "url": "https://api.inhost.com/chat/webhook/instagram",
+          "headers": {
+            "X-Tenant-Id": "tenant_uuid"
+          }
+        },
+        "2_incoming_message": {
+          "description": "Instagram envía mensaje de usuario",
+          "payload": "Ver endpoint webhook.instagramIncoming"
+        }
+      }
+    },
+    "ui_externa_desacoplada": {
+      "description": "UI propia del tenant (ejemplo: App móvil de Tienda XYZ)",
+      "flow": {
+        "1_identify_user": {
+          "endpoint": "POST /chat/end-user/identify",
+          "headers": {
+            "X-Tenant-Id": "tienda-xyz",
+            "X-End-User-Id": "app_user_12345"
+          },
+          "body": {
+            "name": "Juan Pérez",
+            "email": "juan@example.com"
+          }
+        },
+        "2_connect_websocket": {
+          "url": "wss://api.inhost.com/chat/realtime",
+          "headers": {
+            "X-Tenant-Id": "tienda-xyz",
+            "X-End-User-Id": "app_user_12345",
+            "X-Channel": "web"
+          }
+        },
+        "3_send_message": {
+          "via": "WebSocket o REST",
+          "endpoint": "POST /chat/messages/send"
+        },
+        "4_receive_messages": {
+          "via": "WebSocket events",
+          "event": "message:new"
+        }
+      },
+      "note": "End-user usa su propia UI (app móvil), no INHOST frontend"
+    }
+  },
+  "rateLimiting": {
+    "description": "Rate limiting basado en tenant_id (no end-user)",
+    "headers": {
+      "X-RateLimit-Limit": "Límite del tenant",
+      "X-RateLimit-Remaining": "Requests restantes",
+      "X-RateLimit-Reset": "Unix timestamp reset"
+    },
+    "limits": {
+      "starter": {
+        "messagesPerMinute": 30
+      },
+      "professional": {
+        "messagesPerMinute": 100
+      },
+      "enterprise": {
+        "messagesPerMinute": 500
+      }
+    },
+    "note": "Límite se aplica por TENANT, no por end-user individual"
+  },
+  "capabilities": {
+    "description": "Servicios habilitados se verifican a nivel TENANT",
+    "flow": {
+      "1_message_received": "End-user envía mensaje",
+      "2_identify_tenant": "Backend identifica tenant_id desde headers",
+      "3_check_capabilities": "SELECT * FROM tenant_capabilities WHERE tenant_id = ? AND service_id = 'ai-assistant'",
+      "4_ai_processing": "Si enabled=true → Ejecutar AI Extension",
+      "5_respond": "Enviar respuesta a end-user via canal original"
+    }
+  },
+  "errorCodes": {
+    "400": "Bad Request - Falta X-Tenant-Id o identificación de end-user",
+    "404": "Tenant Not Found - tenant_id inválido",
+    "422": "Validation Error - Mensaje inválido",
+    "429": "Rate Limit Exceeded - Tenant excedió límite",
+    "500": "Internal Server Error"
+  },
+  "testing": {
+    "curl_examples": {
+      "send_message_whatsapp": "curl -X POST http://localhost:3000/chat/messages/send \\\n  -H 'X-Tenant-Id: 00000000-0000-0000-0000-000000000001' \\\n  -H 'X-End-User-Phone: +5215512345678' \\\n  -H 'X-Channel: whatsapp' \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"text\":\"Hola, necesito ayuda\"}'",
+      "get_history": "curl -X GET 'http://localhost:3000/chat/messages/history?limit=20' \\\n  -H 'X-Tenant-Id: 00000000-0000-0000-0000-000000000001' \\\n  -H 'X-End-User-Phone: +5215512345678'"
+    }
+  }
+}
