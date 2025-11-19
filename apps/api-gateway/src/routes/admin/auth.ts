@@ -45,7 +45,7 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
   .post(
     '/signup',
     async ({ body, error }) => {
-      const { companyName, name, email, password } = body;
+      const { tenantName, name, email, password, plan = 'starter' } = body;
 
       // Validate password strength
       const passwordValidation = validatePasswordStrength(password);
@@ -64,7 +64,7 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         }
 
         // Generate slug for tenant
-        const slug = generateSlug(companyName);
+        const slug = generateSlug(tenantName);
 
         // Check if slug already exists
         const existingTenant = await db.query.tenants.findFirst({
@@ -82,9 +82,9 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         const [newTenant] = await db
           .insert(tenants)
           .values({
-            name: companyName,
+            name: tenantName,
             slug,
-            plan: 'starter',
+            plan: plan as 'starter' | 'professional' | 'enterprise',
             subscriptionStatus: 'trialing',
             trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days trial
           })
@@ -140,10 +140,11 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
     },
     {
       body: t.Object({
-        companyName: t.String({ minLength: 2, maxLength: 255 }),
+        tenantName: t.String({ minLength: 2, maxLength: 255 }),
         name: t.String({ minLength: 2, maxLength: 255 }),
         email: t.String({ format: 'email' }),
         password: t.String({ minLength: 8 }),
+        plan: t.Optional(t.Union([t.Literal('starter'), t.Literal('professional'), t.Literal('enterprise')])),
       }),
       detail: {
         summary: 'Sign Up',
