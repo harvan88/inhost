@@ -115,6 +115,88 @@ export const adminEndUsersRoutes = new Elysia({ prefix: '/admin/end-users' })
     }
   )
 
+  // POST /admin/end-users - Create new end user (contact)
+  .post(
+    '/',
+    async ({ user, body, error }) => {
+      const { externalId, channel, name, email, phone, avatarUrl, metadata } = body;
+
+      try {
+        // Check if end user already exists with this externalId and channel
+        const existing = await db.query.endUsers.findFirst({
+          where: and(
+            eq(endUsers.tenantId, user.tenantId),
+            eq(endUsers.externalId, externalId),
+            eq(endUsers.channel, channel)
+          ),
+        });
+
+        if (existing) {
+          return error(409, createErrorResponse(
+            'END_USER_EXISTS',
+            'An end user with this external ID and channel already exists'
+          ));
+        }
+
+        // Create end user
+        const [newEndUser] = await db
+          .insert(endUsers)
+          .values({
+            tenantId: user.tenantId,
+            externalId,
+            channel,
+            name: name || null,
+            email: email || null,
+            phone: phone || null,
+            avatarUrl: avatarUrl || null,
+            metadata: metadata || {},
+            tags: [],
+            isBlocked: false,
+          })
+          .returning();
+
+        return createSuccessResponse({
+          endUser: {
+            id: newEndUser.id,
+            externalId: newEndUser.externalId,
+            channel: newEndUser.channel,
+            name: newEndUser.name,
+            email: newEndUser.email,
+            phone: newEndUser.phone,
+            avatarUrl: newEndUser.avatarUrl,
+            metadata: newEndUser.metadata,
+            createdAt: newEndUser.createdAt,
+          },
+        });
+      } catch (err: any) {
+        console.error('Create end user error:', err);
+        return error(500, createErrorResponse('CREATE_FAILED', 'Failed to create end user'));
+      }
+    },
+    {
+      body: t.Object({
+        externalId: t.String({ minLength: 1, maxLength: 255 }),
+        channel: t.Union([
+          t.Literal('whatsapp'),
+          t.Literal('telegram'),
+          t.Literal('web'),
+          t.Literal('sms'),
+          t.Literal('instagram'),
+        ]),
+        name: t.Optional(t.String({ maxLength: 255 })),
+        email: t.Optional(t.String({ format: 'email' })),
+        phone: t.Optional(t.String({ maxLength: 50 })),
+        avatarUrl: t.Optional(t.String({ maxLength: 500 })),
+        metadata: t.Optional(t.Any()),
+      }),
+      detail: {
+        summary: 'Create End User',
+        description: 'Create a new end user (customer contact)',
+        tags: ['Admin End Users'],
+      },
+    }
+  )
+
   // GET /admin/end-users/:id - Get end user details
   .get(
     '/:id',

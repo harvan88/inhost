@@ -261,3 +261,83 @@ export const adminTeamRoutes = new Elysia({ prefix: '/admin/team' })
       },
     }
   );
+
+// Team Invites Routes (separate Elysia instance for /invites subpath)
+export const adminTeamInvitesRoutes = new Elysia({ prefix: '/admin/team/invites' })
+  .use(httpLogger)
+  .use(requireAuth())
+  .use(requireRole(['owner', 'admin']))
+
+  // POST /admin/team/invites - Create team invitation
+  .post(
+    '/',
+    async ({ user, body, error }) => {
+      const { name, email, password, role } = body;
+
+      try {
+        // Validate password strength
+        const passwordValidation = validatePasswordStrength(password);
+        if (!passwordValidation.valid) {
+          return error(422, createErrorResponse('VALIDATION_ERROR', passwordValidation.errors.join(', ')));
+        }
+
+        // Check if email already exists
+        const existingUser = await db.query.adminUsers.findFirst({
+          where: eq(adminUsers.email, email),
+        });
+
+        if (existingUser) {
+          return error(409, createErrorResponse('EMAIL_EXISTS', 'A user with this email already exists'));
+        }
+
+        // Validate role - only owner can create owner
+        if (role === 'owner' && user.role !== 'owner') {
+          return error(403, createErrorResponse('FORBIDDEN', 'Only owners can create owner accounts'));
+        }
+
+        // Hash password
+        const passwordHash = await hashPassword(password);
+
+        // Create new team member (invitation = immediate creation in MVP)
+        const [newMember] = await db
+          .insert(adminUsers)
+          .values({
+            tenantId: user.tenantId,
+            email,
+            passwordHash,
+            name,
+            role,
+            isActive: true,
+          })
+          .returning({
+            id: adminUsers.id,
+            email: adminUsers.email,
+            name: adminUsers.name,
+            role: adminUsers.role,
+            isActive: adminUsers.isActive,
+            createdAt: adminUsers.createdAt,
+          });
+
+        return createSuccessResponse({
+          invite: newMember,
+          message: 'Team member invited successfully',
+        });
+      } catch (err: any) {
+        console.error('Create team invite error:', err);
+        return error(500, createErrorResponse('CREATE_FAILED', 'Failed to create team invitation'));
+      }
+    },
+    {
+      body: t.Object({
+        name: t.String({ minLength: 2, maxLength: 255 }),
+        email: t.String({ format: 'email' }),
+        password: t.String({ minLength: 8 }),
+        role: t.Union([t.Literal('owner'), t.Literal('admin'), t.Literal('agent'), t.Literal('viewer')]),
+      }),
+      detail: {
+        summary: 'Create Team Invitation',
+        description: 'Invite a new team member (owner/admin only)',
+        tags: ['Admin Team Invites'],
+      },
+    }
+  );

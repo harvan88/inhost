@@ -8,7 +8,9 @@ import { adminTenantRoutes } from './admin/tenant';
 import { adminConversationsRoutes } from './admin/conversations';
 import { adminMessagesRoutes } from './admin/messages';
 import { adminEndUsersRoutes } from './admin/end-users';
-import { adminTeamRoutes } from './admin/team';
+import { adminTeamRoutes, adminTeamInvitesRoutes } from './admin/team';
+import { adminAccountRoutes } from './admin/account';
+import { adminIntegrationsRoutes } from './admin/integrations';
 
 /**
  * Configuración centralizada de todas las rutas del API Gateway
@@ -23,8 +25,12 @@ import { adminTeamRoutes } from './admin/team';
  * - POST /admin/auth/*  → Admin authentication (signup, login, me)
  * - GET  /admin/tenant  → Tenant management
  * - GET  /admin/conversations → Conversations management
+ * - GET  /admin/messages → Messages management
  * - GET  /admin/end-users → End users management
  * - GET  /admin/team → Team management
+ * - POST /admin/team/invites → Team invitations
+ * - GET  /admin/account → Account settings
+ * - GET  /admin/integrations → Integrations management
  */
 export const routes = new Elysia()
   .use(healthRoutes)
@@ -36,4 +42,7 @@ export const routes = new Elysia()
   .use(adminConversationsRoutes)
   .use(adminMessagesRoutes)
   .use(adminEndUsersRoutes)
-  .use(adminTeamRoutes);
+  .use(adminTeamRoutes)
+  .use(adminTeamInvitesRoutes)
+  .use(adminAccountRoutes)
+  .use(adminIntegrationsRoutes);

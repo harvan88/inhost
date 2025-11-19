@@ -420,6 +420,117 @@
           }
         }
       },
+      "create": {
+        "method": "POST",
+        "path": "/admin/conversations",
+        "description": "Crear nueva conversación con mensaje inicial opcional",
+        "headers": ["Authorization", "Content-Type"],
+        "body": {
+          "endUserId": "uuid",
+          "channel": "whatsapp|telegram|web|sms|instagram",
+          "initialMessage": {
+            "text": "string (optional)"
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "conversation": {
+              "id": "uuid",
+              "status": "active",
+              "channel": "whatsapp",
+              "assignedToId": "uuid",
+              "createdAt": "ISO8601"
+            },
+            "initialMessage": {
+              "id": "uuid",
+              "type": "outgoing",
+              "createdAt": "ISO8601"
+            }
+          }
+        },
+        "errors": {
+          "404": "END_USER_NOT_FOUND"
+        }
+      },
+      "delete": {
+        "method": "DELETE",
+        "path": "/admin/conversations/:id",
+        "description": "Archivar conversación (soft delete)",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "status": "archived",
+            "closedAt": "ISO8601"
+          }
+        },
+        "errors": {
+          "404": "CONVERSATION_NOT_FOUND"
+        }
+      },
+      "getMessages": {
+        "method": "GET",
+        "path": "/admin/conversations/:id/messages",
+        "description": "Listar mensajes de una conversación",
+        "headers": ["Authorization"],
+        "query": {
+          "limit": "number (default 50)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "conversationId": "uuid",
+            "messages": [
+              {
+                "id": "uuid",
+                "type": "incoming|outgoing",
+                "content": {
+                  "text": "string"
+                },
+                "sentByAdminUser": {
+                  "id": "uuid",
+                  "name": "Agent Name"
+                },
+                "createdAt": "ISO8601"
+              }
+            ],
+            "pagination": {
+              "limit": 50,
+              "total": 125
+            }
+          }
+        }
+      },
+      "createMessage": {
+        "method": "POST",
+        "path": "/admin/conversations/:id/messages",
+        "description": "Crear nuevo mensaje en conversación",
+        "headers": ["Authorization", "Content-Type"],
+        "body": {
+          "text": "string",
+          "type": "outgoing|incoming (default: outgoing)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "message": {
+              "id": "uuid",
+              "conversationId": "uuid",
+              "type": "outgoing",
+              "content": {
+                "text": "string"
+              },
+              "sentByAdminUserId": "uuid",
+              "createdAt": "ISO8601"
+            }
+          }
+        },
+        "errors": {
+          "404": "CONVERSATION_NOT_FOUND"
+        }
+      },
       "get": {
         "method": "GET",
         "path": "/admin/conversations/:id",
@@ -475,6 +586,37 @@
             "updatedAt": "ISO8601",
             "closedAt": "ISO8601"
           }
+        }
+      }
+    },
+    "messages": {
+      "updateStatus": {
+        "method": "PATCH",
+        "path": "/admin/messages/:id/status",
+        "description": "Actualizar estado de entrega de mensaje",
+        "headers": ["Authorization", "Content-Type"],
+        "body": {
+          "status": "sent|delivered|read|failed"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "message": {
+              "id": "uuid",
+              "statusChain": [
+                {
+                  "status": "sent",
+                  "timestamp": "ISO8601",
+                  "messageId": "uuid"
+                }
+              ],
+              "updatedAt": "ISO8601"
+            }
+          }
+        },
+        "errors": {
+          "404": "MESSAGE_NOT_FOUND",
+          "403": "FORBIDDEN"
         }
       }
     },
@@ -571,6 +713,37 @@
             "updatedAt": "ISO8601"
           }
         }
+      },
+      "create": {
+        "method": "POST",
+        "path": "/admin/end-users",
+        "description": "Crear nuevo end user (contacto)",
+        "headers": ["Authorization", "Content-Type"],
+        "body": {
+          "externalId": "string",
+          "channel": "whatsapp|telegram|web|sms|instagram",
+          "name": "string (optional)",
+          "email": "string (optional)",
+          "phone": "string (optional)",
+          "avatarUrl": "string (optional)",
+          "metadata": "object (optional)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "endUser": {
+              "id": "uuid",
+              "externalId": "whatsapp-1234",
+              "channel": "whatsapp",
+              "name": "John Customer",
+              "email": "customer@example.com",
+              "createdAt": "ISO8601"
+            }
+          }
+        },
+        "errors": {
+          "409": "END_USER_EXISTS - Duplicate externalId + channel"
+        }
       }
     },
     "team": {
@@ -665,6 +838,200 @@
         },
         "errors": {
           "403": "FORBIDDEN - cannot delete yourself"
+        }
+      },
+      "invites": {
+        "create": {
+          "method": "POST",
+          "path": "/admin/team/invites",
+          "description": "Invitar nuevo miembro al equipo (owner/admin only)",
+          "headers": ["Authorization", "Content-Type"],
+          "requiredRoles": ["owner", "admin"],
+          "body": {
+            "name": "string (2-255 chars)",
+            "email": "string (email format)",
+            "password": "string (min 8 chars)",
+            "role": "owner|admin|agent|viewer"
+          },
+          "response": {
+            "success": true,
+            "data": {
+              "invite": {
+                "id": "uuid",
+                "email": "newagent@example.com",
+                "name": "New Agent",
+                "role": "agent",
+                "isActive": true,
+                "createdAt": "ISO8601"
+              },
+              "message": "Team member invited successfully"
+            }
+          },
+          "errors": {
+            "409": "EMAIL_EXISTS",
+            "403": "FORBIDDEN - only owners can create owners"
+          }
+        }
+      }
+    },
+    "account": {
+      "get": {
+        "method": "GET",
+        "path": "/admin/account",
+        "description": "Obtener configuración de cuenta del usuario actual",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "uuid",
+              "email": "user@example.com",
+              "name": "John Doe",
+              "role": "owner|admin|agent|viewer",
+              "isActive": true,
+              "lastLoginAt": "ISO8601",
+              "createdAt": "ISO8601"
+            },
+            "tenant": {
+              "id": "uuid",
+              "name": "My Company",
+              "slug": "my-company",
+              "plan": "starter|professional|enterprise",
+              "subscriptionStatus": "trialing|active|cancelled",
+              "settings": {},
+              "trialEndsAt": "ISO8601"
+            },
+            "preferences": {
+              "notifications": true,
+              "language": "en",
+              "timezone": "UTC"
+            }
+          }
+        }
+      },
+      "update": {
+        "method": "PATCH",
+        "path": "/admin/account",
+        "description": "Actualizar configuración de cuenta, contraseña y preferencias",
+        "headers": ["Authorization", "Content-Type"],
+        "body": {
+          "name": "string (optional)",
+          "email": "string (optional)",
+          "currentPassword": "string (required if changing password)",
+          "newPassword": "string (min 8 chars, optional)",
+          "preferences": {
+            "notifications": "boolean (optional)",
+            "language": "string (optional)",
+            "timezone": "string (optional)"
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "user": {
+              "id": "uuid",
+              "email": "newemail@example.com",
+              "name": "Updated Name",
+              "role": "owner",
+              "updatedAt": "ISO8601"
+            },
+            "message": "Account settings updated successfully",
+            "preferences": {
+              "notifications": true,
+              "language": "en",
+              "timezone": "UTC"
+            }
+          }
+        },
+        "errors": {
+          "409": "EMAIL_EXISTS",
+          "401": "INVALID_PASSWORD - current password incorrect",
+          "422": "VALIDATION_ERROR - weak password"
+        }
+      }
+    },
+    "integrations": {
+      "list": {
+        "method": "GET",
+        "path": "/admin/integrations",
+        "description": "Listar integraciones disponibles y conectadas",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "integrations": [
+              {
+                "id": "uuid",
+                "type": "whatsapp",
+                "name": "WhatsApp Business",
+                "status": "connected",
+                "connectedAt": "ISO8601",
+                "settings": {}
+              }
+            ],
+            "available": [
+              {
+                "type": "whatsapp",
+                "name": "WhatsApp Business",
+                "description": "Connect your WhatsApp Business account",
+                "icon": "💬",
+                "available": true
+              },
+              {
+                "type": "telegram",
+                "name": "Telegram",
+                "description": "Connect your Telegram bot",
+                "icon": "✈️",
+                "available": true
+              }
+            ],
+            "total": 1
+          }
+        }
+      },
+      "connect": {
+        "method": "POST",
+        "path": "/admin/integrations/:type/connect",
+        "description": "Conectar nueva integración (owner/admin only)",
+        "headers": ["Authorization", "Content-Type"],
+        "requiredRoles": ["owner", "admin"],
+        "body": {
+          "settings": "object (optional)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "integration": {
+              "id": "uuid",
+              "type": "whatsapp",
+              "name": "WhatsApp Business",
+              "status": "connected",
+              "connectedAt": "ISO8601",
+              "settings": {}
+            },
+            "message": "WhatsApp Business connected successfully"
+          }
+        },
+        "errors": {
+          "400": "INVALID_TYPE",
+          "409": "ALREADY_CONNECTED"
+        }
+      },
+      "disconnect": {
+        "method": "DELETE",
+        "path": "/admin/integrations/:id",
+        "description": "Desconectar integración (owner/admin only)",
+        "headers": ["Authorization"],
+        "requiredRoles": ["owner", "admin"],
+        "response": {
+          "success": true,
+          "data": {
+            "message": "WhatsApp Business disconnected successfully",
+            "id": "uuid"
+          }
+        },
+        "errors": {
+          "404": "INTEGRATION_NOT_FOUND"
         }
       }
     }
