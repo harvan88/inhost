@@ -32,6 +32,7 @@ interface UserLimit {
 
 export class MemoryRateLimiter implements IRateLimiter {
   private limits: Map<string, UserLimit> = new Map();
+  private cleanupInterval?: Timer;
   private config: RateLimiterConfig = {
     limits: {
       free: {
@@ -137,18 +138,25 @@ export class MemoryRateLimiter implements IRateLimiter {
    * Limpiar límites expirados (útil para no crecer indefinidamente)
    */
   cleanup(): void {
-    const now = new Date();
-    let cleaned = 0;
+    try {
+      const now = new Date();
+      let cleaned = 0;
 
-    for (const [userId, userLimit] of this.limits.entries()) {
-      if (now >= userLimit.resetAt) {
-        this.limits.delete(userId);
-        cleaned++;
+      for (const [userId, userLimit] of this.limits.entries()) {
+        if (now >= userLimit.resetAt) {
+          this.limits.delete(userId);
+          cleaned++;
+        }
       }
-    }
 
-    if (cleaned > 0) {
-      logger.debug('Rate limiter cleanup', { cleaned, remaining: this.limits.size });
+      if (cleaned > 0) {
+        logger.debug('Rate limiter cleanup', { cleaned, remaining: this.limits.size });
+      }
+    } catch (error) {
+      logger.error('Rate limiter cleanup failed', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
     }
   }
 
@@ -156,7 +164,24 @@ export class MemoryRateLimiter implements IRateLimiter {
    * Iniciar limpieza periódica (cada 5 minutos)
    */
   startCleanup(): void {
-    setInterval(() => this.cleanup(), 5 * 60 * 1000);
-    logger.info('Rate limiter cleanup started');
+    // Prevenir múltiples intervals
+    if (this.cleanupInterval) {
+      logger.warn('Rate limiter cleanup already started');
+      return;
+    }
+
+    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    logger.info('Rate limiter cleanup started (every 5 minutes)');
+  }
+
+  /**
+   * Detener limpieza periódica
+   */
+  stopCleanup(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+      logger.info('Rate limiter cleanup stopped');
+    }
   }
 }

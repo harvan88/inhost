@@ -166,6 +166,12 @@ export async function initializeServices(): Promise<void> {
 export async function shutdownServices(): Promise<void> {
   logger.info('🛑 Shutting down services...');
 
+  // Detener todos los intervals primero
+  rateLimiter.stopCleanup();
+  ownerChecker.stopCleanup();
+  messageQueue.stopAutoReset();
+
+  // Luego detener adaptadores y limpiar
   await adapterManager.stopAll();
   await messageQueue.clear();
 

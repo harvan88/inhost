@@ -35,6 +35,7 @@ interface QueueMetrics {
 export class MemoryQueue implements IMessageQueue {
   private queue: MessageEnvelope[] = [];
   private processing: Set<string> = new Set();
+  private resetInterval?: Timer;
   private metrics: QueueMetrics = {
     processed: 0,
     failed: 0,
@@ -184,31 +185,55 @@ export class MemoryQueue implements IMessageQueue {
    * Resetear métricas (útil para testing o cada 24h)
    */
   resetMetrics(): void {
-    const previousMetrics = { ...this.metrics };
+    try {
+      const previousMetrics = { ...this.metrics };
 
-    this.metrics = {
-      processed: 0,
-      failed: 0,
-      totalProcessingTime: 0,
-      lastReset: new Date()
-    };
+      this.metrics = {
+        processed: 0,
+        failed: 0,
+        totalProcessingTime: 0,
+        lastReset: new Date()
+      };
 
-    logger.info('Queue metrics reset', {
-      previous: {
-        processed: previousMetrics.processed,
-        failed: previousMetrics.failed,
-        averageTime: previousMetrics.processed > 0
-          ? previousMetrics.totalProcessingTime / previousMetrics.processed
-          : 0
-      }
-    });
+      logger.info('Queue metrics reset', {
+        previous: {
+          processed: previousMetrics.processed,
+          failed: previousMetrics.failed,
+          averageTime: previousMetrics.processed > 0
+            ? previousMetrics.totalProcessingTime / previousMetrics.processed
+            : 0
+        }
+      });
+    } catch (error) {
+      logger.error('Queue metrics reset failed', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+    }
   }
 
   /**
    * Iniciar reset automático de métricas (cada 24h)
    */
   startAutoReset(): void {
-    setInterval(() => this.resetMetrics(), 24 * 60 * 60 * 1000);
+    // Prevenir múltiples intervals
+    if (this.resetInterval) {
+      logger.warn('Queue auto-reset already started');
+      return;
+    }
+
+    this.resetInterval = setInterval(() => this.resetMetrics(), 24 * 60 * 60 * 1000);
     logger.info('Queue auto-reset started (every 24h)');
+  }
+
+  /**
+   * Detener reset automático de métricas
+   */
+  stopAutoReset(): void {
+    if (this.resetInterval) {
+      clearInterval(this.resetInterval);
+      this.resetInterval = undefined;
+      logger.info('Queue auto-reset stopped');
+    }
   }
 }

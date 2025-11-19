@@ -23,6 +23,7 @@ import { logger } from '../../middleware/logger';
 export class ConnectionOwnerChecker implements IOwnerChecker {
   // userId -> Set<deviceId>
   private userDevices: Map<string, Map<string, DeviceInfo>> = new Map();
+  private cleanupInterval?: Timer;
 
   async isOnline(userId: string): Promise<boolean> {
     const devices = this.userDevices.get(userId);
@@ -159,38 +160,45 @@ export class ConnectionOwnerChecker implements IOwnerChecker {
    * Limpia dispositivos inactivos (llamar periódicamente)
    */
   cleanupInactiveDevices(inactivityThresholdMinutes: number = 30): void {
-    const now = new Date();
-    const threshold = inactivityThresholdMinutes * 60 * 1000;
+    try {
+      const now = new Date();
+      const threshold = inactivityThresholdMinutes * 60 * 1000;
 
-    let cleanedCount = 0;
+      let cleanedCount = 0;
 
-    for (const [userId, devices] of this.userDevices.entries()) {
-      for (const [deviceId, device] of devices.entries()) {
-        const lastActivity = new Date(device.lastActivity);
-        const inactiveTime = now.getTime() - lastActivity.getTime();
+      for (const [userId, devices] of this.userDevices.entries()) {
+        for (const [deviceId, device] of devices.entries()) {
+          const lastActivity = new Date(device.lastActivity);
+          const inactiveTime = now.getTime() - lastActivity.getTime();
 
-        if (inactiveTime > threshold) {
-          devices.delete(deviceId);
-          cleanedCount++;
+          if (inactiveTime > threshold) {
+            devices.delete(deviceId);
+            cleanedCount++;
 
-          logger.debug('🧹 Inactive device removed', {
-            userId,
-            deviceId,
-            inactiveMinutes: Math.floor(inactiveTime / 60000)
-          });
+            logger.debug('🧹 Inactive device removed', {
+              userId,
+              deviceId,
+              inactiveMinutes: Math.floor(inactiveTime / 60000)
+            });
+          }
+        }
+
+        // Si no quedan dispositivos, remover usuario
+        if (devices.size === 0) {
+          this.userDevices.delete(userId);
         }
       }
 
-      // Si no quedan dispositivos, remover usuario
-      if (devices.size === 0) {
-        this.userDevices.delete(userId);
+      if (cleanedCount > 0) {
+        logger.info('🧹 Cleanup completed', {
+          devicesRemoved: cleanedCount,
+          remainingUsers: this.userDevices.size
+        });
       }
-    }
-
-    if (cleanedCount > 0) {
-      logger.info('🧹 Cleanup completed', {
-        devicesRemoved: cleanedCount,
-        remainingUsers: this.userDevices.size
+    } catch (error) {
+      logger.error('Device cleanup failed', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
       });
     }
   }
@@ -199,7 +207,13 @@ export class ConnectionOwnerChecker implements IOwnerChecker {
    * Inicia limpieza automática periódica
    */
   startAutoCleanup(intervalMinutes: number = 5): void {
-    setInterval(() => {
+    // Prevenir múltiples intervals
+    if (this.cleanupInterval) {
+      logger.warn('Device cleanup already started');
+      return;
+    }
+
+    this.cleanupInterval = setInterval(() => {
       this.cleanupInactiveDevices(30); // Limpiar inactivos de 30+ minutos
     }, intervalMinutes * 60 * 1000);
 
@@ -207,5 +221,16 @@ export class ConnectionOwnerChecker implements IOwnerChecker {
       intervalMinutes,
       inactivityThreshold: 30
     });
+  }
+
+  /**
+   * Detener limpieza automática periódica
+   */
+  stopCleanup(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = undefined;
+      logger.info('🧹 Device cleanup stopped');
+    }
   }
 }

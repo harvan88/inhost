@@ -184,6 +184,15 @@ export class RedisRateLimiter implements IRateLimiter {
   }
 
   /**
+   * Detener limpieza periódica
+   * NO NECESARIO en V2 - Redis TTL lo hace automáticamente
+   */
+  stopCleanup(): void {
+    // NO-OP en Redis: no hay interval que detener
+    logger.debug('🔴 Redis rate limiter cleanup stop (no-op)');
+  }
+
+  /**
    * Obtener estadísticas de Redis (útil para debugging)
    */
   async getStats(): Promise<{
