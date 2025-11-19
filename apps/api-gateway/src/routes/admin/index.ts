@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { jwtAuth } from '../../middleware/jwt-auth';
 import { authRoutes } from './auth';
+import { syncRoutes } from './sync';
 
 /**
  * Admin Routes - Multi-Tenancy V2
@@ -30,9 +31,12 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(authRoutes) // POST /admin/auth/login, /admin/auth/signup
 
   // Apply JWT middleware - all routes below require authentication
-  // .use(jwtAuth())
+  .use(jwtAuth())
 
-  // Protected routes (TODO - implement these)
+  // Protected routes
+  .use(syncRoutes) // GET /admin/sync/initial
+
+  // Future protected routes (TODO - implement these)
   // .use(tenantRoutes)        // GET /admin/tenant, PATCH /admin/tenant
   // .use(conversationsRoutes) // GET /admin/conversations
   // .use(endUsersRoutes)      // GET /admin/end-users
@@ -52,6 +56,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
         },
         protected: {
           note: 'Require JWT token in Authorization: Bearer <token>',
+          sync: 'GET /admin/sync/initial',
           tenant: 'GET /admin/tenant (TODO)',
           conversations: 'GET /admin/conversations (TODO)',
           endUsers: 'GET /admin/end-users (TODO)',
