@@ -127,6 +127,12 @@ export const adminSyncRoutes = new Elysia({ prefix: '/admin/sync' })
       });
     } catch (err: any) {
       console.error('Initial sync error:', err);
-      return error(500, createErrorResponse('SYNC_FAILED', 'Failed to fetch initial data'));
+      return createErrorResponse('SYNC_FAILED', 'Failed to fetch initial data');
+    }
+  }, {
+    detail: {
+      summary: 'Initial Sync',
+      description: 'Get initial data after login (conversations, contacts, team, integrations)',
+      tags: ['Admin Sync'],
     }
   });
