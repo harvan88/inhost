@@ -1,6 +1,7 @@
 import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
 import { MessageChannel, MessageType, MessageStatus } from '@inhost/shared';
 import type { IAdapter, SendResult, AdapterConfig } from '../../core/interfaces';
+import { observeLog } from '../../utils/observability-logger';
 
 /**
  * Simulador de WhatsApp Adapter
@@ -166,6 +167,13 @@ export class SimulatedWhatsAppAdapter implements IAdapter {
    * (Este método es útil para los endpoints de simulación)
    */
   createIncomingMessage(text: string, from?: string): MessageEnvelope {
+    observeLog.adapter('Mensaje recibido del chat simulado (WhatsApp)', {
+      from: from || this.metadata.phone,
+      text: text.substring(0, 100) // Limitar para no llenar logs
+    });
+
+    observeLog.adapterDebug('Traduciendo a MessageEnvelope...');
+
     const envelope: MessageEnvelope = {
       id: crypto.randomUUID(),
       type: MessageType.INCOMING,
@@ -189,6 +197,13 @@ export class SimulatedWhatsAppAdapter implements IAdapter {
         plan: 'free'
       }
     };
+
+    observeLog.adapter('Mensaje traducido a MessageEnvelope', {
+      id: envelope.id,
+      type: envelope.type,
+      channel: envelope.channel,
+      status: envelope.statusChain[0].status
+    });
 
     return envelope;
   }
