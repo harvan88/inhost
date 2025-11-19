@@ -6,6 +6,7 @@ import { simulationRoutes } from './simulation';
 import { adminAuthRoutes } from './admin/auth';
 import { adminTenantRoutes } from './admin/tenant';
 import { adminConversationsRoutes } from './admin/conversations';
+import { adminMessagesRoutes } from './admin/messages';
 import { adminEndUsersRoutes } from './admin/end-users';
 import { adminTeamRoutes } from './admin/team';
 
@@ -33,5 +34,6 @@ export const routes = new Elysia()
   .use(adminAuthRoutes)
   .use(adminTenantRoutes)
   .use(adminConversationsRoutes)
+  .use(adminMessagesRoutes)
   .use(adminEndUsersRoutes)
   .use(adminTeamRoutes);

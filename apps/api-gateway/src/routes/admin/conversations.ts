@@ -23,6 +23,104 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
   .use(httpLogger)
   .use(requireAuth())
 
+  // POST /admin/conversations - Create new conversation
+  .post(
+    '/',
+    async ({ user, body, error }) => {
+      const { endUserId, channel, initialMessage } = body;
+
+      try {
+        // Verify end user exists and belongs to tenant
+        const endUser = await db.query.endUsers.findFirst({
+          where: and(
+            eq(endUsers.id, endUserId),
+            eq(endUsers.tenantId, user.tenantId)
+          ),
+        });
+
+        if (!endUser) {
+          return error(404, createErrorResponse(
+            'END_USER_NOT_FOUND',
+            'End user not found or does not belong to your tenant'
+          ));
+        }
+
+        // Create conversation
+        const [newConversation] = await db
+          .insert(conversations)
+          .values({
+            tenantId: user.tenantId,
+            endUserId,
+            channel,
+            status: 'active',
+            assignedToId: user.userId, // Assign to creator by default
+            metadata: {},
+          })
+          .returning();
+
+        // If initial message provided, create it
+        if (initialMessage?.text) {
+          await db.insert(messages).values({
+            conversationId: newConversation.id,
+            type: 'outgoing',
+            channel,
+            content: { text: initialMessage.text },
+            metadata: {
+              from: 'admin',
+              to: endUser.externalId,
+              timestamp: new Date().toISOString(),
+            },
+            statusChain: [],
+            context: {},
+            sentByAdminUserId: user.userId,
+          });
+        }
+
+        return createSuccessResponse({
+          conversation: {
+            id: newConversation.id,
+            status: newConversation.status,
+            channel: newConversation.channel,
+            createdAt: newConversation.createdAt,
+            endUser: {
+              id: endUser.id,
+              name: endUser.name,
+              email: endUser.email,
+              phone: endUser.phone,
+            },
+            assignedTo: {
+              id: user.userId,
+              name: user.name || user.email,
+            },
+          },
+        });
+      } catch (err: any) {
+        console.error('Create conversation error:', err);
+        return error(500, createErrorResponse('CREATE_FAILED', 'Failed to create conversation'));
+      }
+    },
+    {
+      body: t.Object({
+        endUserId: t.String({ format: 'uuid' }),
+        channel: t.Union([
+          t.Literal('whatsapp'),
+          t.Literal('telegram'),
+          t.Literal('web'),
+          t.Literal('sms'),
+          t.Literal('instagram'),
+        ]),
+        initialMessage: t.Optional(t.Object({
+          text: t.String(),
+        })),
+      }),
+      detail: {
+        summary: 'Create Conversation',
+        description: 'Create a new conversation with an end user',
+        tags: ['Admin Conversations'],
+      },
+    }
+  )
+
   // GET /admin/conversations - List conversations
   .get(
     '/',
@@ -226,6 +324,157 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
     }
   )
 
+  // GET /admin/conversations/:id/messages - List messages in conversation
+  .get(
+    '/:id/messages',
+    async ({ user, params, query, error }) => {
+      const { id } = params;
+      const { limit = 50, offset = 0 } = query;
+
+      try {
+        // Verify conversation belongs to tenant
+        const conversation = await db.query.conversations.findFirst({
+          where: and(eq(conversations.id, id), eq(conversations.tenantId, user.tenantId)),
+        });
+
+        if (!conversation) {
+          return error(404, createErrorResponse('CONVERSATION_NOT_FOUND', 'Conversation not found'));
+        }
+
+        // Fetch messages
+        const messagesList = await db.query.messages.findMany({
+          where: eq(messages.conversationId, id),
+          with: {
+            sentByAdminUser: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+          orderBy: desc(messages.createdAt),
+          limit: parseInt(limit as string),
+          offset: parseInt(offset as string),
+        });
+
+        return createSuccessResponse({
+          conversationId: id,
+          messages: messagesList.map((msg) => ({
+            id: msg.id,
+            type: msg.type,
+            channel: msg.channel,
+            content: msg.content,
+            metadata: msg.metadata,
+            statusChain: msg.statusChain,
+            createdAt: msg.createdAt,
+            sentByAdminUser: msg.sentByAdminUser
+              ? {
+                  id: msg.sentByAdminUser.id,
+                  name: msg.sentByAdminUser.name,
+                  email: msg.sentByAdminUser.email,
+                }
+              : null,
+          })),
+          count: messagesList.length,
+        });
+      } catch (err: any) {
+        console.error('List messages error:', err);
+        return error(500, createErrorResponse('FETCH_FAILED', 'Failed to fetch messages'));
+      }
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      query: t.Object({
+        limit: t.Optional(t.String()),
+        offset: t.Optional(t.String()),
+      }),
+      detail: {
+        summary: 'List Messages',
+        description: 'List messages in a conversation',
+        tags: ['Admin Conversations'],
+      },
+    }
+  )
+
+  // POST /admin/conversations/:id/messages - Create message in conversation
+  .post(
+    '/:id/messages',
+    async ({ user, params, body, error }) => {
+      const { id } = params;
+      const { text, type = 'outgoing' } = body;
+
+      try {
+        // Verify conversation belongs to tenant
+        const conversation = await db.query.conversations.findFirst({
+          where: and(eq(conversations.id, id), eq(conversations.tenantId, user.tenantId)),
+          with: {
+            endUser: true,
+          },
+        });
+
+        if (!conversation) {
+          return error(404, createErrorResponse('CONVERSATION_NOT_FOUND', 'Conversation not found'));
+        }
+
+        // Create message
+        const [newMessage] = await db
+          .insert(messages)
+          .values({
+            conversationId: id,
+            type,
+            channel: conversation.channel,
+            content: { text },
+            metadata: {
+              from: type === 'outgoing' ? 'admin' : conversation.endUser.externalId,
+              to: type === 'outgoing' ? conversation.endUser.externalId : 'admin',
+              timestamp: new Date().toISOString(),
+            },
+            statusChain: [],
+            context: {},
+            sentByAdminUserId: type === 'outgoing' ? user.userId : null,
+          })
+          .returning();
+
+        // Update conversation's updatedAt
+        await db
+          .update(conversations)
+          .set({ updatedAt: new Date() })
+          .where(eq(conversations.id, id));
+
+        return createSuccessResponse({
+          message: {
+            id: newMessage.id,
+            type: newMessage.type,
+            channel: newMessage.channel,
+            content: newMessage.content,
+            metadata: newMessage.metadata,
+            createdAt: newMessage.createdAt,
+          },
+        });
+      } catch (err: any) {
+        console.error('Create message error:', err);
+        return error(500, createErrorResponse('CREATE_FAILED', 'Failed to create message'));
+      }
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      body: t.Object({
+        text: t.String(),
+        type: t.Optional(t.Union([t.Literal('incoming'), t.Literal('outgoing')])),
+      }),
+      detail: {
+        summary: 'Create Message',
+        description: 'Create a new message in a conversation',
+        tags: ['Admin Conversations'],
+      },
+    }
+  )
+
   // PATCH /admin/conversations/:id - Update conversation
   .patch(
     '/:id',
@@ -292,6 +541,63 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
       detail: {
         summary: 'Update Conversation',
         description: 'Update conversation status, assignment, or metadata',
+        tags: ['Admin Conversations'],
+      },
+    }
+  )
+
+  // DELETE /admin/conversations/:id - Archive conversation
+  .delete(
+    '/:id',
+    async ({ user, params, error }) => {
+      const { id } = params;
+
+      try {
+        // Verify conversation exists and belongs to tenant
+        const conversation = await db.query.conversations.findFirst({
+          where: and(
+            eq(conversations.id, id),
+            eq(conversations.tenantId, user.tenantId)
+          ),
+        });
+
+        if (!conversation) {
+          return error(404, createErrorResponse(
+            'CONVERSATION_NOT_FOUND',
+            'Conversation not found'
+          ));
+        }
+
+        // Archive conversation (soft delete)
+        const [archivedConversation] = await db
+          .update(conversations)
+          .set({
+            status: 'archived',
+            closedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(conversations.id, id))
+          .returning();
+
+        return createSuccessResponse({
+          conversation: {
+            id: archivedConversation.id,
+            status: archivedConversation.status,
+            closedAt: archivedConversation.closedAt,
+          },
+        });
+      } catch (err: any) {
+        console.error('Archive conversation error:', err);
+        return error(500, createErrorResponse('ARCHIVE_FAILED', 'Failed to archive conversation'));
+      }
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      detail: {
+        summary: 'Archive Conversation',
+        description: 'Archive a conversation (soft delete)',
         tags: ['Admin Conversations'],
       },
     }
