@@ -161,47 +161,54 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           offset: parseInt(offset as string),
         });
 
-        // Get message counts for each conversation
-        const conversationsWithCounts = await Promise.all(
+        // Get lastMessage and message counts for each conversation
+        const conversationsWithDetails = await Promise.all(
           conversationsList.map(async (conv) => {
-            const [messageCount] = await db
-              .select({ count: sql<number>`count(*)` })
-              .from(messages)
-              .where(eq(messages.conversationId, conv.id));
+            // Get last message
+            const lastMsg = await db.query.messages.findFirst({
+              where: eq(messages.conversationId, conv.id),
+              orderBy: desc(messages.createdAt),
+              columns: {
+                id: true,
+                type: true,
+                content: true,
+                createdAt: true,
+              },
+            });
 
             return {
               id: conv.id,
+              endUserId: conv.endUserId, // ✅ Frontend mandato
               status: conv.status,
               channel: conv.channel,
-              createdAt: conv.createdAt,
-              updatedAt: conv.updatedAt,
-              closedAt: conv.closedAt,
-              metadata: conv.metadata,
-              endUser: {
-                id: conv.endUser.id,
-                name: conv.endUser.name,
-                email: conv.endUser.email,
-                phone: conv.endUser.phone,
-                avatarUrl: conv.endUser.avatarUrl,
-              },
+              isPinned: conv.isPinned || false, // ✅ Nuevo campo
+              unreadCount: conv.unreadCount || 0, // ✅ Nuevo campo
+              lastMessage: lastMsg
+                ? {
+                    id: lastMsg.id,
+                    text: (lastMsg.content as any)?.text || '',
+                    type: lastMsg.type,
+                    timestamp: lastMsg.createdAt?.toISOString() || '',
+                  }
+                : undefined, // ✅ Nuevo campo como objeto
               assignedTo: conv.assignedTo
                 ? {
                     id: conv.assignedTo.id,
                     name: conv.assignedTo.name,
-                    email: conv.assignedTo.email,
                   }
                 : null,
-              messageCount: messageCount.count,
+              createdAt: conv.createdAt?.toISOString() || '',
+              updatedAt: conv.updatedAt?.toISOString() || '',
             };
           })
         );
 
         return createSuccessResponse({
-          conversations: conversationsWithCounts,
+          conversations: conversationsWithDetails,
           pagination: {
             limit: parseInt(limit as string),
             offset: parseInt(offset as string),
-            total: conversationsWithCounts.length,
+            total: conversationsWithDetails.length,
           },
         });
       } catch (err: any) {
@@ -438,10 +445,16 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           })
           .returning();
 
-        // Update conversation's updatedAt
+        // Update conversation's updatedAt and increment unreadCount if incoming
+        const updateData: any = { updatedAt: new Date() };
+        if (type === 'incoming') {
+          // Increment unreadCount for incoming messages
+          updateData.unreadCount = sql`${conversations.unreadCount} + 1`;
+        }
+
         await db
           .update(conversations)
-          .set({ updatedAt: new Date() })
+          .set(updateData)
           .where(eq(conversations.id, id));
 
         return createSuccessResponse({
@@ -480,7 +493,7 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
     '/:id',
     async ({ user, params, body, error }) => {
       const { id } = params;
-      const { status, assignedToId, metadata } = body;
+      const { status, assignedToId, metadata, isPinned } = body;
 
       try {
         // Verify conversation belongs to tenant
@@ -508,6 +521,7 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
         if (status) updateData.status = status;
         if (assignedToId !== undefined) updateData.assignedToId = assignedToId;
         if (metadata) updateData.metadata = metadata;
+        if (isPinned !== undefined) updateData.isPinned = isPinned; // ✅ Nuevo campo
         if (status === 'closed') updateData.closedAt = new Date();
 
         const [updated] = await db
@@ -520,6 +534,7 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           id: updated.id,
           status: updated.status,
           assignedToId: updated.assignedToId,
+          isPinned: updated.isPinned, // ✅ Retornar isPinned
           metadata: updated.metadata,
           updatedAt: updated.updatedAt,
           closedAt: updated.closedAt,
@@ -536,11 +551,12 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
       body: t.Object({
         status: t.Optional(t.Union([t.Literal('active'), t.Literal('closed'), t.Literal('archived')])),
         assignedToId: t.Optional(t.Union([t.String(), t.Null()])),
+        isPinned: t.Optional(t.Boolean()), // ✅ Nuevo campo
         metadata: t.Optional(t.Any()),
       }),
       detail: {
         summary: 'Update Conversation',
-        description: 'Update conversation status, assignment, or metadata',
+        description: 'Update conversation status, assignment, isPinned, or metadata',
         tags: ['Admin Conversations'],
       },
     }
@@ -598,6 +614,59 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
       detail: {
         summary: 'Archive Conversation',
         description: 'Archive a conversation (soft delete)',
+        tags: ['Admin Conversations'],
+      },
+    }
+  )
+
+  // POST /admin/conversations/:id/mark-as-read - Mark conversation as read
+  .post(
+    '/:id/mark-as-read',
+    async ({ user, params, error }) => {
+      const { id } = params;
+
+      try {
+        // Verify conversation belongs to tenant
+        const conversation = await db.query.conversations.findFirst({
+          where: and(eq(conversations.id, id), eq(conversations.tenantId, user.tenantId)),
+        });
+
+        if (!conversation) {
+          return error(404, createErrorResponse('CONVERSATION_NOT_FOUND', 'Conversation not found'));
+        }
+
+        // Update conversation: mark as read
+        const now = new Date();
+        const [updated] = await db
+          .update(conversations)
+          .set({
+            lastReadAt: now,
+            unreadCount: 0, // Reset unread counter
+            updatedAt: now,
+          })
+          .where(eq(conversations.id, id))
+          .returning();
+
+        return createSuccessResponse({
+          conversation: {
+            id: updated.id,
+            unreadCount: updated.unreadCount,
+            lastReadAt: updated.lastReadAt,
+          },
+          message: 'Conversation marked as read',
+        });
+      } catch (err: any) {
+        console.error('Mark as read error:', err);
+        return error(500, createErrorResponse('UPDATE_FAILED', 'Failed to mark conversation as read'));
+      }
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      detail: {
+        summary: 'Mark Conversation as Read',
+        description: 'Mark all messages in a conversation as read',
         tags: ['Admin Conversations'],
       },
     }

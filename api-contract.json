@@ -375,6 +375,23 @@
         }
       }
     },
+    "sync": {
+      "initial": {
+        "method": "GET",
+        "path": "/admin/sync/initial",
+        "description": "Initial data hydration after login (CRÍTICO)",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "conversations": "Conversation[] (últimas 50)",
+            "contacts": "EndUser[] (todos los contactos)",
+            "team": "TeamMember[] (miembros activos)",
+            "integrations": "Integration[] (integraciones conectadas)"
+          }
+        }
+      }
+    },
     "conversations": {
       "list": {
         "method": "GET",
@@ -394,20 +411,21 @@
             "conversations": [
               {
                 "id": "uuid",
+                "endUserId": "uuid",
                 "status": "active",
                 "channel": "whatsapp",
-                "endUser": {
+                "isPinned": false,
+                "unreadCount": 5,
+                "lastMessage": {
                   "id": "uuid",
-                  "name": "John Customer",
-                  "email": "customer@example.com",
-                  "phone": "+1234567890"
+                  "text": "Último mensaje...",
+                  "type": "incoming",
+                  "timestamp": "ISO8601"
                 },
                 "assignedTo": {
                   "id": "uuid",
-                  "name": "Agent Name",
-                  "email": "agent@example.com"
+                  "name": "Agent Name"
                 },
-                "messageCount": 25,
                 "createdAt": "ISO8601",
                 "updatedAt": "ISO8601"
               }
@@ -417,6 +435,23 @@
               "offset": 0,
               "total": 150
             }
+          }
+        }
+      },
+      "markAsRead": {
+        "method": "POST",
+        "path": "/admin/conversations/:id/mark-as-read",
+        "description": "Marcar conversación como leída (CRÍTICO)",
+        "headers": ["Authorization"],
+        "response": {
+          "success": true,
+          "data": {
+            "conversation": {
+              "id": "uuid",
+              "unreadCount": 0,
+              "lastReadAt": "ISO8601"
+            },
+            "message": "Conversation marked as read"
           }
         }
       },

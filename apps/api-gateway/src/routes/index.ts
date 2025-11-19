@@ -11,6 +11,7 @@ import { adminEndUsersRoutes } from './admin/end-users';
 import { adminTeamRoutes, adminTeamInvitesRoutes } from './admin/team';
 import { adminAccountRoutes } from './admin/account';
 import { adminIntegrationsRoutes } from './admin/integrations';
+import { adminSyncRoutes } from './admin/sync';
 
 /**
  * Configuración centralizada de todas las rutas del API Gateway
@@ -39,6 +40,7 @@ export const routes = new Elysia()
   .use(simulationRoutes)
   .use(adminAuthRoutes)
   .use(adminTenantRoutes)
+  .use(adminSyncRoutes)
   .use(adminConversationsRoutes)
   .use(adminMessagesRoutes)
   .use(adminEndUsersRoutes)

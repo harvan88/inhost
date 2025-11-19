@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, jsonb, varchar, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, varchar, boolean, integer, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { MessageType, MessageChannel, MessageStatus } from '../types/message-envelope';
 
@@ -74,6 +74,9 @@ export const conversations = pgTable('conversations', {
   channel: varchar('channel', { enum: ['whatsapp', 'telegram', 'web', 'sms', 'instagram'] }).notNull(),
   status: varchar('status', { enum: ['active', 'closed', 'archived'] }).default('active'),
   assignedToId: uuid('assigned_to_id').references(() => adminUsers.id), // Agente asignado
+  isPinned: boolean('is_pinned').default(false), // Conversación fijada
+  unreadCount: integer('unread_count').default(0), // Contador de mensajes no leídos (desnormalizado)
+  lastReadAt: timestamp('last_read_at'), // Última vez que el agente leyó la conversación
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
