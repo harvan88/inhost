@@ -10,11 +10,12 @@
  */
 
 import { Elysia, t } from 'elysia';
-import { eq, and, desc, sql } from 'drizzle-orm';
-import { db, conversations, messages, endUsers, adminUsers } from '@inhost/shared';
+import { eq, and, desc, sql, notExists } from 'drizzle-orm';
+import { db, conversations, messages, endUsers, adminUsers, messageReads } from '@inhost/shared';
 import { createSuccessResponse, createErrorResponse } from '../../types/api';
 import { requireAuth } from '../../middleware/auth';
 import { httpLogger } from '../../middleware/logger';
+import { notifications } from '../../services';
 
 /**
  * Conversations Management Routes
@@ -479,6 +480,26 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           console.error('Failed to create mentions:', mentionError);
         }
 
+        // Broadcast conversation:updated event (lastMessage was updated by trigger)
+        await notifications.broadcastConversationUpdated({
+          conversationId: id,
+          updates: {
+            lastMessage: {
+              id: newMessage.id,
+              text,
+              type: newMessage.type,
+              timestamp: newMessage.createdAt?.toISOString() || new Date().toISOString(),
+            },
+            // If incoming, unreadCount was incremented
+            ...(type === 'incoming' && {
+              unreadCount: (conversation.unreadCount || 0) + 1,
+            }),
+          },
+          timestamp: new Date().toISOString(),
+        }).catch(err => {
+          console.error('Failed to broadcast conversation:updated event:', err);
+        });
+
         return createSuccessResponse({
           message: {
             id: newMessage.id,
@@ -657,17 +678,67 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           return error(404, createErrorResponse('CONVERSATION_NOT_FOUND', 'Conversation not found'));
         }
 
-        // Update conversation: mark as read
+        // 1. Find all incoming messages in this conversation that haven't been read by this user
+        const unreadMessages = await db
+          .select({ id: messages.id })
+          .from(messages)
+          .where(
+            and(
+              eq(messages.conversationId, id),
+              eq(messages.type, 'incoming'),
+              notExists(
+                db
+                  .select()
+                  .from(messageReads)
+                  .where(
+                    and(
+                      eq(messageReads.messageId, messages.id),
+                      eq(messageReads.userId, user.id)
+                    )
+                  )
+              )
+            )
+          );
+
+        // 2. Create message_reads records for unread messages (bulk insert)
+        if (unreadMessages.length > 0) {
+          await db.insert(messageReads).values(
+            unreadMessages.map((msg) => ({
+              messageId: msg.id,
+              userId: user.id,
+              readAt: new Date(),
+            }))
+          );
+        }
+
+        // 3. Calculate new unread count using database function (per-user)
+        const result = await db.execute(
+          sql`SELECT calculate_unread_count(${id}, ${user.id}) as unread_count`
+        );
+        const newUnreadCount = (result.rows[0] as any)?.unread_count || 0;
+
+        // 4. Update conversation lastReadAt and unreadCount
         const now = new Date();
         const [updated] = await db
           .update(conversations)
           .set({
             lastReadAt: now,
-            unreadCount: 0, // Reset unread counter
+            unreadCount: newUnreadCount,
             updatedAt: now,
           })
           .where(eq(conversations.id, id))
           .returning();
+
+        // 5. Broadcast conversation:read event to all clients in this tenant
+        await notifications.broadcastConversationRead({
+          conversationId: updated.id,
+          userId: user.id,
+          unreadCount: updated.unreadCount || 0,
+          lastReadAt: updated.lastReadAt?.toISOString() || now.toISOString(),
+          timestamp: now.toISOString(),
+        }).catch(err => {
+          console.error('Failed to broadcast conversation:read event:', err);
+        });
 
         return createSuccessResponse({
           conversation: {
@@ -675,7 +746,8 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
             unreadCount: updated.unreadCount,
             lastReadAt: updated.lastReadAt,
           },
-          message: 'Conversation marked as read',
+          markedAsRead: unreadMessages.length,
+          message: `Marked ${unreadMessages.length} messages as read`,
         });
       } catch (err: any) {
         console.error('Mark as read error:', err);

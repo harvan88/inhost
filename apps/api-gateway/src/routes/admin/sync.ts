@@ -39,46 +39,34 @@ export const adminSyncRoutes = new Elysia({ prefix: '/admin/sync' })
         limit: 50,
       });
 
-      // Get lastMessage for each conversation
-      const conversationsWithDetails = await Promise.all(
-        conversationsList.map(async (conv) => {
-          const lastMsg = await db.query.messages.findFirst({
-            where: eq(messages.conversationId, conv.id),
-            orderBy: desc(messages.createdAt),
-            columns: {
-              id: true,
-              type: true,
-              content: true,
-              createdAt: true,
-            },
-          });
-
-          return {
-            id: conv.id,
-            endUserId: conv.endUserId,
-            status: conv.status,
-            channel: conv.channel,
-            isPinned: conv.isPinned || false,
-            unreadCount: conv.unreadCount || 0,
-            lastMessage: lastMsg
-              ? {
-                  id: lastMsg.id,
-                  text: (lastMsg.content as any)?.text || '',
-                  type: lastMsg.type,
-                  timestamp: lastMsg.createdAt?.toISOString() || '',
-                }
-              : undefined,
-            assignedTo: conv.assignedTo
-              ? {
-                  id: conv.assignedTo.id,
-                  name: conv.assignedTo.name,
-                }
-              : null,
-            createdAt: conv.createdAt?.toISOString() || '',
-            updatedAt: conv.updatedAt?.toISOString() || '',
-          };
-        })
-      );
+      // Map conversations using denormalized lastMessage fields (performance optimized)
+      const conversationsWithDetails = conversationsList.map((conv) => {
+        return {
+          id: conv.id,
+          endUserId: conv.endUserId,
+          status: conv.status,
+          channel: conv.channel,
+          isPinned: conv.isPinned || false,
+          unreadCount: conv.unreadCount || 0,
+          // Use denormalized lastMessage fields (updated by trigger)
+          lastMessage: conv.lastMessageId
+            ? {
+                id: conv.lastMessageId,
+                text: conv.lastMessageText || '',
+                type: conv.lastMessageType || '',
+                timestamp: conv.lastMessageAt?.toISOString() || '',
+              }
+            : undefined,
+          assignedTo: conv.assignedTo
+            ? {
+                id: conv.assignedTo.id,
+                name: conv.assignedTo.name,
+              }
+            : null,
+          createdAt: conv.createdAt?.toISOString() || '',
+          updatedAt: conv.updatedAt?.toISOString() || '',
+        };
+      });
 
       // 2. Fetch contacts (all end users)
       const contactsList = await db.query.endUsers.findMany({

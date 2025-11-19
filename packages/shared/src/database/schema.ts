@@ -77,6 +77,13 @@ export const conversations = pgTable('conversations', {
   isPinned: boolean('is_pinned').default(false), // Conversación fijada
   unreadCount: integer('unread_count').default(0), // Contador de mensajes no leídos (desnormalizado)
   lastReadAt: timestamp('last_read_at'), // Última vez que el agente leyó la conversación
+
+  // Campos desnormalizados de lastMessage (para performance)
+  lastMessageId: uuid('last_message_id'), // Se actualiza con trigger
+  lastMessageText: text('last_message_text'),
+  lastMessageType: varchar('last_message_type', { length: 50 }),
+  lastMessageAt: timestamp('last_message_at'),
+
   metadata: jsonb('metadata').default({}),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
@@ -158,6 +165,22 @@ export const messageFeedback = pgTable('message_feedback', {
   };
 });
 
+// Tabla de lecturas de mensajes - Tracking granular por usuario
+export const messageReads = pgTable('message_reads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  messageId: uuid('message_id').references(() => messages.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => adminUsers.id, { onDelete: 'cascade' }).notNull(),
+  readAt: timestamp('read_at').defaultNow(),
+}, (table) => {
+  return {
+    messageIdx: index('message_reads_message_id_idx').on(table.messageId),
+    userIdx: index('message_reads_user_id_idx').on(table.userId),
+    compositeIdx: index('message_reads_composite_idx').on(table.messageId, table.userId),
+    // UNIQUE constraint para evitar duplicados
+    uniqueMessageUser: index('message_reads_message_user_unique').on(table.messageId, table.userId),
+  };
+});
+
 // ============================================
 // RELACIONES
 // ============================================
@@ -175,6 +198,7 @@ export const adminUsersRelations = relations(adminUsers, ({ one, many }) => ({
   }),
   assignedConversations: many(conversations),
   sentMessages: many(messages),
+  readMessages: many(messageReads), // Mensajes leídos por este usuario
 }));
 
 export const endUsersRelations = relations(endUsers, ({ one, many }) => ({
@@ -211,6 +235,7 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
     references: [adminUsers.id],
   }),
   feedback: many(messageFeedback),
+  reads: many(messageReads), // Quiénes han leído este mensaje
 }));
 
 export const mentionsRelations = relations(mentions, ({ one }) => ({
@@ -243,6 +268,17 @@ export const messageFeedbackRelations = relations(messageFeedback, ({ one }) => 
   }),
 }));
 
+export const messageReadsRelations = relations(messageReads, ({ one }) => ({
+  message: one(messages, {
+    fields: [messageReads.messageId],
+    references: [messages.id],
+  }),
+  user: one(adminUsers, {
+    fields: [messageReads.userId],
+    references: [adminUsers.id],
+  }),
+}));
+
 // ============================================
 // TIPOS TYPESCRIPT
 // ============================================
@@ -267,6 +303,9 @@ export type NewMention = typeof mentions.$inferInsert;
 
 export type MessageFeedback = typeof messageFeedback.$inferSelect;
 export type NewMessageFeedback = typeof messageFeedback.$inferInsert;
+
+export type MessageRead = typeof messageReads.$inferSelect;
+export type NewMessageRead = typeof messageReads.$inferInsert;
 
 // Legacy alias (mantener compatibilidad)
 export type User = AdminUser;

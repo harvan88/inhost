@@ -18,7 +18,9 @@ import type {
   INotificationService,
   NotificationTarget,
   StatusUpdate,
-  TypingIndicator
+  TypingIndicator,
+  ConversationReadEvent,
+  ConversationUpdatedEvent
 } from '../../core/interfaces';
 import { logger } from '../../middleware/logger';
 
@@ -103,6 +105,51 @@ export class WebSocketNotification implements INotificationService {
       userId: indicator.userId,
       isTyping: indicator.isTyping,
       targetUser: target?.userId
+    });
+  }
+
+  async broadcastConversationRead(
+    event: ConversationReadEvent,
+    target?: NotificationTarget
+  ): Promise<void> {
+    const payload = {
+      type: 'conversation:read',
+      data: event,
+      timestamp: new Date().toISOString()
+    };
+
+    if (target?.userId) {
+      await this.broadcastToUser(target.userId, payload);
+    } else {
+      await this.broadcastToAll(payload);
+    }
+
+    logger.debug('👁️  WebSocketNotification: Conversation read event sent', {
+      conversationId: event.conversationId,
+      userId: event.userId,
+      unreadCount: event.unreadCount
+    });
+  }
+
+  async broadcastConversationUpdated(
+    event: ConversationUpdatedEvent,
+    target?: NotificationTarget
+  ): Promise<void> {
+    const payload = {
+      type: 'conversation:updated',
+      data: event,
+      timestamp: new Date().toISOString()
+    };
+
+    if (target?.userId) {
+      await this.broadcastToUser(target.userId, payload);
+    } else {
+      await this.broadcastToAll(payload);
+    }
+
+    logger.debug('🔄 WebSocketNotification: Conversation updated event sent', {
+      conversationId: event.conversationId,
+      updates: Object.keys(event.updates)
     });
   }
 

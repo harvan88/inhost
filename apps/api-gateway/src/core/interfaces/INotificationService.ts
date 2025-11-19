@@ -34,6 +34,30 @@ export interface TypingIndicator {
   timestamp: string;
 }
 
+export interface ConversationReadEvent {
+  conversationId: string;
+  userId: string;
+  unreadCount: number;
+  lastReadAt: string;
+  timestamp: string;
+}
+
+export interface ConversationUpdatedEvent {
+  conversationId: string;
+  updates: {
+    lastMessage?: {
+      id: string;
+      text: string;
+      type: string;
+      timestamp: string;
+    };
+    unreadCount?: number;
+    status?: string;
+    assignedToId?: string;
+  };
+  timestamp: string;
+}
+
 export interface INotificationService {
   /**
    * Broadcast de mensaje a destinatarios
@@ -49,6 +73,16 @@ export interface INotificationService {
    * Envía indicador de escritura
    */
   sendTypingIndicator(indicator: TypingIndicator, target?: NotificationTarget): Promise<void>;
+
+  /**
+   * Broadcast de conversación marcada como leída
+   */
+  broadcastConversationRead(event: ConversationReadEvent, target?: NotificationTarget): Promise<void>;
+
+  /**
+   * Broadcast de actualización de conversación (lastMessage, unreadCount, etc.)
+   */
+  broadcastConversationUpdated(event: ConversationUpdatedEvent, target?: NotificationTarget): Promise<void>;
 
   /**
    * Registra una conexión de cliente
