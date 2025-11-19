@@ -23,8 +23,7 @@ import {
   MemoryPersistence,
   WebSocketNotification,
   SimplePlanResolver,
-  ConnectionOwnerChecker,
-  CapabilityBasedServiceGate
+  ConnectionOwnerChecker
 } from '../implementations/v1';
 import { RedisRateLimiter } from '../implementations/v2';
 import { MessageCore } from '../core/MessageCore';
@@ -75,10 +74,11 @@ export const planResolver = new SimplePlanResolver();
 export const ownerChecker = new ConnectionOwnerChecker();
 
 /**
- * Service Gate V1 - Sistema de capacidades
- * (Reemplaza la lógica hardcodeada de planes)
+ * Service Gate V2 - Sistema de capacidades persistente
+ * (Usa PostgreSQL con fallback a memoria si DB no está disponible)
  */
-export const serviceGate = new CapabilityBasedServiceGate();
+import { DatabaseServiceGate } from '../implementations/v2';
+export const serviceGate = new DatabaseServiceGate();
 
 /**
  * MESSAGE CORE - Núcleo de mensajería (orquestador ligero)
@@ -143,8 +143,8 @@ export async function initializeServices(): Promise<void> {
     notifications: 'WebSocketNotification (V1)',
     planResolver: 'SimplePlanResolver (V1)',
     ownerChecker: 'ConnectionOwnerChecker (V1)',
-    serviceGate: 'CapabilityBasedServiceGate (V1)',
-    messageCore: 'MessageCore (initialized with ServiceGate)'
+    serviceGate: 'DatabaseServiceGate (V2) - PostgreSQL backend',
+    messageCore: 'MessageCore (initialized with ServiceGate V2)'
   });
 
   // Health check inicial
