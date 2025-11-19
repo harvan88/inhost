@@ -135,7 +135,7 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         });
       } catch (err: any) {
         console.error('Signup error:', err);
-        return error(500, createErrorResponse('SIGNUP_FAILED', 'Failed to create account'));
+        throw new Error(`Signup failed: ${err.message}`);
       }
     },
     {
