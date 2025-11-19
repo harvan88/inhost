@@ -74,6 +74,13 @@ export const planResolver = new SimplePlanResolver();
 export const ownerChecker = new ConnectionOwnerChecker();
 
 /**
+ * Service Gate V2 - Sistema de capacidades persistente
+ * (Usa PostgreSQL con fallback a memoria si DB no está disponible)
+ */
+import { DatabaseServiceGate } from '../implementations/v2';
+export const serviceGate = new DatabaseServiceGate();
+
+/**
  * MESSAGE CORE - Núcleo de mensajería (orquestador ligero)
  */
 export const messageCore = new MessageCore(
@@ -81,7 +88,8 @@ export const messageCore = new MessageCore(
   notifications,
   planResolver,
   ownerChecker,
-  adapterManager
+  adapterManager,
+  serviceGate // Opcional: nuevo sistema de capacidades
 );
 
 /**
@@ -135,7 +143,8 @@ export async function initializeServices(): Promise<void> {
     notifications: 'WebSocketNotification (V1)',
     planResolver: 'SimplePlanResolver (V1)',
     ownerChecker: 'ConnectionOwnerChecker (V1)',
-    messageCore: 'MessageCore (initialized)'
+    serviceGate: 'DatabaseServiceGate (V2) - PostgreSQL backend',
+    messageCore: 'MessageCore (initialized with ServiceGate V2)'
   });
 
   // Health check inicial

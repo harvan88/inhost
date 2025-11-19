@@ -65,3 +65,33 @@ export type {
   DeviceInfo,
   OwnerPresence
 } from './IOwnerChecker';
+
+// Extension System
+export type {
+  IExtension,
+  IMessageExtension,
+  ExtensionType,
+  ExtensionPriority,
+  ExtensionContext,
+  ExtensionResult,
+  ExtensionConfig,
+  ExtensionMetadata
+} from './IExtension';
+
+export type {
+  IExtensionRegistry,
+  IMessageExtensionRegistry,
+  RegisteredExtension,
+  ExtensionFilter,
+  RegistryStats
+} from './IExtensionRegistry';
+
+// Service Gate (Capability-based access control)
+export type {
+  IServiceGate,
+  ServiceId,
+  ServiceConfig,
+  UserCapabilities,
+  ServiceCheckResult,
+  ServiceUsageResult
+} from './IServiceGate';

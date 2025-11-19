@@ -204,6 +204,117 @@
           }
         }
       }
+    },
+    "getUserCapabilities": {
+      "method": "GET",
+      "path": "/me/capabilities",
+      "description": "Obtener capacidades (servicios habilitados) del usuario actual",
+      "headers": ["X-User-Id"],
+      "response": {
+        "success": true,
+        "data": {
+          "userId": "test-user",
+          "services": {
+            "rate-limiting": {
+              "enabled": true,
+              "limits": {
+                "rateLimit": 12
+              }
+            },
+            "ai-assistant": {
+              "enabled": false
+            },
+            "analytics": {
+              "enabled": false
+            },
+            "persistence": {
+              "enabled": true,
+              "features": {
+                "type": "memory",
+                "retentionDays": 1
+              }
+            }
+          },
+          "globalLimits": {
+            "maxConcurrentRequests": 5,
+            "maxStorageBytes": 10485760,
+            "maxTeamMembers": 1
+          }
+        }
+      }
+    },
+    "getUserUsage": {
+      "method": "GET",
+      "path": "/me/usage",
+      "description": "Obtener estadísticas de uso actual del usuario",
+      "headers": ["X-User-Id"],
+      "response": {
+        "success": true,
+        "data": {
+          "userId": "test-user",
+          "services": {
+            "rate-limiting": {
+              "used": 5,
+              "limit": 12
+            },
+            "ai-assistant": {
+              "used": 0,
+              "limit": 0
+            }
+          },
+          "globalUsage": {
+            "concurrentRequests": 0,
+            "storageBytes": 0,
+            "teamMembers": 1
+          }
+        }
+      }
+    },
+    "checkService": {
+      "method": "GET",
+      "path": "/me/services/:serviceId",
+      "description": "Verificar si el usuario puede usar un servicio específico",
+      "headers": ["X-User-Id"],
+      "params": {
+        "serviceId": "rate-limiting|ai-assistant|analytics|persistence|websocket|workflow|integration|custom"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "service": "ai-assistant",
+          "allowed": false,
+          "reason": "Service disabled for user",
+          "config": {
+            "enabled": false
+          },
+          "usage": {
+            "current": 0,
+            "limit": 0,
+            "remaining": 0
+          }
+        }
+      }
+    },
+    "getServiceConfig": {
+      "method": "GET",
+      "path": "/me/services/:serviceId/config",
+      "description": "Obtener configuración de un servicio",
+      "headers": ["X-User-Id"],
+      "params": {
+        "serviceId": "rate-limiting|ai-assistant|analytics|persistence"
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "service": "rate-limiting",
+          "config": {
+            "enabled": true,
+            "limits": {
+              "rateLimit": 12
+            }
+          }
+        }
+      }
     }
   },
   "websocket": {

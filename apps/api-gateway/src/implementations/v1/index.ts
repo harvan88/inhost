@@ -31,3 +31,7 @@ export { MemoryPersistence } from './MemoryPersistence';
 export { WebSocketNotification } from './WebSocketNotification';
 export { SimplePlanResolver } from './SimplePlanResolver';
 export { ConnectionOwnerChecker } from './ConnectionOwnerChecker';
+
+// Capability-based system (replaces hardcoded plans)
+export { CapabilityBasedServiceGate } from './CapabilityBasedServiceGate';
+export { PlanToCapabilityAdapter } from './PlanToCapabilityAdapter';

@@ -1,0 +1,698 @@
+{
+  "version": "2.0.0-multi-tenancy",
+  "name": "INHOST Admin API Contract",
+  "description": "API para Admin Dashboard (Tenant Users) - Gestión de organizaciones y configuración",
+  "audience": "Tenant Users (admins, agents, owners)",
+  "baseURL": {
+    "development": "http://localhost:3000/admin",
+    "production": "https://api.inhost.com/admin"
+  },
+  "authentication": {
+    "type": "JWT",
+    "description": "Todas las requests requieren JWT token en Authorization header",
+    "header": {
+      "name": "Authorization",
+      "value": "Bearer <jwt_token>",
+      "example": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    },
+    "jwtPayload": {
+      "sub": "tenant_user_id (UUID)",
+      "email": "admin@tenant.com",
+      "tenant_id": "tenant UUID",
+      "role": "owner|admin|agent|viewer",
+      "iat": "issued at timestamp",
+      "exp": "expiration timestamp"
+    }
+  },
+  "endpoints": {
+    "auth": {
+      "login": {
+        "method": "POST",
+        "path": "/auth/login",
+        "description": "Login de tenant user",
+        "public": true,
+        "body": {
+          "email": "admin@tiendaxyz.com",
+          "password": "string (min 8 chars)"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "token": "eyJhbGc...",
+            "user": {
+              "id": "uuid",
+              "email": "admin@tiendaxyz.com",
+              "name": "Admin Name",
+              "role": "owner",
+              "tenant": {
+                "id": "uuid",
+                "name": "Tienda XYZ",
+                "slug": "tienda-xyz",
+                "plan": "professional",
+                "subscriptionStatus": "active"
+              }
+            },
+            "expiresIn": 86400
+          }
+        },
+        "errors": {
+          "401": {
+            "code": "INVALID_CREDENTIALS",
+            "message": "Email o contraseña incorrectos"
+          },
+          "403": {
+            "code": "ACCOUNT_SUSPENDED",
+            "message": "Cuenta suspendida"
+          }
+        }
+      },
+      "signup": {
+        "method": "POST",
+        "path": "/auth/signup",
+        "description": "Crear nueva organización (tenant) y owner",
+        "public": true,
+        "body": {
+          "tenantName": "Mi Empresa",
+          "email": "admin@miempresa.com",
+          "password": "string (min 8 chars)",
+          "name": "Admin Name",
+          "plan": "starter|professional|enterprise"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "token": "eyJhbGc...",
+            "tenant": {
+              "id": "uuid",
+              "name": "Mi Empresa",
+              "slug": "mi-empresa",
+              "plan": "starter",
+              "subscriptionStatus": "trial",
+              "trialEndsAt": "2025-12-31T23:59:59Z"
+            },
+            "user": {
+              "id": "uuid",
+              "email": "admin@miempresa.com",
+              "role": "owner"
+            }
+          }
+        }
+      },
+      "me": {
+        "method": "GET",
+        "path": "/auth/me",
+        "description": "Obtener información del tenant user actual",
+        "auth": true,
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "email": "admin@tiendaxyz.com",
+            "name": "Admin Name",
+            "role": "owner",
+            "tenant": {
+              "id": "uuid",
+              "name": "Tienda XYZ",
+              "plan": "professional",
+              "subscriptionStatus": "active"
+            }
+          }
+        }
+      },
+      "logout": {
+        "method": "POST",
+        "path": "/auth/logout",
+        "description": "Invalidar token JWT",
+        "auth": true,
+        "response": {
+          "success": true,
+          "message": "Logged out successfully"
+        }
+      }
+    },
+    "tenant": {
+      "getTenant": {
+        "method": "GET",
+        "path": "/tenant",
+        "description": "Obtener información de la organización",
+        "auth": true,
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "name": "Tienda XYZ",
+            "slug": "tienda-xyz",
+            "email": "info@tiendaxyz.com",
+            "plan": "professional",
+            "subscriptionStatus": "active",
+            "trialEndsAt": null,
+            "billingEmail": "billing@tiendaxyz.com",
+            "settings": {
+              "whatsapp_number": "+5215500000000",
+              "branding": {
+                "primaryColor": "#007bff"
+              }
+            },
+            "createdAt": "2025-01-01T00:00:00Z"
+          }
+        }
+      },
+      "updateTenant": {
+        "method": "PATCH",
+        "path": "/tenant",
+        "description": "Actualizar información de la organización",
+        "auth": true,
+        "permissions": ["owner", "admin"],
+        "body": {
+          "name": "Nuevo Nombre",
+          "email": "nuevo@email.com",
+          "billingEmail": "billing@nuevo.com",
+          "settings": {
+            "whatsapp_number": "+5215511111111"
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "name": "Nuevo Nombre",
+            "updatedAt": "2025-11-19T10:00:00Z"
+          }
+        }
+      },
+      "upgradePlan": {
+        "method": "POST",
+        "path": "/tenant/upgrade",
+        "description": "Actualizar plan de la organización",
+        "auth": true,
+        "permissions": ["owner"],
+        "body": {
+          "plan": "professional|enterprise"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "tenant": {
+              "plan": "professional",
+              "subscriptionStatus": "active"
+            },
+            "capabilities": [
+              {
+                "serviceId": "ai-assistant",
+                "enabled": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "endUsers": {
+      "list": {
+        "method": "GET",
+        "path": "/end-users",
+        "description": "Listar clientes finales (end-users) de la organización",
+        "auth": true,
+        "query": {
+          "limit": {
+            "type": "number",
+            "default": 50,
+            "max": 100
+          },
+          "offset": {
+            "type": "number",
+            "default": 0
+          },
+          "channel": {
+            "type": "string",
+            "enum": ["whatsapp", "telegram", "web", "sms"],
+            "optional": true
+          },
+          "search": {
+            "type": "string",
+            "description": "Buscar por name, phone, email",
+            "optional": true
+          },
+          "activeOnly": {
+            "type": "boolean",
+            "description": "Solo usuarios activos (últimos 30 días)",
+            "optional": true
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "total": 1250,
+            "count": 50,
+            "endUsers": [
+              {
+                "id": "uuid",
+                "phone": "+5215512345678",
+                "name": "Juan Pérez",
+                "email": "juan@example.com",
+                "primaryChannel": "whatsapp",
+                "lastInteractionAt": "2025-11-19T09:00:00Z",
+                "conversationCount": 5,
+                "messageCount": 23,
+                "createdAt": "2025-01-15T10:00:00Z"
+              }
+            ]
+          }
+        }
+      },
+      "get": {
+        "method": "GET",
+        "path": "/end-users/:id",
+        "description": "Obtener detalles de un cliente final",
+        "auth": true,
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "phone": "+5215512345678",
+            "name": "Juan Pérez",
+            "email": "juan@example.com",
+            "primaryChannel": "whatsapp",
+            "customFields": {
+              "customer_id": "CUST-123",
+              "vip": true
+            },
+            "tags": ["vip", "frequent"],
+            "lastInteractionAt": "2025-11-19T09:00:00Z",
+            "stats": {
+              "totalConversations": 5,
+              "totalMessages": 23,
+              "avgResponseTime": "2m 30s"
+            },
+            "createdAt": "2025-01-15T10:00:00Z"
+          }
+        }
+      },
+      "create": {
+        "method": "POST",
+        "path": "/end-users",
+        "description": "Crear nuevo cliente final manualmente",
+        "auth": true,
+        "permissions": ["owner", "admin", "agent"],
+        "body": {
+          "phone": "+5215512345678",
+          "name": "Juan Pérez",
+          "email": "juan@example.com",
+          "primaryChannel": "whatsapp",
+          "customFields": {
+            "customer_id": "CUST-123"
+          },
+          "tags": ["vip"]
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "phone": "+5215512345678",
+            "name": "Juan Pérez",
+            "createdAt": "2025-11-19T10:00:00Z"
+          }
+        }
+      },
+      "update": {
+        "method": "PATCH",
+        "path": "/end-users/:id",
+        "description": "Actualizar información de cliente final",
+        "auth": true,
+        "body": {
+          "name": "Juan Alberto Pérez",
+          "email": "nuevo@email.com",
+          "customFields": {
+            "vip": true
+          },
+          "tags": ["vip", "frequent"]
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "name": "Juan Alberto Pérez",
+            "updatedAt": "2025-11-19T10:00:00Z"
+          }
+        }
+      }
+    },
+    "conversations": {
+      "list": {
+        "method": "GET",
+        "path": "/conversations",
+        "description": "Listar conversaciones de la organización",
+        "auth": true,
+        "query": {
+          "limit": {
+            "type": "number",
+            "default": 50
+          },
+          "offset": {
+            "type": "number",
+            "default": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "resolved", "all"],
+            "default": "all"
+          },
+          "channel": {
+            "type": "string",
+            "enum": ["whatsapp", "telegram", "web", "sms"],
+            "optional": true
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "total": 342,
+            "count": 50,
+            "conversations": [
+              {
+                "id": "uuid",
+                "endUser": {
+                  "id": "uuid",
+                  "name": "Juan Pérez",
+                  "phone": "+5215512345678"
+                },
+                "channel": "whatsapp",
+                "lastMessage": {
+                  "text": "¿Dónde está mi pedido?",
+                  "timestamp": "2025-11-19T09:00:00Z"
+                },
+                "unreadCount": 2,
+                "status": "open",
+                "createdAt": "2025-11-15T10:00:00Z",
+                "updatedAt": "2025-11-19T09:00:00Z"
+              }
+            ]
+          }
+        }
+      },
+      "get": {
+        "method": "GET",
+        "path": "/conversations/:id",
+        "description": "Obtener detalles de una conversación",
+        "auth": true,
+        "response": {
+          "success": true,
+          "data": {
+            "id": "uuid",
+            "endUser": {
+              "id": "uuid",
+              "name": "Juan Pérez",
+              "phone": "+5215512345678",
+              "email": "juan@example.com"
+            },
+            "channel": "whatsapp",
+            "status": "open",
+            "assignedTo": {
+              "id": "uuid",
+              "name": "María (Agente)",
+              "email": "maria@tiendaxyz.com"
+            },
+            "createdAt": "2025-11-15T10:00:00Z",
+            "updatedAt": "2025-11-19T09:00:00Z"
+          }
+        }
+      },
+      "getMessages": {
+        "method": "GET",
+        "path": "/conversations/:id/messages",
+        "description": "Obtener mensajes de una conversación",
+        "auth": true,
+        "query": {
+          "limit": {
+            "type": "number",
+            "default": 100
+          },
+          "before": {
+            "type": "string",
+            "description": "Message ID - cargar mensajes anteriores",
+            "optional": true
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "conversationId": "uuid",
+            "count": 15,
+            "messages": [
+              {
+                "id": "uuid",
+                "type": "incoming",
+                "content": {
+                  "text": "Hola, ¿dónde está mi pedido #123?"
+                },
+                "metadata": {
+                  "from": "+5215512345678",
+                  "timestamp": "2025-11-19T09:00:00Z"
+                },
+                "createdAt": "2025-11-19T09:00:00Z"
+              },
+              {
+                "id": "uuid",
+                "type": "outgoing",
+                "content": {
+                  "text": "Hola Juan, tu pedido está en camino"
+                },
+                "metadata": {
+                  "from": "agent@tiendaxyz.com",
+                  "aiGenerated": false,
+                  "timestamp": "2025-11-19T09:01:00Z"
+                },
+                "createdAt": "2025-11-19T09:01:00Z"
+              }
+            ]
+          }
+        }
+      },
+      "sendMessage": {
+        "method": "POST",
+        "path": "/conversations/:id/messages",
+        "description": "Enviar mensaje desde admin dashboard",
+        "auth": true,
+        "body": {
+          "text": "Hola, ¿en qué puedo ayudarte?",
+          "attachments": [
+            {
+              "url": "https://...",
+              "type": "image",
+              "filename": "image.jpg"
+            }
+          ]
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "messageId": "uuid",
+            "status": "sent",
+            "createdAt": "2025-11-19T10:00:00Z"
+          }
+        }
+      }
+    },
+    "team": {
+      "list": {
+        "method": "GET",
+        "path": "/team",
+        "description": "Listar miembros del equipo (tenant_users)",
+        "auth": true,
+        "response": {
+          "success": true,
+          "data": {
+            "count": 5,
+            "members": [
+              {
+                "id": "uuid",
+                "email": "admin@tiendaxyz.com",
+                "name": "Admin Name",
+                "role": "owner",
+                "isActive": true,
+                "lastLoginAt": "2025-11-19T08:00:00Z",
+                "createdAt": "2025-01-01T00:00:00Z"
+              }
+            ]
+          }
+        }
+      },
+      "invite": {
+        "method": "POST",
+        "path": "/team/invite",
+        "description": "Invitar nuevo miembro al equipo",
+        "auth": true,
+        "permissions": ["owner", "admin"],
+        "body": {
+          "email": "nuevo@tiendaxyz.com",
+          "name": "Nuevo Agente",
+          "role": "agent"
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "inviteId": "uuid",
+            "email": "nuevo@tiendaxyz.com",
+            "inviteUrl": "https://app.inhost.com/invite/abc123"
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "list": {
+        "method": "GET",
+        "path": "/capabilities",
+        "description": "Listar capabilities habilitadas",
+        "auth": true,
+        "response": {
+          "success": true,
+          "data": {
+            "capabilities": [
+              {
+                "serviceId": "ai-assistant",
+                "enabled": true,
+                "config": {
+                  "limits": {
+                    "quota": 1000
+                  }
+                },
+                "usage": {
+                  "current": 234,
+                  "limit": 1000,
+                  "resetAt": "2025-12-01T00:00:00Z"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "toggle": {
+        "method": "POST",
+        "path": "/capabilities/:serviceId/toggle",
+        "description": "Habilitar/deshabilitar capability",
+        "auth": true,
+        "permissions": ["owner", "admin"],
+        "body": {
+          "enabled": true
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "serviceId": "ai-assistant",
+            "enabled": true
+          }
+        }
+      }
+    },
+    "analytics": {
+      "dashboard": {
+        "method": "GET",
+        "path": "/analytics/dashboard",
+        "description": "Obtener métricas para dashboard",
+        "auth": true,
+        "query": {
+          "period": {
+            "type": "string",
+            "enum": ["7d", "30d", "90d"],
+            "default": "30d"
+          }
+        },
+        "response": {
+          "success": true,
+          "data": {
+            "period": "30d",
+            "metrics": {
+              "totalEndUsers": 1250,
+              "activeEndUsers": 543,
+              "totalMessages": 45230,
+              "avgResponseTime": "2m 15s",
+              "satisfactionScore": 92
+            },
+            "messagesByDay": [
+              {
+                "date": "2025-11-19",
+                "count": 1523
+              }
+            ],
+            "topChannels": [
+              {
+                "channel": "whatsapp",
+                "percentage": 68
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "websocket": {
+    "endpoint": "/admin/realtime",
+    "protocol": "wss",
+    "authentication": {
+      "method": "query param",
+      "param": "token",
+      "example": "wss://api.inhost.com/admin/realtime?token=<jwt>"
+    },
+    "events": {
+      "connection": {
+        "direction": "server → client",
+        "payload": {
+          "type": "connection",
+          "status": "connected",
+          "tenantId": "uuid",
+          "userId": "uuid"
+        }
+      },
+      "conversation:new": {
+        "direction": "server → client",
+        "payload": {
+          "type": "conversation:new",
+          "data": {
+            "conversationId": "uuid",
+            "endUser": {
+              "name": "Juan Pérez",
+              "phone": "+52..."
+            },
+            "lastMessage": "Hola, necesito ayuda"
+          }
+        }
+      },
+      "message:new": {
+        "direction": "server → client",
+        "payload": {
+          "type": "message:new",
+          "data": {
+            "conversationId": "uuid",
+            "message": {
+              "id": "uuid",
+              "type": "incoming|outgoing",
+              "text": "...",
+              "createdAt": "ISO8601"
+            },
+            "endUser": {
+              "id": "uuid",
+              "name": "Juan Pérez"
+            }
+          }
+        }
+      },
+      "end_user:online": {
+        "direction": "server → client",
+        "payload": {
+          "type": "end_user:online",
+          "data": {
+            "endUserId": "uuid",
+            "status": "online|offline"
+          }
+        }
+      }
+    }
+  },
+  "errorCodes": {
+    "401": "Unauthorized - Token inválido o expirado",
+    "403": "Forbidden - Permisos insuficientes",
+    "404": "Not Found - Recurso no encontrado",
+    "422": "Validation Error - Datos inválidos",
+    "429": "Rate Limit Exceeded - Demasiadas requests",
+    "500": "Internal Server Error"
+  }
+}

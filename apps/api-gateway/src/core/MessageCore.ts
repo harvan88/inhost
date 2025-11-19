@@ -20,6 +20,7 @@ import type {
   INotificationService,
   IPlanResolver,
   IOwnerChecker,
+  IServiceGate,
   SendResult
 } from './interfaces';
 import type { AdapterManager } from '../adapters/manager';
@@ -29,13 +30,15 @@ export interface MessageCoreConfig {
   enablePersistence?: boolean;
   enableNotifications?: boolean;
   enablePlanChecks?: boolean;
+  useServiceGate?: boolean; // Usar ServiceGate en lugar de PlanResolver
 }
 
 export class MessageCore {
   private config: MessageCoreConfig = {
     enablePersistence: true,
     enableNotifications: true,
-    enablePlanChecks: true
+    enablePlanChecks: true,
+    useServiceGate: false
   };
 
   constructor(
@@ -43,7 +46,8 @@ export class MessageCore {
     private notifications: INotificationService,
     private planResolver: IPlanResolver,
     private ownerChecker: IOwnerChecker,
-    private adapters: AdapterManager
+    private adapters: AdapterManager,
+    private serviceGate?: IServiceGate // Opcional: nuevo sistema de capacidades
   ) {}
 
   /**
@@ -107,12 +111,38 @@ export class MessageCore {
     });
 
     try {
-      // 1. Verificar plan (si está habilitado)
+      // 1. Verificar capacidades (si está habilitado)
       if (this.config.enablePlanChecks && envelope.metadata?.ownerId) {
-        const canSend = await this.planResolver.canPerformAction(
-          envelope.metadata.ownerId,
-          'send_message'
-        );
+        let canSend = true;
+
+        // Usar ServiceGate si está disponible (nuevo sistema)
+        if (this.config.useServiceGate && this.serviceGate) {
+          const result = await this.serviceGate.canUseService(
+            envelope.metadata.ownerId,
+            'rate-limiting'
+          );
+          canSend = result.allowed;
+
+          if (!canSend) {
+            logger.warn('⚠️  Service gate denied access', {
+              userId: envelope.metadata.ownerId,
+              service: 'rate-limiting',
+              reason: result.reason
+            });
+          }
+        } else {
+          // Fallback: usar PlanResolver legacy
+          canSend = await this.planResolver.canPerformAction(
+            envelope.metadata.ownerId,
+            'send_message'
+          );
+
+          if (!canSend) {
+            logger.warn('⚠️  Plan limit exceeded', {
+              userId: envelope.metadata.ownerId
+            });
+          }
+        }
 
         if (!canSend) {
           const result: SendResult = {
@@ -120,14 +150,13 @@ export class MessageCore {
             messageId: envelope.id,
             status: 'failed',
             error: {
-              code: 'PLAN_LIMIT_EXCEEDED',
-              message: 'Plan limit exceeded for sending messages',
+              code: 'LIMIT_EXCEEDED',
+              message: 'Rate limit or plan limit exceeded for sending messages',
               retryable: false
             },
             timestamp: new Date().toISOString()
           };
 
-          logger.warn('⚠️  Plan limit exceeded', { userId: envelope.metadata.ownerId });
           return result;
         }
       }
@@ -155,9 +184,21 @@ export class MessageCore {
         });
       }
 
-      // 6. Registrar uso en el plan
+      // 6. Registrar uso
       if (this.config.enablePlanChecks && envelope.metadata?.ownerId) {
-        await this.planResolver.recordUsage(envelope.metadata.ownerId, 'send_message');
+        if (this.config.useServiceGate && this.serviceGate) {
+          // Usar ServiceGate (nuevo sistema)
+          await this.serviceGate.recordServiceUsage(
+            envelope.metadata.ownerId,
+            'rate-limiting'
+          );
+        } else {
+          // Fallback: PlanResolver legacy
+          await this.planResolver.recordUsage(
+            envelope.metadata.ownerId,
+            'send_message'
+          );
+        }
       }
 
       return result;

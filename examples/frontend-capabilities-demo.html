@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INHOST - Capabilities Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+      color: #333;
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 0.5rem;
+    }
+
+    .feature {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .feature:last-child {
+      border-bottom: none;
+    }
+
+    .feature-name {
+      font-weight: 500;
+      color: #555;
+    }
+
+    .enabled {
+      color: #10b981;
+      font-weight: 600;
+    }
+
+    .disabled {
+      color: #ef4444;
+      font-weight: 600;
+    }
+
+    .locked {
+      background: #fef2f2;
+      padding: 0.5rem;
+      border-radius: 6px;
+      color: #991b1b;
+      font-size: 0.875rem;
+    }
+
+    .progress-bar {
+      background: #e5e7eb;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.5rem 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .progress-fill.warning {
+      background: linear-gradient(90deg, #f59e0b, #dc2626);
+    }
+
+    .upgrade-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+      font-size: 1rem;
+      transition: transform 0.2s;
+    }
+
+    .upgrade-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .loading {
+      text-align: center;
+      color: white;
+      font-size: 1.25rem;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .trial-badge {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .usage-text {
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .service-check {
+      background: #f9fafb;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+    }
+
+    .service-check-title {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .test-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .test-btn {
+      flex: 1;
+      padding: 0.5rem;
+      border: 2px solid #667eea;
+      background: white;
+      color: #667eea;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .test-btn:hover {
+      background: #667eea;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 INHOST Capabilities Demo</h1>
+
+    <div id="loading" class="loading">Loading your capabilities...</div>
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div id="dashboard" class="dashboard" style="display: none;">
+      <!-- Card: Your Plan -->
+      <div class="card">
+        <h2>📋 Your Plan</h2>
+        <div id="capabilities-list"></div>
+        <button class="upgrade-btn" onclick="handleUpgrade()">
+          ⬆️ Upgrade Plan
+        </button>
+      </div>
+
+      <!-- Card: Usage Stats -->
+      <div class="card">
+        <h2>📊 Usage Statistics</h2>
+        <div id="usage-stats"></div>
+      </div>
+
+      <!-- Card: Service Checks -->
+      <div class="card">
+        <h2>🔍 Service Checks</h2>
+        <div class="test-buttons">
+          <button class="test-btn" onclick="checkService('ai-assistant')">
+            Check AI
+          </button>
+          <button class="test-btn" onclick="checkService('analytics')">
+            Check Analytics
+          </button>
+          <button class="test-btn" onclick="checkService('rate-limiting')">
+            Check Rate Limit
+          </button>
+        </div>
+        <div id="service-check-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000';
+    const USER_ID = localStorage.getItem('userId') || 'demo-user';
+
+    // Store userId
+    localStorage.setItem('userId', USER_ID);
+
+    // Fetch capabilities
+    async function fetchCapabilities() {
+      try {
+        const response = await fetch(`${API_BASE}/me/capabilities`, {
+          headers: {
+            'X-User-Id': USER_ID
+          }
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error?.message || 'Failed to fetch capabilities');
+        }
+
+        return data.data;
+      } catch (error) {
+        console.error('Error fetching capabilities:', error);
+        throw error;
+      }
+    }
+
+    // Fetch usage stats
+    async function fetchUsage() {
+      try {
+        const response = await fetch(`${API_BASE}/me/usage`, {
+          headers: {
+            'X-User-Id': USER_ID
+          }
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error?.message || 'Failed to fetch usage');
+        }
+
+        return data.data;
+      } catch (error) {
+        console.error('Error fetching usage:', error);
+        throw error;
+      }
+    }
+
+    // Check specific service
+    async function checkService(serviceId) {
+      try {
+        const response = await fetch(`${API_BASE}/me/services/${serviceId}`, {
+          headers: {
+            'X-User-Id': USER_ID
+          }
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error?.message || 'Failed to check service');
+        }
+
+        displayServiceCheck(data.data);
+      } catch (error) {
+        console.error('Error checking service:', error);
+        displayServiceCheck({
+          service: serviceId,
+          allowed: false,
+          reason: error.message
+        });
+      }
+    }
+
+    // Display service check result
+    function displayServiceCheck(result) {
+      const container = document.getElementById('service-check-results');
+      const statusClass = result.allowed ? 'enabled' : 'disabled';
+      const statusText = result.allowed ? '✓ Available' : '✗ Not Available';
+
+      const html = `
+        <div class="service-check">
+          <div class="service-check-title">
+            ${result.service}
+            <span class="${statusClass}">${statusText}</span>
+          </div>
+          ${result.reason ? `<div class="locked">${result.reason}</div>` : ''}
+          ${result.usage ? `
+            <div class="usage-text">
+              Usage: ${result.usage.current} / ${result.usage.limit || '∞'}
+              ${result.usage.remaining !== undefined ? `(${result.usage.remaining} remaining)` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    // Render capabilities
+    function renderCapabilities(capabilities) {
+      const container = document.getElementById('capabilities-list');
+
+      const services = Object.entries(capabilities.services)
+        .filter(([_, config]) => config.enabled !== undefined);
+
+      const html = services.map(([serviceId, config]) => {
+        const enabled = config.enabled;
+        const statusClass = enabled ? 'enabled' : 'disabled';
+        const statusText = enabled ? '✓ Enabled' : '✗ Disabled';
+
+        let extraInfo = '';
+        if (enabled && config.limits?.rateLimit) {
+          extraInfo = `<div class="usage-text">${config.limits.rateLimit} req/min</div>`;
+        }
+
+        return `
+          <div class="feature">
+            <div>
+              <div class="feature-name">${formatServiceName(serviceId)}</div>
+              ${extraInfo}
+            </div>
+            <div class="${statusClass}">${statusText}</div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Render usage stats
+    function renderUsage(usage) {
+      const container = document.getElementById('usage-stats');
+
+      const services = Object.entries(usage.services);
+
+      if (services.length === 0) {
+        container.innerHTML = '<div class="usage-text">No usage data yet</div>';
+        return;
+      }
+
+      const html = services.map(([serviceId, stats]) => {
+        const { used, limit } = stats;
+        const percentage = limit ? (used / limit) * 100 : 0;
+        const warningClass = percentage > 80 ? 'warning' : '';
+
+        return `
+          <div style="margin-bottom: 1rem;">
+            <div class="feature-name">${formatServiceName(serviceId)}</div>
+            <div class="progress-bar">
+              <div class="progress-fill ${warningClass}" style="width: ${percentage}%">
+                ${Math.round(percentage)}%
+              </div>
+            </div>
+            <div class="usage-text">
+              ${used} / ${limit || '∞'} used
+              ${limit ? `(${limit - used} remaining)` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    // Format service name for display
+    function formatServiceName(serviceId) {
+      const names = {
+        'rate-limiting': 'Rate Limiting',
+        'ai-assistant': 'AI Assistant',
+        'analytics': 'Analytics',
+        'persistence': 'Message Storage',
+        'websocket': 'WebSocket',
+        'workflow': 'Custom Workflows',
+        'integration': 'Integrations',
+        'custom': 'Custom Extensions'
+      };
+
+      return names[serviceId] || serviceId;
+    }
+
+    // Handle upgrade button
+    function handleUpgrade() {
+      alert('Upgrade functionality coming soon!\n\nThis would redirect to your billing page.');
+    }
+
+    // Initialize app
+    async function init() {
+      const loadingEl = document.getElementById('loading');
+      const errorEl = document.getElementById('error');
+      const dashboardEl = document.getElementById('dashboard');
+
+      try {
+        // Fetch data in parallel
+        const [capabilities, usage] = await Promise.all([
+          fetchCapabilities(),
+          fetchUsage()
+        ]);
+
+        // Render UI
+        renderCapabilities(capabilities);
+        renderUsage(usage);
+
+        // Show dashboard
+        loadingEl.style.display = 'none';
+        dashboardEl.style.display = 'grid';
+
+        // Auto-refresh usage every 10 seconds
+        setInterval(async () => {
+          const updatedUsage = await fetchUsage();
+          renderUsage(updatedUsage);
+        }, 10000);
+
+      } catch (error) {
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.textContent = `Error: ${error.message}\n\nMake sure the API server is running on ${API_BASE}`;
+      }
+    }
+
+    // Start app
+    init();
+  </script>
+</body>
+</html>
