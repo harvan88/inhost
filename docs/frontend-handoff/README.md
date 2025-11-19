@@ -17,29 +17,85 @@ Esta carpeta contiene **toda la documentación necesaria** para que el equipo fr
 
 ## 📂 CONTENIDO DEL PAQUETE
 
-### 1. **api-contract.json** ⭐ FUENTE DE VERDAD
+### 🆕 ADMIN DASHBOARD (Nuevo - 2025-11-19)
+
+#### 1. **ADMIN-QUICK-START.md** ⚡ START HERE
+**Guía rápida de 5 minutos para el dashboard admin**
+
+Incluye:
+- ✅ Setup en 5 pasos
+- ✅ Endpoints principales
+- ✅ Código copy/paste listo para usar (React hooks, auth helpers)
+- ✅ Ejemplos completos de integración
+- ✅ Troubleshooting común
+
+**EMPIEZA AQUÍ** si vas a implementar el dashboard admin.
+
+---
+
+#### 2. **ADMIN-BACKEND-IMPLEMENTATION-REPORT.md** 📊 REPORTE TÉCNICO
+**Documentación completa del backend admin (50KB)**
+
+Incluye:
+- ✅ Arquitectura multi-tenancy (5 tablas)
+- ✅ Sistema de autenticación JWT
+- ✅ 13 endpoints admin documentados
+- ✅ Request/response de cada endpoint
+- ✅ Códigos de error
+- ✅ Instalación y setup
+
+**Lee esto** para entender la arquitectura completa.
+
+---
+
+#### 3. **ADMIN-INTEGRATION-MANDATES.md** 🎯 MANDATOS ADMIN
+**Mandatos obligatorios para integración admin (40KB)**
+
+Incluye:
+- ✅ 22 Mandatos obligatorios
+- ✅ Flujos de autenticación (signup/login)
+- ✅ Protected routes
+- ✅ Dashboard stats
+- ✅ Gestión de conversaciones
+- ✅ Gestión de clientes
+- ✅ Gestión de equipo
+- ✅ UI/UX mandatos
+- ✅ Seguridad (XSS, tokens)
+- ✅ Anti-patterns a evitar
+- ✅ Checklist completo
+
+**Sigue estos mandatos** para implementar el dashboard correctamente.
+
+---
+
+### MENSAJERÍA (Existente)
+
+#### 4. **api-contract.json** ⭐ FUENTE DE VERDAD
 **Lo primero que debes leer**
 
 Contrato completo de la API con:
 - ✅ URLs base (development y production)
-- ✅ Todos los endpoints disponibles
+- ✅ Todos los endpoints disponibles (incluyendo `/admin/*`)
 - ✅ Headers requeridos
 - ✅ Formatos de request/response
 - ✅ Tipos de mensajes WebSocket
 - ✅ Configuración de rate limiting
 - ✅ Códigos de error
 - ✅ Ejemplos de uso
+- 🆕 **Sección `adminEndpoints` completa**
+- 🆕 **Sección `authentication` (JWT)**
 
 **IMPORTANTE:** Este archivo debe ser importado en tu código:
 ```javascript
 import apiContract from './api-contract.json';
 const API_URL = apiContract.baseURL.development;
+const adminLogin = apiContract.adminEndpoints.auth.login;
 ```
 
 ---
 
-### 2. **FRONTEND-INTEGRATION-MANDATES.md** 📘 GUÍA PRINCIPAL
-**La biblia de integración (85KB)**
+#### 5. **FRONTEND-INTEGRATION-MANDATES.md** 📘 GUÍA PRINCIPAL
+**La biblia de integración de mensajería (85KB)**
 
 Documento completo con:
 - ✅ **8 Mandatos Obligatorios** (DEBES implementarlos)
@@ -82,7 +138,43 @@ Auditoría completa del sistema con:
 
 ## 🚀 QUICK START - PRIMEROS PASOS
 
-### Paso 1: Lee el Resumen (15 minutos)
+### 🆕 Para Dashboard Admin (NUEVO)
+
+#### Paso 1: Quick Start Admin (5 minutos)
+```bash
+# Leer primero
+docs/frontend-handoff/ADMIN-QUICK-START.md
+```
+
+**Obtendrás:**
+- Setup en 5 pasos
+- Código copy/paste listo
+- Ejemplos completos
+
+---
+
+#### Paso 2: Implementar Auth Flow (1 día)
+```bash
+# Revisar mandatos de auth
+docs/frontend-handoff/ADMIN-INTEGRATION-MANDATES.md
+```
+
+**Mandatos clave:**
+- MANDATO #4: Signup Flow
+- MANDATO #5: Login Flow
+- MANDATO #6: Protected Routes
+
+---
+
+#### Paso 3: Dashboard Stats (1 día)
+**Endpoint:** `GET /admin/tenant/stats`
+**Mandato:** #7 en ADMIN-INTEGRATION-MANDATES.md
+
+---
+
+### Para Mensajería (Existente)
+
+#### Paso 1: Lee el Resumen (15 minutos)
 ```bash
 # Leer primero
 docs/frontend-handoff/FRONTEND-AUDIT-SUMMARY.md
@@ -92,7 +184,7 @@ docs/frontend-handoff/FRONTEND-AUDIT-SUMMARY.md
 
 ---
 
-### Paso 2: Revisa el Contrato de API (30 minutos)
+#### Paso 2: Revisa el Contrato de API (30 minutos)
 ```bash
 # Tu fuente de verdad
 docs/frontend-handoff/api-contract.json
@@ -105,21 +197,23 @@ import apiContract from './api-contract.json';
 const CONFIG = {
   API_BASE_URL: apiContract.baseURL.development,
   WS_URL: apiContract.websocketURL.development,
-  RATE_LIMIT: apiContract.rateLimiting.free
+  RATE_LIMIT: apiContract.rateLimiting.free,
+  // NUEVO: Admin endpoints
+  ADMIN_LOGIN: apiContract.adminEndpoints.auth.login.path
 };
 ```
 
 ---
 
-### Paso 3: Implementa los 8 Mandatos (1-2 semanas)
+#### Paso 3: Implementa los 8 Mandatos (1-2 semanas)
 ```bash
-# Guía completa
+# Guía completa de mensajería
 docs/frontend-handoff/FRONTEND-INTEGRATION-MANDATES.md
 ```
 
 **Sección crítica:** "MANDATOS DE INTEGRACIÓN"
 
-Los 8 mandatos son:
+Los 8 mandatos de mensajería son:
 1. ✅ Usar el Contrato de API como Fuente de Verdad
 2. ✅ Implementar Headers Requeridos
 3. ✅ Manejar Rate Limiting
@@ -232,7 +326,28 @@ Usa este checklist para trackear tu progreso:
 
 ## 🔧 ENDPOINTS DISPONIBLES
 
-### HTTP REST
+### 🆕 Admin Endpoints (Autenticados)
+
+| Endpoint | Método | Auth | Descripción | Docs |
+|----------|--------|------|-------------|------|
+| `/admin/auth/signup` | POST | No | Crear cuenta | ADMIN-QUICK-START.md |
+| `/admin/auth/login` | POST | No | Login | ADMIN-QUICK-START.md |
+| `/admin/auth/me` | GET | ✅ | Usuario actual | ADMIN-QUICK-START.md |
+| `/admin/tenant` | GET | ✅ | Info tenant | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+| `/admin/tenant/stats` | GET | ✅ | Estadísticas | ADMIN-QUICK-START.md |
+| `/admin/conversations` | GET | ✅ | Listar conversaciones | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+| `/admin/conversations/:id` | GET | ✅ | Detalles conversación | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+| `/admin/conversations/:id` | PATCH | ✅ | Actualizar conversación | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+| `/admin/end-users` | GET | ✅ | Listar clientes | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+| `/admin/end-users/:id` | GET | ✅ | Detalles cliente | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+| `/admin/team` | GET | ✅ | Listar equipo | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+| `/admin/team` | POST | ✅ | Agregar miembro | ADMIN-BACKEND-IMPLEMENTATION-REPORT.md |
+
+**Auth:** ✅ = Requiere `Authorization: Bearer <token>`
+
+---
+
+### HTTP REST (Mensajería)
 
 | Endpoint | Método | Descripción | Docs |
 |----------|--------|-------------|------|
@@ -384,7 +499,13 @@ function addMessage(msg) {
 
 ## 📞 CONTACTO Y SOPORTE
 
-### Documentación
+### Documentación Admin (Nuevo)
+- **Quick Start:** ADMIN-QUICK-START.md ⚡ **EMPIEZA AQUÍ**
+- **Reporte técnico:** ADMIN-BACKEND-IMPLEMENTATION-REPORT.md
+- **Mandatos de integración:** ADMIN-INTEGRATION-MANDATES.md
+- **Contrato de API (actualizado):** api-contract.json
+
+### Documentación Mensajería (Existente)
 - **Mandatos completos:** FRONTEND-INTEGRATION-MANDATES.md
 - **Resumen ejecutivo:** FRONTEND-AUDIT-SUMMARY.md
 - **Contrato de API:** api-contract.json
@@ -403,6 +524,20 @@ function addMessage(msg) {
 
 ## ⏱️ ESTIMACIÓN DE TIEMPO
 
+### 🆕 Dashboard Admin
+**Tiempo estimado:** 1-2 semanas (1 desarrollador)
+
+| Sprint | Tareas | Tiempo |
+|--------|--------|--------|
+| **Sprint 1** | Auth + Protected Routes + Dashboard Stats | 2-3 días |
+| **Sprint 2** | Conversaciones + End Users | 3-4 días |
+| **Sprint 3** | Team Management + Refinamiento | 2-3 días |
+
+**Mínimo viable:** 3 días (solo auth + stats + lista conversaciones)
+
+---
+
+### Mensajería (Existente)
 **Tiempo total estimado:** 2-3 semanas (1 desarrollador)
 
 | Fase | Tareas | Tiempo |
