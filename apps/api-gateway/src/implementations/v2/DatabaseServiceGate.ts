@@ -1,15 +1,18 @@
 /**
- * DatabaseServiceGate (V2)
+ * DatabaseServiceGate (V2 - Multi-Tenancy)
  *
- * Implementación de IServiceGate que persiste en PostgreSQL.
- * Reemplaza CapabilityBasedServiceGate (V1) que usa memoria.
+ * Implementación de IServiceGate usando multi-tenancy.
+ * Capabilities son a nivel TENANT (organización), no usuario individual.
  *
- * Ventajas sobre V1:
- * - Capacidades persisten entre reinicios
- * - Soporta múltiples instancias (horizontal scaling)
- * - Tracking de uso persistente
- * - Soporte para trials con expiración
- * - Templates desde base de datos
+ * IMPORTANTE:
+ * - El parámetro "userId" ahora representa "tenantId"
+ * - Capabilities son compartidas por todos los usuarios de un tenant
+ * - Usage tracking es por tenant (no por usuario individual)
+ *
+ * Cambios desde V1:
+ * - user_capabilities → tenant_capabilities
+ * - service_usage → tenant_usage
+ * - userId → tenantId (en queries internos)
  *
  * @module implementations/v2
  */
@@ -23,64 +26,68 @@ import type {
   ServiceUsageResult
 } from '../../core/interfaces';
 import { logger } from '../../middleware/logger';
-import { db } from '@inhost/shared';
-import { userCapabilities, serviceUsage, capabilityTemplates } from '@inhost/shared';
-import { eq, and, sql } from 'drizzle-orm';
+import { pool } from '@inhost/shared/database/config';
 
 export class DatabaseServiceGate implements IServiceGate {
   constructor() {
-    logger.info('🚪 DatabaseServiceGate (V2) initialized - PostgreSQL backend');
+    logger.info('🚪 DatabaseServiceGate (V2 Multi-Tenancy) initialized');
   }
 
+  /**
+   * Verificar si un tenant puede usar un servicio
+   *
+   * NOTA: userId aquí representa tenantId en el contexto multi-tenancy
+   */
   async canUseService(userId: string, service: ServiceId): Promise<ServiceCheckResult> {
-    try {
-      // 1. Obtener configuración del servicio
-      const capability = await db
-        .select()
-        .from(userCapabilities)
-        .where(
-          and(
-            eq(userCapabilities.userId, userId),
-            eq(userCapabilities.serviceId, service)
-          )
-        )
-        .limit(1);
+    const tenantId = userId; // En multi-tenancy, capabilities son por tenant
 
-      if (capability.length === 0) {
+    try {
+      // 1. Obtener configuración del servicio desde tenant_capabilities
+      const result = await pool.query(
+        `
+        SELECT enabled, config, expires_at
+        FROM tenant_capabilities
+        WHERE tenant_id = $1 AND service_id = $2
+        LIMIT 1
+        `,
+        [tenantId, service]
+      );
+
+      if (result.rows.length === 0) {
         return {
           allowed: false,
           service,
-          reason: 'Service not configured for user'
+          reason: 'Service not configured for tenant'
         };
       }
 
-      const config = capability[0];
+      const capability = result.rows[0];
 
       // 2. Verificar si está habilitado
-      if (!config.enabled) {
+      if (!capability.enabled) {
         return {
           allowed: false,
           service,
-          config: config.config as ServiceConfig,
-          reason: 'Service disabled for user'
+          config: capability.config as ServiceConfig,
+          reason: 'Service disabled for tenant'
         };
       }
 
       // 3. Verificar expiración (trials/promos)
-      if (config.expiresAt && new Date() > new Date(config.expiresAt)) {
+      if (capability.expires_at && new Date() > new Date(capability.expires_at)) {
         return {
           allowed: false,
           service,
-          config: config.config as ServiceConfig,
+          config: capability.config as ServiceConfig,
           reason: 'Service expired'
         };
       }
 
       // 4. Verificar límites de rate/cuota
-      const serviceConfig = config.config as ServiceConfig;
+      const serviceConfig = capability.config as ServiceConfig;
 
       if (serviceConfig.limits?.rateLimit || serviceConfig.limits?.quota) {
-        const usage = await this.getServiceUsage(userId, service);
+        const usage = await this.getServiceUsage(tenantId, service);
         const limit = serviceConfig.limits.rateLimit || serviceConfig.limits.quota;
 
         if (limit && limit !== -1 && usage.current >= limit) {
@@ -119,7 +126,7 @@ export class DatabaseServiceGate implements IServiceGate {
 
     } catch (error) {
       logger.error('Failed to check service', {
-        userId,
+        tenantId,
         service,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -133,24 +140,25 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   async getServiceConfig(userId: string, service: ServiceId): Promise<ServiceConfig | undefined> {
+    const tenantId = userId;
+
     try {
-      const capability = await db
-        .select()
-        .from(userCapabilities)
-        .where(
-          and(
-            eq(userCapabilities.userId, userId),
-            eq(userCapabilities.serviceId, service)
-          )
-        )
-        .limit(1);
+      const result = await pool.query(
+        `
+        SELECT config
+        FROM tenant_capabilities
+        WHERE tenant_id = $1 AND service_id = $2
+        LIMIT 1
+        `,
+        [tenantId, service]
+      );
 
-      if (capability.length === 0) return undefined;
+      if (result.rows.length === 0) return undefined;
 
-      return capability[0].config as ServiceConfig;
+      return result.rows[0].config as ServiceConfig;
     } catch (error) {
       logger.error('Failed to get service config', {
-        userId,
+        tenantId,
         service,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -159,20 +167,26 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   async getUserCapabilities(userId: string): Promise<UserCapabilities> {
+    const tenantId = userId;
+
     try {
-      const capabilities = await db
-        .select()
-        .from(userCapabilities)
-        .where(eq(userCapabilities.userId, userId));
+      const result = await pool.query(
+        `
+        SELECT service_id, config
+        FROM tenant_capabilities
+        WHERE tenant_id = $1
+        `,
+        [tenantId]
+      );
 
       const services = new Map<ServiceId, ServiceConfig>();
 
-      for (const cap of capabilities) {
-        services.set(cap.serviceId as ServiceId, cap.config as ServiceConfig);
+      for (const row of result.rows) {
+        services.set(row.service_id as ServiceId, row.config as ServiceConfig);
       }
 
       return {
-        userId,
+        userId: tenantId,
         services,
         globalLimits: {
           maxConcurrentRequests: 20,
@@ -181,47 +195,47 @@ export class DatabaseServiceGate implements IServiceGate {
         }
       };
     } catch (error) {
-      logger.error('Failed to get user capabilities', {
-        userId,
+      logger.error('Failed to get tenant capabilities', {
+        tenantId,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
 
-      // Retornar vacío en caso de error
       return {
-        userId,
+        userId: tenantId,
         services: new Map()
       };
     }
   }
 
   async updateUserCapabilities(userId: string, capabilities: Partial<UserCapabilities>): Promise<void> {
+    const tenantId = userId;
+
     try {
       if (!capabilities.services) return;
 
-      // Eliminar capacidades existentes
-      await db
-        .delete(userCapabilities)
-        .where(eq(userCapabilities.userId, userId));
-
-      // Insertar nuevas capacidades
-      const values = [];
+      // Usar PostgreSQL function para actualizar capabilities
       for (const [serviceId, config] of capabilities.services) {
-        values.push({
-          userId,
-          serviceId,
-          enabled: config.enabled,
-          config: config as unknown as Record<string, unknown>
-        });
+        await pool.query(
+          `
+          INSERT INTO tenant_capabilities (tenant_id, service_id, enabled, config)
+          VALUES ($1, $2, $3, $4)
+          ON CONFLICT (tenant_id, service_id)
+          DO UPDATE SET
+            enabled = $3,
+            config = $4,
+            updated_at = NOW()
+          `,
+          [tenantId, serviceId, config.enabled, JSON.stringify(config)]
+        );
       }
 
-      if (values.length > 0) {
-        await db.insert(userCapabilities).values(values);
-      }
-
-      logger.info('User capabilities updated', { userId, services: values.length });
+      logger.info('Tenant capabilities updated', {
+        tenantId,
+        services: capabilities.services.size
+      });
     } catch (error) {
-      logger.error('Failed to update user capabilities', {
-        userId,
+      logger.error('Failed to update tenant capabilities', {
+        tenantId,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error;
@@ -229,21 +243,22 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   async setServiceEnabled(userId: string, service: ServiceId, enabled: boolean): Promise<void> {
-    try {
-      await db
-        .update(userCapabilities)
-        .set({ enabled, updatedAt: new Date() })
-        .where(
-          and(
-            eq(userCapabilities.userId, userId),
-            eq(userCapabilities.serviceId, service)
-          )
-        );
+    const tenantId = userId;
 
-      logger.info('Service toggled', { userId, service, enabled });
+    try {
+      await pool.query(
+        `
+        UPDATE tenant_capabilities
+        SET enabled = $1, updated_at = NOW()
+        WHERE tenant_id = $2 AND service_id = $3
+        `,
+        [enabled, tenantId, service]
+      );
+
+      logger.info('Service toggled', { tenantId, service, enabled });
     } catch (error) {
       logger.error('Failed to toggle service', {
-        userId,
+        tenantId,
         service,
         enabled,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -253,28 +268,25 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   async updateServiceConfig(userId: string, service: ServiceId, config: Partial<ServiceConfig>): Promise<void> {
-    try {
-      // Upsert: insertar si no existe, actualizar si existe
-      await db
-        .insert(userCapabilities)
-        .values({
-          userId,
-          serviceId: service,
-          enabled: true,
-          config: config as unknown as Record<string, unknown>
-        })
-        .onConflictDoUpdate({
-          target: [userCapabilities.userId, userCapabilities.serviceId],
-          set: {
-            config: sql`${userCapabilities.config} || ${JSON.stringify(config)}::jsonb`,
-            updatedAt: new Date()
-          }
-        });
+    const tenantId = userId;
 
-      logger.info('Service config updated', { userId, service });
+    try {
+      await pool.query(
+        `
+        INSERT INTO tenant_capabilities (tenant_id, service_id, enabled, config)
+        VALUES ($1, $2, true, $3)
+        ON CONFLICT (tenant_id, service_id)
+        DO UPDATE SET
+          config = tenant_capabilities.config || $3::jsonb,
+          updated_at = NOW()
+        `,
+        [tenantId, service, JSON.stringify(config)]
+      );
+
+      logger.info('Service config updated', { tenantId, service });
     } catch (error) {
       logger.error('Failed to update service config', {
-        userId,
+        tenantId,
         service,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -283,43 +295,22 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   async recordServiceUsage(userId: string, service: ServiceId, amount: number = 1): Promise<ServiceUsageResult> {
+    const tenantId = userId;
+
     try {
-      const now = new Date();
-      const resetAt = new Date(now.getTime() + 60000); // +1 minuto
+      // Usar PostgreSQL function increment_tenant_usage
+      const result = await pool.query(
+        `SELECT increment_tenant_usage($1, $2, $3) as count`,
+        [tenantId, service, amount]
+      );
 
-      // Upsert: incrementar contador o crear nuevo
-      const result = await db
-        .insert(serviceUsage)
-        .values({
-          userId,
-          serviceId: service,
-          count: amount,
-          resetAt,
-          lastUsedAt: now
-        })
-        .onConflictDoUpdate({
-          target: [serviceUsage.userId, serviceUsage.serviceId],
-          set: {
-            count: sql`CASE
-              WHEN ${serviceUsage.resetAt} < NOW() THEN ${amount}
-              ELSE ${serviceUsage.count} + ${amount}
-            END`,
-            resetAt: sql`CASE
-              WHEN ${serviceUsage.resetAt} < NOW() THEN ${resetAt}
-              ELSE ${serviceUsage.resetAt}
-            END`,
-            lastUsedAt: now
-          }
-        })
-        .returning({ count: serviceUsage.count });
-
-      const newCount = result[0]?.count || amount;
-      const config = await this.getServiceConfig(userId, service);
+      const newCount = result.rows[0]?.count || amount;
+      const config = await this.getServiceConfig(tenantId, service);
       const limit = config?.limits?.rateLimit || config?.limits?.quota;
       const remaining = limit ? Math.max(0, limit - newCount) : undefined;
 
-      logger.debug('Service usage recorded (DB)', {
-        userId,
+      logger.debug('Service usage recorded (tenant)', {
+        tenantId,
         service,
         amount,
         count: newCount,
@@ -334,7 +325,7 @@ export class DatabaseServiceGate implements IServiceGate {
       };
     } catch (error) {
       logger.error('Failed to record service usage', {
-        userId,
+        tenantId,
         service,
         amount,
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -357,41 +348,42 @@ export class DatabaseServiceGate implements IServiceGate {
     limit?: number;
     resetAt?: Date;
   }> {
-    try {
-      const usage = await db
-        .select()
-        .from(serviceUsage)
-        .where(
-          and(
-            eq(serviceUsage.userId, userId),
-            eq(serviceUsage.serviceId, service)
-          )
-        )
-        .limit(1);
+    const tenantId = userId;
 
-      if (usage.length === 0) {
+    try {
+      const result = await pool.query(
+        `
+        SELECT count, reset_at
+        FROM tenant_usage
+        WHERE tenant_id = $1 AND service_id = $2
+        LIMIT 1
+        `,
+        [tenantId, service]
+      );
+
+      if (result.rows.length === 0) {
         return { current: 0 };
       }
 
-      const record = usage[0];
+      const record = result.rows[0];
       const now = new Date();
 
       // Si expiró, retornar 0
-      if (record.resetAt && now > new Date(record.resetAt)) {
-        return { current: 0, resetAt: record.resetAt };
+      if (record.reset_at && now > new Date(record.reset_at)) {
+        return { current: 0, resetAt: record.reset_at };
       }
 
-      const config = await this.getServiceConfig(userId, service);
+      const config = await this.getServiceConfig(tenantId, service);
       const limit = config?.limits?.rateLimit || config?.limits?.quota;
 
       return {
         current: record.count || 0,
         limit,
-        resetAt: record.resetAt
+        resetAt: record.reset_at
       };
     } catch (error) {
       logger.error('Failed to get service usage', {
-        userId,
+        tenantId,
         service,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -401,26 +393,25 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   async resetUsage(userId: string, service?: ServiceId): Promise<void> {
+    const tenantId = userId;
+
     try {
       if (service) {
-        await db
-          .delete(serviceUsage)
-          .where(
-            and(
-              eq(serviceUsage.userId, userId),
-              eq(serviceUsage.serviceId, service)
-            )
-          );
-        logger.info('Service usage reset (DB)', { userId, service });
+        await pool.query(
+          `DELETE FROM tenant_usage WHERE tenant_id = $1 AND service_id = $2`,
+          [tenantId, service]
+        );
+        logger.info('Service usage reset (tenant)', { tenantId, service });
       } else {
-        await db
-          .delete(serviceUsage)
-          .where(eq(serviceUsage.userId, userId));
-        logger.info('All usage reset (DB)', { userId });
+        await pool.query(
+          `DELETE FROM tenant_usage WHERE tenant_id = $1`,
+          [tenantId]
+        );
+        logger.info('All usage reset (tenant)', { tenantId });
       }
     } catch (error) {
       logger.error('Failed to reset usage', {
-        userId,
+        tenantId,
         service,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -429,7 +420,7 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   async checkGlobalLimits(userId: string): Promise<boolean> {
-    // TODO: Implementar checks de límites globales
+    // TODO: Implementar checks de límites globales a nivel tenant
     return true;
   }
 
@@ -441,19 +432,25 @@ export class DatabaseServiceGate implements IServiceGate {
       teamMembers: number;
     };
   }> {
+    const tenantId = userId;
+
     try {
-      const usageRecords = await db
-        .select()
-        .from(serviceUsage)
-        .where(eq(serviceUsage.userId, userId));
+      const result = await pool.query(
+        `
+        SELECT service_id, count
+        FROM tenant_usage
+        WHERE tenant_id = $1
+        `,
+        [tenantId]
+      );
 
       const services = new Map<ServiceId, { used: number; limit?: number }>();
 
-      for (const record of usageRecords) {
-        const config = await this.getServiceConfig(userId, record.serviceId as ServiceId);
+      for (const record of result.rows) {
+        const config = await this.getServiceConfig(tenantId, record.service_id as ServiceId);
         const limit = config?.limits?.rateLimit || config?.limits?.quota;
 
-        services.set(record.serviceId as ServiceId, {
+        services.set(record.service_id as ServiceId, {
           used: record.count || 0,
           limit
         });
@@ -469,7 +466,7 @@ export class DatabaseServiceGate implements IServiceGate {
       };
     } catch (error) {
       logger.error('Failed to get usage stats', {
-        userId,
+        tenantId,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
 
@@ -485,51 +482,21 @@ export class DatabaseServiceGate implements IServiceGate {
   }
 
   /**
-   * Aplicar template a usuario (desde DB)
+   * Aplicar template a tenant (usando PostgreSQL function)
    */
   async applyTemplate(userId: string, templateName: string): Promise<void> {
+    const tenantId = userId;
+
     try {
-      const template = await db
-        .select()
-        .from(capabilityTemplates)
-        .where(
-          and(
-            eq(capabilityTemplates.name, templateName),
-            eq(capabilityTemplates.isActive, true)
-          )
-        )
-        .limit(1);
+      await pool.query(
+        `SELECT apply_template_to_tenant($1, $2)`,
+        [tenantId, templateName]
+      );
 
-      if (template.length === 0) {
-        throw new Error(`Template not found: ${templateName}`);
-      }
-
-      const services = template[0].services as Record<string, ServiceConfig>;
-
-      // Eliminar capacidades existentes
-      await db
-        .delete(userCapabilities)
-        .where(eq(userCapabilities.userId, userId));
-
-      // Insertar servicios del template
-      const values = [];
-      for (const [serviceId, config] of Object.entries(services)) {
-        values.push({
-          userId,
-          serviceId,
-          enabled: config.enabled,
-          config: config as unknown as Record<string, unknown>
-        });
-      }
-
-      if (values.length > 0) {
-        await db.insert(userCapabilities).values(values);
-      }
-
-      logger.info('Template applied to user (DB)', { userId, template: templateName, services: values.length });
+      logger.info('Template applied to tenant', { tenantId, template: templateName });
     } catch (error) {
       logger.error('Failed to apply template', {
-        userId,
+        tenantId,
         templateName,
         error: error instanceof Error ? error.message : 'Unknown error'
       });

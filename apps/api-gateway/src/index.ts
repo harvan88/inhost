@@ -57,9 +57,12 @@ logger.info('📍 Available routes', {
   routes: [
     'GET  /              → API Information',
     'GET  /health        → Health check with DB',
-    'POST /messages      → Create message',
-    'GET  /messages      → List messages',
-    'WS   /realtime      → WebSocket real-time'
+    'POST /admin/auth/login  → Login (Multi-Tenancy V2)',
+    'POST /admin/auth/signup → Signup (Multi-Tenancy V2)',
+    'GET  /admin/*       → Protected admin routes (require JWT)',
+    'POST /messages      → Create message (LEGACY)',
+    'GET  /messages      → List messages (LEGACY)',
+    'WS   /realtime      → WebSocket real-time (LEGACY)'
   ]
 });
 
