@@ -135,7 +135,40 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         });
       } catch (err: any) {
         console.error('Signup error:', err);
-        throw new Error(`Signup failed: ${err.message}`);
+
+        // Database connection errors
+        if (err.code === 'ECONNREFUSED') {
+          return error(503, createErrorResponse(
+            'DATABASE_UNAVAILABLE',
+            'Database service is currently unavailable. Please try again later or contact support.',
+            { hint: 'Make sure PostgreSQL is running (bun run dev:db)' }
+          ));
+        }
+
+        // Connection timeout
+        if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
+          return error(504, createErrorResponse(
+            'DATABASE_TIMEOUT',
+            'Database connection timed out. Please try again.',
+            { hint: 'Check database connection settings' }
+          ));
+        }
+
+        // Unique constraint violations (duplicate email/slug)
+        if (err.code === '23505') {
+          return error(409, createErrorResponse(
+            'DUPLICATE_ENTRY',
+            'An account with this information already exists.',
+            { hint: 'Try a different email or company name' }
+          ));
+        }
+
+        // Generic database error
+        return error(500, createErrorResponse(
+          'SIGNUP_FAILED',
+          'Failed to create account due to a server error. Please try again.',
+          { hint: err.message }
+        ));
       }
     },
     {
@@ -223,7 +256,31 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         });
       } catch (err: any) {
         console.error('Login error:', err);
-        return error(500, createErrorResponse('LOGIN_FAILED', 'Login failed'));
+
+        // Database connection errors
+        if (err.code === 'ECONNREFUSED') {
+          return error(503, createErrorResponse(
+            'DATABASE_UNAVAILABLE',
+            'Database service is currently unavailable. Please try again later.',
+            { hint: 'The server cannot connect to the database. Contact support if this persists.' }
+          ));
+        }
+
+        // Connection timeout
+        if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
+          return error(504, createErrorResponse(
+            'DATABASE_TIMEOUT',
+            'Login request timed out. Please try again.',
+            { hint: 'Database connection is slow. Try again in a moment.' }
+          ));
+        }
+
+        // Generic login error
+        return error(500, createErrorResponse(
+          'LOGIN_FAILED',
+          'Login failed due to a server error. Please try again.',
+          { hint: err.message }
+        ));
       }
     },
     {
@@ -276,7 +333,30 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         });
       } catch (err: any) {
         console.error('Get user error:', err);
-        return error(500, createErrorResponse('FETCH_FAILED', 'Failed to fetch user data'));
+
+        // Database connection errors
+        if (err.code === 'ECONNREFUSED') {
+          return error(503, createErrorResponse(
+            'DATABASE_UNAVAILABLE',
+            'Database service is currently unavailable. Please try again later.',
+            { hint: 'Cannot connect to database' }
+          ));
+        }
+
+        // Connection timeout
+        if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
+          return error(504, createErrorResponse(
+            'DATABASE_TIMEOUT',
+            'Request timed out. Please try again.'
+          ));
+        }
+
+        // Generic error
+        return error(500, createErrorResponse(
+          'FETCH_FAILED',
+          'Failed to fetch user data due to a server error.',
+          { hint: err.message }
+        ));
       }
     },
     {
