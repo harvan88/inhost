@@ -50,7 +50,7 @@ export interface AuthenticatedRequest {
  */
 export function jwtAuth() {
   return new Elysia({ name: 'jwt-auth' })
-    .derive(async ({ request, set }) => {
+    .onRequest(async ({ request, set, store }) => {
       const authHeader = request.headers.get('Authorization');
 
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -63,15 +63,13 @@ export function jwtAuth() {
       try {
         const payload = jwt.verify(token, JWT_SECRET) as JWTPayload;
 
-        // Add auth context to request (available in handlers via context)
-        const authContext: AuthenticatedRequest = {
+        // Add auth context to store (available in handlers via store)
+        (store as any).auth = {
           tenantUserId: payload.sub,
           tenantId: payload.tenant_id,
           email: payload.email,
           role: payload.role
-        };
-
-        return authContext;
+        } as AuthenticatedRequest;
       } catch (error) {
         set.status = 401;
         if (error instanceof jwt.TokenExpiredError) {
