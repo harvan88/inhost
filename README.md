@@ -1,160 +1,393 @@
-# INHOST - API Gateway
+# INHOST - Multi-Tenancy Messaging Platform
 
-Multi-channel messaging platform with WhatsApp, Telegram, Web, and SMS support.
+Multi-channel messaging API Gateway with multi-tenancy support for WhatsApp, Instagram, and custom integrations.
 
-## 🚀 Quick Start
+**Version:** 2.0.0 (Multi-Tenancy)
+**Status:** ✅ Backend Implemented - Ready for Testing
+**Branch:** `claude/remove-hardcoded-plans-01Q7hVprGPtpH2kGc2h6vGsj`
+
+---
+
+## ⚡ Quick Start (10 minutos)
 
 ```bash
-# Terminal 1: API Server
-start-server.bat
+# 1. Iniciar PostgreSQL
+docker-compose up -d postgres
 
-# Terminal 2: Testing Dashboard
-start-testing.bat
+# 2. Resetear DB (multi-tenancy)
+psql -h localhost -U inhost_user -d inhost -f scripts/reset-database.sql
 
-# Browser
-http://localhost:5500
+# 3. Iniciar API
+bun --cwd apps/api-gateway dev
+
+# 4. Test signup
+curl -X POST http://localhost:3000/admin/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@mycompany.com",
+    "password": "test123456",
+    "name": "Admin User",
+    "tenantName": "My Company",
+    "plan": "professional"
+  }'
 ```
 
-**Full guide**: [QUICK-START.md](QUICK-START.md)
+**Guía completa:** [QUICK-START-TESTING.md](QUICK-START-TESTING.md)
 
 ---
 
-## 📋 Current Status
+## 🎯 ¿Qué es INHOST?
 
-**Sprint 3 (WebSocket Real-time)** - ✅ **COMPLETED**
+Sistema de mensajería multi-canal con **multi-tenancy** que separa:
 
-- ✅ WebSocket Real-time (`/realtime`)
-- ✅ WebSocket Rate Limiting (12 free, 30 premium)
-- ✅ WebSocket Message Validation (TypeBox)
-- ✅ WebSocket Size Validation (1MB max)
-- 📄 [Sprint 3 Report](docs/sprints/sprint3-report.md)
+- **TENANTS** (Organizaciones) → Empresas que compran el servicio
+- **TENANT USERS** (Admins/Agentes) → Empleados de las organizaciones
+- **END USERS** (Clientes finales) → Personas que chatean (vía WhatsApp, Instagram, etc.)
+
+### Arquitectura
+
+```
+┌─────────────────────────────────────────┐
+│         END USERS (Clientes)            │
+│  (WhatsApp, Instagram, UIs externas)    │
+└──────────────┬──────────────────────────┘
+               │ /chat/* API
+               ↓
+┌─────────────────────────────────────────┐
+│      BACKEND (Multi-Tenancy V2)         │
+│                                         │
+│  /admin/* → Tenant Users (JWT)          │
+│  /chat/*  → External Services (Headers) │
+│                                         │
+│  Database: PostgreSQL                   │
+│  - tenants                              │
+│  - tenant_users                         │
+│  - end_users                            │
+│  - tenant_capabilities                  │
+│  - tenant_usage                         │
+└──────────────┬──────────────────────────┘
+               │ JWT Auth
+               ↓
+┌─────────────────────────────────────────┐
+│   FRONTEND: inhost-admin-dashboard      │
+│   (Solo para Tenant Users)              │
+│                                         │
+│  - Login/Signup                         │
+│  - Inbox (conversaciones)               │
+│  - End Users (clientes)                 │
+│  - Team (equipo)                        │
+│  - Settings                             │
+└─────────────────────────────────────────┘
+```
 
 ---
 
-## 🏗️ Architecture
+## 📋 Estado Actual
+
+### ✅ Completado
+
+**Database (Multi-Tenancy):**
+- ✅ Tablas: `tenants`, `tenant_users`, `end_users`, `tenant_capabilities`, `tenant_usage`
+- ✅ PostgreSQL functions: `apply_template_to_tenant()`, `increment_tenant_usage()`
+- ✅ Scripts de reset y migración
+
+**Backend Authentication:**
+- ✅ JWT middleware (`apps/api-gateway/src/middleware/jwt-auth.ts`)
+- ✅ POST `/admin/auth/login` - Autenticar tenant user
+- ✅ POST `/admin/auth/signup` - Crear tenant + owner
+- ✅ ServiceGate V2 (usa `tenant_capabilities` en lugar de `user_capabilities`)
+
+**Dependencias:**
+- ✅ `jsonwebtoken` - JWT tokens
+- ✅ `bcrypt` - Password hashing
+
+### 📋 Pendiente
+
+**Backend Endpoints:**
+- [ ] GET `/admin/tenant` - Info de organización
+- [ ] GET `/admin/conversations` - Listar conversaciones
+- [ ] GET `/admin/end-users` - Listar end users
+- [ ] GET `/admin/capabilities` - Ver/toggle capabilities
+- [ ] POST `/chat/webhook/whatsapp` - Webhook WhatsApp
+- [ ] POST `/chat/messages/send` - Enviar mensaje
+
+**Frontend:**
+- [ ] `inhost-admin-dashboard` (Next.js)
+- [ ] Login/Signup UI
+- [ ] Dashboard
+- [ ] Inbox
+
+---
+
+## 📚 Documentación
+
+### 🚀 Para Empezar
+
+| Documento | Descripción | Tiempo |
+|-----------|-------------|--------|
+| [QUICK-START-TESTING.md](QUICK-START-TESTING.md) | Testing rápido del sistema | 10 min |
+| [SYSTEM-OVERVIEW.md](SYSTEM-OVERVIEW.md) | Vista general completa | 15 min |
+| [TESTING-PLAN.md](TESTING-PLAN.md) | Plan de testing completo | 2-3 hrs |
+
+### 👨‍💻 Para Frontend
+
+| Documento | Descripción |
+|-----------|-------------|
+| [FRONTEND-INTEGRATION-GUIDE.md](FRONTEND-INTEGRATION-GUIDE.md) | **Mandatos para frontend** - Setup Next.js |
+| [api-contract-admin.json](api-contract-admin.json) | Contrato API completo |
+
+### 🗄️ Para Backend/DevOps
+
+| Documento | Descripción |
+|-----------|-------------|
+| [DATABASE-MIGRATION-GUIDE.md](DATABASE-MIGRATION-GUIDE.md) | Guía paso a paso migración DB |
+| [docs/migration/clean-migration-strategy.md](docs/migration/clean-migration-strategy.md) | Estrategia de migración |
+| [docs/database/multi-tenancy-model.md](docs/database/multi-tenancy-model.md) | Modelo completo DB |
+
+### 📖 Sesiones Anteriores
+
+| Documento | Descripción |
+|-----------|-------------|
+| [SESSION-SUMMARY.md](SESSION-SUMMARY.md) | Resumen sesión multi-tenancy |
+| [CLAUDE.md](CLAUDE.md) | Guía desarrollo (sistema antiguo) |
+
+---
+
+## 🏗️ Estructura del Proyecto
 
 ```
 inhost/
-├── apps/
-│   └── api-gateway/          # Main API server (Elysia.js + Bun)
-│       ├── src/
-│       │   ├── core/         # Business logic & interfaces
-│       │   ├── middleware/   # Rate limiting, validation, timeout
-│       │   ├── routes/       # API endpoints
-│       │   └── index.ts      # Server entry point
-│       └── package.json
+├── apps/api-gateway/
+│   └── src/
+│       ├── middleware/
+│       │   └── jwt-auth.ts              ✅ JWT authentication
+│       ├── routes/
+│       │   ├── admin/
+│       │   │   ├── index.ts             ✅ Admin router
+│       │   │   └── auth.ts              ✅ Login/Signup
+│       │   ├── index.ts                 ✅ Main router
+│       │   ├── messages.ts              ⚠️ LEGACY
+│       │   └── capabilities.ts          ⚠️ LEGACY
+│       └── implementations/v2/
+│           └── DatabaseServiceGate.ts   ✅ Multi-tenancy
 │
-├── testing/                  # Testing dashboard
-│   ├── index.html           # Main dashboard
-│   ├── tests/               # Individual test files
-│   └── server.js            # HTTP server for testing
+├── packages/shared/src/database/
+│   ├── config.ts                        ✅ PostgreSQL pool
+│   └── multi-tenancy-schema.ts          ✅ Drizzle schema
 │
-├── docs/                     # Documentation
-│   ├── architecture/        # System design & planning
-│   ├── guides/              # Testing & usage guides
-│   └── troubleshooting/     # Problem solving
+├── scripts/
+│   ├── create-multi-tenancy-tables.sql  ✅ DB schema
+│   ├── reset-database.sql               ✅ Reset completo
+│   └── migrate-to-multi-tenancy.sql     ⚠️ No usado (clean slate)
 │
-├── scripts/                  # Utility scripts
-├── start-server.bat         # Start API server
-└── start-testing.bat        # Start testing dashboard
+├── docs/
+│   ├── database/
+│   │   └── multi-tenancy-model.md
+│   ├── migration/
+│   │   └── clean-migration-strategy.md
+│   └── frontend-integration/
+│       ├── multi-tenancy-frontend-guide.md
+│       └── frontend-restructure-plan.md
+│
+├── SYSTEM-OVERVIEW.md                   📖 Vista general
+├── FRONTEND-INTEGRATION-GUIDE.md        📖 Mandatos frontend
+├── TESTING-PLAN.md                      📖 Plan testing completo
+├── QUICK-START-TESTING.md               📖 Testing rápido (10 min)
+├── DATABASE-MIGRATION-GUIDE.md          📖 Guía migración DB
+├── SESSION-SUMMARY.md                   📖 Resumen sesión
+└── api-contract-admin.json              📋 Contrato API
 ```
 
-**Details**: [docs/architecture/plan-modular.md](docs/architecture/plan-modular.md)
+---
+
+## 🔐 API Endpoints
+
+### Admin API (/admin/* - Tenant Users)
+
+**Auth:** JWT (Bearer token)
+
+| Endpoint | Método | Estado | Descripción |
+|----------|--------|--------|-------------|
+| `/admin/auth/login` | POST | ✅ | Login tenant user |
+| `/admin/auth/signup` | POST | ✅ | Crear tenant + owner |
+| `/admin/tenant` | GET | 📋 TODO | Info organización |
+| `/admin/conversations` | GET | 📋 TODO | Listar conversaciones |
+| `/admin/end-users` | GET | 📋 TODO | Listar end users |
+| `/admin/capabilities` | GET | 📋 TODO | Ver capabilities |
+
+### Chat API (/chat/* - External Services)
+
+**Auth:** Headers (X-Tenant-Id + X-End-User-*)
+
+| Endpoint | Método | Estado | Descripción |
+|----------|--------|--------|-------------|
+| `/chat/webhook/whatsapp` | POST | 📋 TODO | Webhook WhatsApp |
+| `/chat/messages/send` | POST | 📋 TODO | Enviar mensaje |
+
+**Contrato completo:** [api-contract-admin.json](api-contract-admin.json), [api-contract-chat.json](api-contract-chat.json)
 
 ---
 
 ## 🧪 Testing
 
-### Automated Tests
+### Quick Test (10 min)
 
-**HTTP Endpoints:**
 ```bash
-# Sprint 2 - HTTP protection tests
-scripts\test-sprint2-simple.bat
+# Ver: QUICK-START-TESTING.md
 ```
 
-**WebSocket:**
-```bash
-# Sprint 3 - WebSocket protection tests
-bun scripts/test-websocket.js
+### Full Test Suite (2-3 hrs)
 
-# Expected: 5/5 tests pass
-# - Connection
-# - Valid message
-# - Invalid message (rejected)
-# - Large message (rejected)
-# - Rate limiting (~12 messages accepted)
+```bash
+# Ver: TESTING-PLAN.md
 ```
 
 ### Manual Testing
-1. Open `http://localhost:5500`
-2. Select test suite from sidebar
-3. Run tests
 
-**Guides**:
-- [Sprint 1 Testing](docs/guides/sprint1-testing.md)
-- [Sprint 2 Testing](docs/guides/sprint2-testing.md)
+```bash
+# 1. Health check
+curl http://localhost:3000/health
 
----
+# 2. Signup
+curl -X POST http://localhost:3000/admin/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{ "email": "...", "password": "...", ... }'
 
-## 🚨 Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| "Failed to fetch" | [docs/troubleshooting/failed-to-fetch.md](docs/troubleshooting/failed-to-fetch.md) |
-| Multiple instances | [docs/troubleshooting/multiple-instances.md](docs/troubleshooting/multiple-instances.md) |
-| Server won't start | Check processes → Kill all → Restart |
-
----
-
-## 📚 Documentation
-
-### Essential
-- [QUICK-START.md](QUICK-START.md) - Get started in 2 minutes
-- [CLAUDE.md](CLAUDE.md) - Development guide for AI assistants
-
-### Sprint Reports
-- [Sprint 3 Report](docs/sprints/sprint3-report.md) - WebSocket Real-time (COMPLETED)
-- [Sprint 2 Report](docs/sprints/sprint2-report.md) - Protection & Security (COMPLETED)
-
-### Planning
-- [Sprint 4 Planning](docs/sprints/sprint4-planning.md) - Persistencia (Redis + PostgreSQL) - NEXT
-- [Session Summary 2025-11-16](SESSION-SUMMARY-2025-11-16.md) - Sprint 3 completion
-
-### Architecture & Design
-- [Frontend/Backend Separation](docs/architecture/frontend-backend-separation.md) - Architectural principles
-- [Modular Development Plan](docs/architecture/plan-modular.md) - Interface-based architecture
-- [Frontend Strategy](docs/architecture/frontend-strategy.md) - Frontend approach
-
-### Testing Guides
-- [docs/guides/sprint1-testing.md](docs/guides/sprint1-testing.md) - MessageCore testing
-- [docs/guides/sprint2-testing.md](docs/guides/sprint2-testing.md) - Protection & Security testing
-
-### Troubleshooting
-- [docs/troubleshooting/failed-to-fetch.md](docs/troubleshooting/failed-to-fetch.md) - "Failed to fetch" errors
-- [docs/troubleshooting/multiple-instances.md](docs/troubleshooting/multiple-instances.md) - Multiple server instances
+# 3. Login
+curl -X POST http://localhost:3000/admin/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{ "email": "...", "password": "..." }'
+```
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Runtime**: Bun
-- **Framework**: Elysia.js
-- **Validation**: TypeBox
-- **Database**: PostgreSQL (Prisma)
-- **Testing**: Custom dashboard
+**Backend:**
+- Runtime: Bun
+- Framework: Elysia.js
+- Database: PostgreSQL + Drizzle ORM
+- Auth: JWT (jsonwebtoken + bcrypt)
+- Validation: TypeBox
+
+**Frontend (próximo):**
+- Framework: Next.js 14
+- Styling: Tailwind CSS
+- State: Zustand
+- Data fetching: TanStack Query
+- HTTP: Axios
 
 ---
 
-## 📖 Sprints
+## 🚀 Próximos Pasos
 
-- ✅ **Sprint 1**: MessageCore + Basic Routes
-- ✅ **Sprint 1.5**: Support Services (Logger, Storage, RateLimiter)
-- ✅ **Sprint 2**: Protection & Security - [Report](docs/sprints/sprint2-report.md)
-- ✅ **Sprint 3**: WebSocket Real-time (Rate limiting + Validation)
+### Para Backend Developers
 
-**Next**: Sprint 4 (Persistence - Redis/PostgreSQL)
+1. **Testing** (HOY)
+   - Ejecutar `QUICK-START-TESTING.md`
+   - Verificar signup/login
+   - Verificar multi-tenancy
+
+2. **Implementar Endpoints** (1-2 días)
+   - `/admin/tenant` (GET/PATCH)
+   - `/admin/conversations` (GET)
+   - `/admin/end-users` (GET)
+
+3. **External Services** (1 semana)
+   - `/chat/webhook/whatsapp`
+   - `/chat/messages/send`
+
+### Para Frontend Developers
+
+1. **Setup** (1 hora)
+   - Leer `FRONTEND-INTEGRATION-GUIDE.md`
+   - Crear proyecto Next.js
+   - Implementar API Client
+
+2. **Auth** (2-3 horas)
+   - Login page
+   - Signup page
+   - JWT storage
+
+3. **Dashboard** (1 semana)
+   - Layout con sidebar
+   - Dashboard home
+   - Inbox (conversaciones)
+   - Settings
 
 ---
 
-**Last Updated**: 2025-11-16
+## 🐛 Troubleshooting
+
+### PostgreSQL no conecta
+
+```bash
+docker ps | grep postgres
+docker-compose logs postgres
+docker-compose restart postgres
+```
+
+### API no inicia
+
+```bash
+bun install
+LOG_LEVEL=debug bun --cwd apps/api-gateway dev
+```
+
+### Signup falla
+
+```bash
+# Verificar tablas
+psql -h localhost -U inhost_user -d inhost -c "\dt"
+
+# Ver logs backend
+# Terminal donde corre el server
+```
+
+---
+
+## 📞 Contacto y Soporte
+
+**Documentación clave:**
+- Sistema: `SYSTEM-OVERVIEW.md`
+- Testing: `TESTING-PLAN.md`
+- Frontend: `FRONTEND-INTEGRATION-GUIDE.md`
+- Database: `DATABASE-MIGRATION-GUIDE.md`
+
+**Comandos útiles:**
+
+```bash
+# Ver tenants
+psql -h localhost -U inhost_user -d inhost -c "SELECT * FROM tenants;"
+
+# Ver capabilities de un tenant
+psql -h localhost -U inhost_user -d inhost -c "
+  SELECT t.name, tc.service_id, tc.enabled
+  FROM tenant_capabilities tc
+  JOIN tenants t ON t.id = tc.tenant_id;
+"
+
+# Logs detallados
+LOG_LEVEL=debug bun --cwd apps/api-gateway dev
+```
+
+---
+
+## 📅 Historial de Versiones
+
+- **v2.0.0** (2025-11-19) - Multi-Tenancy V2
+  - ✅ Database multi-tenancy
+  - ✅ JWT authentication
+  - ✅ ServiceGate V2 (tenant_capabilities)
+  - 📋 Endpoints básicos implementados
+
+- **v1.x** (2025-11-16) - Sistema Legacy
+  - WebSocket real-time
+  - Protection & Security
+  - MessageCore
+
+---
+
+**🚀 Sistema listo para testing y desarrollo de frontend!**
+
+**Last Updated:** 2025-11-19
