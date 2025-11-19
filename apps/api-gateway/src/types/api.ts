@@ -54,6 +54,25 @@ export function createSuccessResponse<T>(
 }
 
 /**
+ * Helper para crear respuestas de error
+ */
+export function createErrorResponse(
+  code: string,
+  message: string,
+  details?: unknown
+): ApiErrorResponse {
+  return {
+    success: false,
+    error: {
+      code,
+      message,
+      details,
+      timestamp: new Date().toISOString()
+    }
+  };
+}
+
+/**
  * DTOs de Mensajes
  */
 export namespace MessageDTO {
