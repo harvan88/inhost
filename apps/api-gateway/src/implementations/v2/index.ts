@@ -6,3 +6,4 @@
  */
 
 export { RedisRateLimiter } from './RedisRateLimiter';
+export { DatabaseServiceGate } from './DatabaseServiceGate';
