@@ -10,6 +10,7 @@ export default defineConfig({
     user: process.env.DB_USER || 'inhost_user',
     password: process.env.DB_PASSWORD || 'inhost_password',
     database: process.env.DB_NAME || 'inhost',
+    ssl: false,
   },
   verbose: true,
   strict: true,

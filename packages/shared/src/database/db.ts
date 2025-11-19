@@ -15,6 +15,7 @@ const pool = new Pool({
   user: process.env.DB_USER || 'inhost_user',
   password: process.env.DB_PASSWORD || 'inhost_password',
   database: process.env.DB_NAME || 'inhost',
+  ssl: false, // Disable SSL for local development
   max: 20, // Máximo 20 conexiones en el pool
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
