@@ -249,7 +249,7 @@ export const websocketRoutes = new Elysia()
         lastActivity: new Date().toISOString()
       });
 
-      logger.info('WebSocket client connected', {
+      logger.debug('WebSocket client connected', {
         connectionId,
         userId,
         deviceId,

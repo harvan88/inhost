@@ -127,7 +127,7 @@ export class WebSocketNotification implements INotificationService {
     }
     this.userConnections.get(userId)!.add(connectionId);
 
-    logger.info('🔌 WebSocketNotification: Connection registered', {
+    logger.debug('🔌 WebSocketNotification: Connection registered', {
       userId,
       connectionId,
       totalConnections: this.connections.size,
@@ -153,7 +153,7 @@ export class WebSocketNotification implements INotificationService {
         }
       }
 
-      logger.info('🔌 WebSocketNotification: Connection unregistered', {
+      logger.debug('🔌 WebSocketNotification: Connection unregistered', {
         userId,
         connectionId,
         totalConnections: this.connections.size

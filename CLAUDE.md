@@ -40,6 +40,32 @@ curl -X POST http://localhost:3000/messages \
   -d '{"type":"incoming","channel":"whatsapp","content":{"text":"Test"},"metadata":{"from":"+1","to":"+2","timestamp":"2025-11-16T10:00:00Z"}}'
 ```
 
+### Logging Configuration
+
+Control the verbosity of server logs with `LOG_LEVEL` environment variable:
+
+```bash
+# Default (INFO) - Recommended for development
+bun --cwd apps/api-gateway dev
+
+# Quiet (only warnings and errors)
+LOG_LEVEL=WARN bun --cwd apps/api-gateway dev
+
+# Verbose (all debug logs - use only for troubleshooting)
+LOG_LEVEL=DEBUG bun --cwd apps/api-gateway dev
+
+# Silent (errors only)
+LOG_LEVEL=ERROR bun --cwd apps/api-gateway dev
+```
+
+**Levels:**
+- `DEBUG` 🔍 - Very verbose (rate limiting, connections, all operations)
+- `INFO` ℹ️  - **Default** - Important operations only
+- `WARN` ⚠️  - Warnings and errors only
+- `ERROR` 🔴 - Errors only
+
+**📘 Full docs:** [docs/troubleshooting/logging-configuration.md](docs/troubleshooting/logging-configuration.md)
+
 ### Testing
 
 **Manual Testing:**
