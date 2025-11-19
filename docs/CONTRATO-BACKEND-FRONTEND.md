@@ -138,6 +138,7 @@ Content-Type: application/json
   "error": {
     "code": "SYNC_FAILED",
     "message": "Failed to fetch initial data",
+    "details": null,
     "timestamp": "2025-11-19T..."
   }
 }
@@ -211,29 +212,25 @@ ws.onopen = () => {
   console.log('✅ WebSocket connected');
 };
 
-// Eventos que recibirán del backend
+// Eventos que recibirán del backend (VERIFICADOS)
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
 
   switch (data.type) {
-    case 'message:new':
-      // Nuevo mensaje en conversación
-      handleNewMessage(data.data);
+    case 'connection':
+      // Conexión establecida con el servidor
+      console.log('Connected, clientId:', data.clientId);
       break;
 
-    case 'conversation:updated':
-      // Conversación actualizada (lastMessage, unreadCount)
-      handleConversationUpdated(data.data);
+    case 'echo':
+      // Echo del mensaje enviado (desarrollo)
+      console.log('Echo received:', data.data);
       break;
 
-    case 'conversation:read':
-      // Conversación marcada como leída
-      handleConversationRead(data.data);
-      break;
-
-    case 'typing:indicator':
+    case 'typing':
       // Usuario está escribiendo
-      handleTypingIndicator(data.data);
+      // data = { userId, conversationId, isTyping, timestamp }
+      handleTypingIndicator(data);
       break;
 
     case 'error':
@@ -243,6 +240,8 @@ ws.onmessage = (event) => {
   }
 };
 ```
+
+**⚠️ NOTA IMPORTANTE:** Los eventos `message:new`, `conversation:updated`, `conversation:read` **NO ESTÁN IMPLEMENTADOS** actualmente en el backend.
 
 ---
 
@@ -297,10 +296,10 @@ Marcar cuando esté implementado:
   ```
 
 - [ ] **6. Manejan eventos WebSocket correctamente**
-  - `message:new`
-  - `conversation:updated`
-  - `conversation:read`
-  - `typing:indicator`
+  - `connection` - Conexión establecida
+  - `echo` - Echo de mensajes enviados
+  - `typing` - Indicador de escritura
+  - `error` - Errores del servidor
 
 - [ ] **7. NO usan datos mock después de login exitoso**
 
