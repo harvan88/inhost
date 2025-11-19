@@ -457,6 +457,28 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           .set(updateData)
           .where(eq(conversations.id, id));
 
+        // Auto-detect mentions in text and create mention records
+        try {
+          const { createMentionsFromText } = await import('../../utils/mentions-parser');
+          const createdMentions = await createMentionsFromText(
+            text,
+            'message',
+            newMessage.id,
+            user.tenantId,
+            user.id
+          );
+
+          // TODO: Send WebSocket notification to mentioned users
+          // Format: { type: 'mention:new', mentionId, userId, entityType, entityId }
+          // Frontend can then fetch /admin/mentions/unread-count to update badge
+          if (createdMentions.length > 0) {
+            console.log(`✉️  Created ${createdMentions.length} mentions for message ${newMessage.id}`);
+          }
+        } catch (mentionError) {
+          // Log mention error but don't fail the request
+          console.error('Failed to create mentions:', mentionError);
+        }
+
         return createSuccessResponse({
           message: {
             id: newMessage.id,

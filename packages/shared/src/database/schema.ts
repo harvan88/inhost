@@ -110,6 +110,54 @@ export const messages = pgTable('messages', {
   };
 });
 
+// Tabla de mentions - Sistema universal de menciones (@username)
+export const mentions = pgTable('mentions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
+  mentionedUserId: uuid('mentioned_user_id').references(() => adminUsers.id).notNull(), // Usuario mencionado
+  mentionedByUserId: uuid('mentioned_by_user_id').references(() => adminUsers.id).notNull(), // Usuario que mencionó
+  entityType: varchar('entity_type', {
+    enum: ['message', 'conversation', 'feedback', 'note', 'assignment']
+  }).notNull(), // Tipo de entidad donde se menciona
+  entityId: uuid('entity_id').notNull(), // ID de la entidad (polimórfico)
+  mentionType: varchar('mention_type', {
+    enum: ['user', 'team', 'admins', 'everyone']
+  }).default('user'), // Tipo de mención
+  context: text('context'), // Texto donde aparece la mención (para preview)
+  isRead: boolean('is_read').default(false), // Si el usuario ya vio la mención
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => {
+  return {
+    tenantIdx: index('mentions_tenant_id_idx').on(table.tenantId),
+    mentionedUserIdx: index('mentions_mentioned_user_id_idx').on(table.mentionedUserId),
+    entityIdx: index('mentions_entity_type_id_idx').on(table.entityType, table.entityId),
+    isReadIdx: index('mentions_is_read_idx').on(table.isRead),
+  };
+});
+
+// Tabla de feedback para mensajes (rating + comentarios)
+export const messageFeedback = pgTable('message_feedback', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
+  messageId: uuid('message_id').references(() => messages.id).notNull(), // Mensaje al que se refiere
+  givenByUserId: uuid('given_by_user_id').references(() => adminUsers.id).notNull(), // Usuario que da feedback
+  rating: varchar('rating', { enum: ['positive', 'negative'] }), // Thumbs up/down
+  comment: text('comment'), // Qué estuvo mal
+  suggestedCorrection: text('suggested_correction'), // Cómo debió ser
+  extensionId: varchar('extension_id', { length: 100 }), // Extensión que generó el mensaje
+  metadata: jsonb('metadata').default({}), // Datos adicionales
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => {
+  return {
+    tenantIdx: index('message_feedback_tenant_id_idx').on(table.tenantId),
+    messageIdx: index('message_feedback_message_id_idx').on(table.messageId),
+    extensionIdx: index('message_feedback_extension_id_idx').on(table.extensionId),
+    ratingIdx: index('message_feedback_rating_idx').on(table.rating),
+    givenByIdx: index('message_feedback_given_by_user_id_idx').on(table.givenByUserId),
+  };
+});
+
 // ============================================
 // RELACIONES
 // ============================================
@@ -153,13 +201,44 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
   messages: many(messages),
 }));
 
-export const messagesRelations = relations(messages, ({ one }) => ({
+export const messagesRelations = relations(messages, ({ one, many }) => ({
   conversation: one(conversations, {
     fields: [messages.conversationId],
     references: [conversations.id],
   }),
   sentByAdminUser: one(adminUsers, {
     fields: [messages.sentByAdminUserId],
+    references: [adminUsers.id],
+  }),
+  feedback: many(messageFeedback),
+}));
+
+export const mentionsRelations = relations(mentions, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [mentions.tenantId],
+    references: [tenants.id],
+  }),
+  mentionedUser: one(adminUsers, {
+    fields: [mentions.mentionedUserId],
+    references: [adminUsers.id],
+  }),
+  mentionedByUser: one(adminUsers, {
+    fields: [mentions.mentionedByUserId],
+    references: [adminUsers.id],
+  }),
+}));
+
+export const messageFeedbackRelations = relations(messageFeedback, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [messageFeedback.tenantId],
+    references: [tenants.id],
+  }),
+  message: one(messages, {
+    fields: [messageFeedback.messageId],
+    references: [messages.id],
+  }),
+  givenByUser: one(adminUsers, {
+    fields: [messageFeedback.givenByUserId],
     references: [adminUsers.id],
   }),
 }));
@@ -182,6 +261,12 @@ export type NewConversation = typeof conversations.$inferInsert;
 
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
+
+export type Mention = typeof mentions.$inferSelect;
+export type NewMention = typeof mentions.$inferInsert;
+
+export type MessageFeedback = typeof messageFeedback.$inferSelect;
+export type NewMessageFeedback = typeof messageFeedback.$inferInsert;
 
 // Legacy alias (mantener compatibilidad)
 export type User = AdminUser;

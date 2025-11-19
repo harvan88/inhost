@@ -12,6 +12,8 @@ import { adminTeamRoutes, adminTeamInvitesRoutes } from './admin/team';
 import { adminAccountRoutes } from './admin/account';
 import { adminIntegrationsRoutes } from './admin/integrations';
 import { adminSyncRoutes } from './admin/sync';
+import { adminMentionsRoutes } from './admin/mentions';
+import { adminFeedbackRoutes } from './admin/feedback';
 
 /**
  * Configuración centralizada de todas las rutas del API Gateway
@@ -32,6 +34,9 @@ import { adminSyncRoutes } from './admin/sync';
  * - POST /admin/team/invites → Team invitations
  * - GET  /admin/account → Account settings
  * - GET  /admin/integrations → Integrations management
+ * - GET  /admin/mentions → Mentions management (@username)
+ * - POST /admin/messages/:id/feedback → Message feedback (rating + comments)
+ * - GET  /admin/feedback/analytics → Feedback analytics by extension
  */
 export const routes = new Elysia()
   .use(healthRoutes)
@@ -47,4 +52,6 @@ export const routes = new Elysia()
   .use(adminTeamRoutes)
   .use(adminTeamInvitesRoutes)
   .use(adminAccountRoutes)
-  .use(adminIntegrationsRoutes);
+  .use(adminIntegrationsRoutes)
+  .use(adminMentionsRoutes)
+  .use(adminFeedbackRoutes);

@@ -15,6 +15,13 @@
       "when": 1763572199563,
       "tag": "0001_petite_firestar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1763574515258,
+      "tag": "0002_empty_sheva_callister",
+      "breakpoints": true
     }
   ]
 }
