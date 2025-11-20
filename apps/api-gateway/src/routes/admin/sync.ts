@@ -72,10 +72,24 @@ export const adminSyncRoutes = new Elysia({ prefix: '/admin/sync' })
     }
   })
 
-  .use(requireAuth())
-
   // GET /admin/sync/initial - Initial data hydration after login
-  .get('/initial', async ({ user, error }) => {
+  .get('/initial', async ({ request, error }) => {
+    // TEMPORARY FIX: Manual token extraction until middleware is fixed
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return error(401, createErrorResponse('UNAUTHORIZED', 'Missing authorization token'));
+    }
+
+    let user;
+    try {
+      const { verifyToken } = await import('@inhost/shared');
+      user = await verifyToken(token);
+    } catch (err) {
+      return error(401, createErrorResponse('INVALID_TOKEN', 'Invalid or expired token'));
+    }
+
     try {
       // 1. Fetch conversations (last 50)
       const conversationsList = await db.query.conversations.findMany({
