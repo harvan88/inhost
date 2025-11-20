@@ -21,20 +21,6 @@ export const adminSyncRoutes = new Elysia({ prefix: '/admin/sync' })
 
   // GET /admin/sync/initial - Initial data hydration after login
   .get('/initial', async ({ user, error }) => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔍 Sync endpoint /admin/sync/initial called');
-    console.log('🔍 User object:', user);
-    console.log('🔍 User type:', typeof user);
-    console.log('🔍 User keys:', user ? Object.keys(user) : 'undefined');
-    console.log('🔍 Has tenantId:', user?.tenantId);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    if (!user) {
-      console.error('❌ CRITICAL: user es undefined');
-      console.error('❌ Middleware requireAuth() NO funcionó');
-      return error(500, createErrorResponse('AUTH_MIDDLEWARE_FAILED', 'Authentication middleware did not populate user object'));
-    }
-
     try {
       // 1. Fetch conversations (last 50)
       const conversationsList = await db.query.conversations.findMany({
