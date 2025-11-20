@@ -17,6 +17,61 @@ import { httpLogger } from '../../middleware/logger';
  */
 export const adminSyncRoutes = new Elysia({ prefix: '/admin/sync' })
   .use(httpLogger)
+
+  // GET /admin/sync/test - TEMPORARY: Test endpoint without middleware
+  .get('/test', async ({ request, error }) => {
+    // Manual token extraction for testing
+    const authHeader = request.headers.get('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return error(401, createErrorResponse('UNAUTHORIZED', 'Missing token'));
+    }
+
+    try {
+      // Manually verify token
+      const { verifyToken } = await import('@inhost/shared');
+      const user = await verifyToken(token);
+
+      // Fetch conversations (last 50)
+      const conversationsList = await db.query.conversations.findMany({
+        where: eq(conversations.tenantId, user.tenantId),
+        with: {
+          endUser: true,
+          assignedTo: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: desc(conversations.updatedAt),
+        limit: 50,
+      });
+
+      return createSuccessResponse({
+        message: 'TEST ENDPOINT - Middleware bypass successful',
+        user: {
+          userId: user.userId,
+          tenantId: user.tenantId,
+          email: user.email,
+          role: user.role
+        },
+        conversationsCount: conversationsList.length,
+        conversations: conversationsList.map(conv => ({
+          id: conv.id,
+          channel: conv.channel,
+          status: conv.status,
+          endUser: conv.endUser?.name || 'Unknown'
+        }))
+      });
+    } catch (err: any) {
+      console.error('Test endpoint error:', err);
+      return createErrorResponse('TEST_FAILED', err.message);
+    }
+  })
+
   .use(requireAuth())
 
   // GET /admin/sync/initial - Initial data hydration after login
