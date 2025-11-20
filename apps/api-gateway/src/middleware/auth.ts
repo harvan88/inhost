@@ -32,36 +32,42 @@ export interface AuthContext {
  */
 export function requireAuth() {
   return new Elysia({ name: 'auth' })
-    .derive(async ({ request, error }) => {
+    .onRequest(async ({ request, set, store }: any) => {
       // Extract token from Authorization header
       const authHeader = request.headers.get('Authorization');
       const token = extractTokenFromHeader(authHeader || undefined);
 
       if (!token) {
-        return error(401, {
+        set.status = 401;
+        return {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
             message: 'Missing or invalid authorization header',
           },
-        });
+        };
       }
 
       try {
         // Verify token and extract user data
         const user = await verifyToken(token);
 
-        // Add user to context
-        return { user };
+        // Store user in request store (accessible in route handlers)
+        store.user = user;
       } catch (err) {
-        return error(401, {
+        set.status = 401;
+        return {
           success: false,
           error: {
             code: 'INVALID_TOKEN',
             message: 'Invalid or expired authentication token',
           },
-        });
+        };
       }
+    })
+    .derive(({ store }: any) => {
+      // Make user available in route handler context
+      return { user: store.user };
     });
 }
 
@@ -84,20 +90,24 @@ export function requireAuth() {
  */
 export function optionalAuth() {
   return new Elysia({ name: 'optional-auth' })
-    .derive(async ({ request }) => {
+    .onRequest(async ({ request, store }: any) => {
       const authHeader = request.headers.get('Authorization');
       const token = extractTokenFromHeader(authHeader || undefined);
 
       if (!token) {
-        return { user: undefined };
+        store.user = undefined;
+        return;
       }
 
       try {
         const user = await verifyToken(token);
-        return { user };
+        store.user = user;
       } catch {
-        return { user: undefined };
+        store.user = undefined;
       }
+    })
+    .derive(({ store }: any) => {
+      return { user: store.user };
     });
 }
 
