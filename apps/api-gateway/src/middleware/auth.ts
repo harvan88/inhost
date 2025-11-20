@@ -35,9 +35,15 @@ export function requireAuth() {
     .onRequest(async ({ request, set, store }: any) => {
       // Extract token from Authorization header
       const authHeader = request.headers.get('Authorization');
+
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔐 Auth Middleware - onRequest');
+      console.log('Authorization header:', authHeader?.substring(0, 50) + '...');
+
       const token = extractTokenFromHeader(authHeader || undefined);
 
       if (!token) {
+        console.log('❌ No token extracted from header');
         set.status = 401;
         return {
           success: false,
@@ -48,13 +54,24 @@ export function requireAuth() {
         };
       }
 
+      console.log('✅ Token extracted, length:', token.length);
+
       try {
         // Verify token and extract user data
         const user = await verifyToken(token);
 
+        console.log('✅ Token verified, user:', {
+          userId: user.userId,
+          tenantId: user.tenantId,
+          email: user.email,
+          role: user.role
+        });
+
         // Store user in request store (accessible in route handlers)
         store.user = user;
+        console.log('✅ User stored in store.user');
       } catch (err) {
+        console.log('❌ Token verification failed:', err);
         set.status = 401;
         return {
           success: false,
@@ -64,8 +81,13 @@ export function requireAuth() {
           },
         };
       }
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     })
     .derive(({ store }: any) => {
+      console.log('🔍 Auth Middleware - derive');
+      console.log('store.user exists?', !!store.user);
+      console.log('store.user value:', store.user);
+
       // Make user available in route handler context
       return { user: store.user };
     });
