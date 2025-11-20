@@ -26,7 +26,7 @@ import type {
   ServiceUsageResult
 } from '../../core/interfaces';
 import { logger } from '../../middleware/logger';
-import { pool } from '@inhost/shared/database/config';
+import { pool } from '@inhost/shared';
 
 export class DatabaseServiceGate implements IServiceGate {
   constructor() {

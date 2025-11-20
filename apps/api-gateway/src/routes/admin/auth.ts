@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import bcrypt from 'bcrypt';
-import { pool } from '@inhost/shared/database/config';
+import { pool } from '@inhost/shared';
 import { generateToken } from '../../middleware/jwt-auth';
 import { createSuccessResponse, createErrorResponse } from '../../types/api';
 import { logger } from '../../middleware/logger';

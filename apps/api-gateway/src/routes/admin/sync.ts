@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { pool } from '@inhost/shared/database/config';
+import { pool } from '@inhost/shared';
 import { createSuccessResponse, createErrorResponse } from '../../types/api';
 import { logger } from '../../middleware/logger';
 
