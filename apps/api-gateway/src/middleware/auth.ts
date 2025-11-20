@@ -32,38 +32,40 @@ export interface AuthContext {
  */
 export function requireAuth() {
   return new Elysia({ name: 'auth' })
-    .derive(async ({ request, set }: any) => {
+    .onBeforeHandle(async ({ request, set, error }: any) => {
       // Extract token from Authorization header
       const authHeader = request.headers.get('Authorization');
       const token = extractTokenFromHeader(authHeader || undefined);
 
       if (!token) {
-        set.status = 401;
-        throw new Error(JSON.stringify({
+        return error(401, {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
             message: 'Missing or invalid authorization header',
           },
-        }));
+        });
       }
 
       try {
         // Verify token and extract user data
         const user = await verifyToken(token);
 
-        // Return user to make it available in route handler context
-        return { user };
+        // Store user in request for access in handlers
+        (request as any).user = user;
       } catch (err) {
-        set.status = 401;
-        throw new Error(JSON.stringify({
+        return error(401, {
           success: false,
           error: {
             code: 'INVALID_TOKEN',
             message: 'Invalid or expired authentication token',
           },
-        }));
+        });
       }
+    })
+    .derive(({ request }: any) => {
+      // Make user available in route handler context
+      return { user: (request as any).user };
     });
 }
 
