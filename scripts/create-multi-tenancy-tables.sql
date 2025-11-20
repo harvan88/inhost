@@ -442,11 +442,13 @@ VALUES (
 ) ON CONFLICT (slug) DO NOTHING;
 
 -- Tenant User: Admin de Tienda XYZ
-INSERT INTO tenant_users (tenant_id, email, name, role)
+-- Password: admin123 (hashed with bcrypt)
+INSERT INTO tenant_users (tenant_id, email, name, password_hash, role)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
     'admin@tiendaxyz.com',
     'Admin Tienda XYZ',
+    '$2b$10$F3GBXnsejvfWzL59UCXvV.dFDZunAYoaQXQXbVA18psimGYT3alQ6',
     'owner'
 ) ON CONFLICT (email) DO NOTHING;
 
