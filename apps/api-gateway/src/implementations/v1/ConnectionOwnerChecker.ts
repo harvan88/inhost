@@ -75,7 +75,7 @@ export class ConnectionOwnerChecker implements IOwnerChecker {
       lastActivity: new Date().toISOString()
     });
 
-    logger.info('👤 Owner marked online', {
+    logger.debug('👤 Owner marked online', {
       userId,
       deviceId: deviceInfo.deviceId,
       type: deviceInfo.type,

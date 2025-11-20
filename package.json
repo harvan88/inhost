@@ -18,11 +18,17 @@
     "clean": "bun run clean:modules && bun run clean:build",
     "clean:modules": "rm -rf node_modules && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "clean:build": "find . -name 'dist' -type d -prune -exec rm -rf '{}' +",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
     "migrate": "bun run scripts/migrate.ts",
-    "test:whatsapp": "bun scripts/test-whatsapp-flow.ts"
+    "test:whatsapp": "bun scripts/test-whatsapp-flow.ts",
+    "test:messaging": "bun scripts/test-messaging-flow.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.31.6",
     "typescript": "^5.0.0"
   },
@@ -33,11 +39,17 @@
     "pg"
   ],
   "dependencies": {
+<<<<<<< HEAD
     "@types/bcrypt": "^6.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "bcrypt": "^6.0.0",
     "drizzle-orm": "^0.44.7",
     "jsonwebtoken": "^9.0.2",
+=======
+    "@elysiajs/jwt": "^1.4.0",
+    "drizzle-orm": "^0.44.7",
+    "jose": "^6.1.2",
+>>>>>>> claude/frontend-audit-integration-01Ybr2mAfT7KboLrZ7pSSpUe
     "pg": "^8.16.3"
   }
 }

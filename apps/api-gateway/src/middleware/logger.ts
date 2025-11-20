@@ -22,16 +22,35 @@ interface LogEntry {
 }
 
 /**
- * Logger estructurado
+ * Logger estructurado con niveles configurables
  */
 export class Logger {
   private context: Record<string, unknown> = {};
+  private minLevel: LogLevel;
 
   constructor(defaultContext?: Record<string, unknown>) {
     this.context = defaultContext || {};
+
+    // Configurar nivel mínimo de log desde env
+    // LOG_LEVEL=DEBUG|INFO|WARN|ERROR
+    // Default: INFO (no muestra DEBUG)
+    const envLevel = process.env.LOG_LEVEL?.toUpperCase() || 'INFO';
+    this.minLevel = LogLevel[envLevel as keyof typeof LogLevel] || LogLevel.INFO;
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    const levels = [LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR];
+    const currentLevelIndex = levels.indexOf(level);
+    const minLevelIndex = levels.indexOf(this.minLevel);
+    return currentLevelIndex >= minLevelIndex;
   }
 
   private log(level: LogLevel, message: string, context?: Record<string, unknown>) {
+    // Filtrar por nivel configurado
+    if (!this.shouldLog(level)) {
+      return;
+    }
+
     const entry: LogEntry = {
       level,
       timestamp: new Date().toISOString(),
@@ -49,9 +68,14 @@ export class Logger {
 
     const formatted = `${emoji} [${entry.level}] ${entry.message}`;
 
-    // En desarrollo, mostrar contexto si existe
+    // En desarrollo, mostrar contexto si existe y es relevante
     if (process.env.NODE_ENV === 'development' && entry.context && Object.keys(entry.context).length > 0) {
-      console.log(formatted, entry.context);
+      // Solo mostrar contexto para WARN y ERROR
+      if (level === LogLevel.WARN || level === LogLevel.ERROR) {
+        console.log(formatted, entry.context);
+      } else {
+        console.log(formatted);
+      }
     } else {
       console.log(formatted);
     }
