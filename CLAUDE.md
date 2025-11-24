@@ -1,391 +1,515 @@
-# CLAUDE.md
+# CLAUDE.md - INHOST Backend
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with the **INHOST backend monorepo**.
 
-## Project Overview
+**Source:** This file is based EXCLUSIVELY on `docs/ARCHITECTURE.md` and `docs/AUDIT-REPORT.md`.
 
-**INHOST** is a multi-channel messaging API Gateway built on Bun + Elysia.js, designed with interface-based modular architecture for incremental development. Currently in **Sprint 2 (Protection & Security)** testing phase.
+## Project Identity
+
+**This is the BACKEND monorepo only.** The frontend lives at `../inhost-frontend/` as a completely separate monorepo.
+
+## Stack (from ARCHITECTURE.md)
+
+- **Runtime:** Bun 1.x
+- **Framework:** Elysia.js 1.2
+- **Language:** TypeScript 5.x (strict mode)
+- **Database:** PostgreSQL 15 + Drizzle ORM 0.44
+- **Cache:** Redis 7 (optional)
+- **Authentication:** JWT (jose + @elysiajs/jwt OR bcrypt + jsonwebtoken - **⚠️ CONFLICT**)
 
 ## Development Commands
 
-### Starting the System (Required: 2 Terminals)
-
 ```bash
-# Terminal 1: API Server (Port 3000)
-start-server.bat                    # Recommended - checks for conflicts
-# OR
-bun --cwd apps/api-gateway dev      # Manual
+# Development
+bun run dev                  # Start API gateway with watch
+bun run dev:db               # Start PostgreSQL + Redis (Docker)
+bun run dev:db:stop          # Stop database services
 
-# Terminal 2: Testing Dashboard Server (Port 5500)
-start-testing.bat                   # Serves testing/ directory via HTTP
-# OR
-cd testing && bun server.js         # Manual
+# Build
+bun run build                # Build all packages
+bun run type-check           # TypeScript checking
 
-# Browser: http://localhost:5500 (NOT file://)
+# Database
+bun run db:generate          # Generate migration from schema
+bun run db:push              # Push schema (DEV ONLY - dangerous!)
+bun run db:migrate           # Run migrations (PRODUCTION)
+bun run db:studio            # Drizzle Studio (visual DB editor)
+
+# Testing
+bun run test:whatsapp        # Test WhatsApp simulation
+bun run test:messaging       # Test end-to-end messaging
 ```
 
-### Health Checks
+## Architecture: Clean Architecture with Layers
 
-```bash
-# Verify server status
-curl http://localhost:3000/health
+**From ARCHITECTURE.md Section 3:**
 
-# Check process count (MUST be exactly 3 lines)
-tasklist | findstr bun.exe
+### Layer 1: Presentation (Routes + Middleware)
 
-# Test message endpoint
-curl -X POST http://localhost:3000/messages \
-  -H "Content-Type: application/json" \
-  -H "X-User-Id: test" \
-  -d '{"type":"incoming","channel":"whatsapp","content":{"text":"Test"},"metadata":{"from":"+1","to":"+2","timestamp":"2025-11-16T10:00:00Z"}}'
-```
+**Location:** `apps/api-gateway/src/routes/`, `middleware/`
 
-### Logging Configuration
+**Routes:**
+- `health.ts`: Health checks
+- `messages.ts`: LEGACY message endpoints
+- `simulation.ts`: Development simulation
+- `websocket.ts`: WebSocket real-time
+- `admin/*`: Protected multi-tenant routes (auth, conversations, messages, team, etc.)
 
-Control the verbosity of server logs with `LOG_LEVEL` environment variable:
+**Middleware:**
+- `auth.ts`: Basic auth
+- `jwt-auth.ts`: JWT authentication
+- `errorHandler.ts`: Global error handling
+- `logger.ts`: HTTP logging
+- `rateLimiting.ts`: Rate limiting V1 (memory)
+- `rateLimitingV2.ts`: Rate limiting V2 (Redis)
+- `validation.ts`: Input validation
+- `websocketValidation.ts`: WebSocket message validation
+- `timeout.ts`: Request timeout
 
-```bash
-# Default (INFO) - Recommended for development
-bun --cwd apps/api-gateway dev
+### Layer 2: Application (Services + MessageCore)
 
-# Quiet (only warnings and errors)
-LOG_LEVEL=WARN bun --cwd apps/api-gateway dev
+**Location:** `apps/api-gateway/src/core/`, `services/`
 
-# Verbose (all debug logs - use only for troubleshooting)
-LOG_LEVEL=DEBUG bun --cwd apps/api-gateway dev
+**MessageCore** (`core/MessageCore.ts`):
+- **THE HEART OF THE SYSTEM**
+- Orchestrates ALL message operations
+- Dependencies: IPersistenceService, INotificationService, IPlanResolver, IOwnerChecker, AdapterManager, IServiceGate
 
-# Silent (errors only)
-LOG_LEVEL=ERROR bun --cwd apps/api-gateway dev
-```
+**Methods:**
+- `receive(envelope)`: Persist → Broadcast → Update status
+- `send(envelope)`: Check capabilities → Persist → Send via adapter → Update status
+- `updateStatus()`: Append to statusChain (never mutate existing)
 
-**Levels:**
-- `DEBUG` 🔍 - Very verbose (rate limiting, connections, all operations)
-- `INFO` ℹ️  - **Default** - Important operations only
-- `WARN` ⚠️  - Warnings and errors only
-- `ERROR` 🔴 - Errors only
+**⚠️ RULE:** All message operations MUST go through MessageCore.
 
-**📘 Full docs:** [docs/troubleshooting/logging-configuration.md](docs/troubleshooting/logging-configuration.md)
+### Layer 3: Domain (Interfaces + Extensions)
 
-### Testing
+**Location:** `apps/api-gateway/src/core/interfaces/`, `extensions/`
 
-**Manual Testing:**
-1. Open `http://localhost:5500` in browser
-2. Select test suite from sidebar (e.g., "Sprint 2 Protection")
-3. Run tests via dashboard
+**Interfaces (Contracts):**
+- `IAdapter.ts`: Channel adapters (WhatsApp, Telegram, etc.)
+- `IPersistenceService.ts`: Message storage
+- `INotificationService.ts`: WebSocket broadcasts
+- `IRateLimiter.ts`: Rate limiting
+- `IMessageQueue.ts`: Message queue
+- `IValidator.ts`: Message validation
+- `IPlanResolver.ts`: Plan/quota resolution
+- `IOwnerChecker.ts`: Presence checking
+- `IServiceGate.ts`: Capability checking
+- `IExtension.ts`: Pluggable extensions
 
-**Automated Testing:**
-```bash
-# Rate limiting test (15 rapid requests)
-for i in {1..15}; do
-  curl -X POST http://localhost:3000/messages \
-    -H "Content-Type: application/json" \
-    -H "X-User-Id: test-user" \
-    -d '{"type":"incoming","channel":"whatsapp","content":{"text":"Test"},"metadata":{"from":"+1","to":"+2","timestamp":"2025-11-16T10:00:00Z"}}'
-done
-```
+### Layer 4: Infrastructure (Implementations + Adapters)
 
-## Architecture
+**Location:** `implementations/v1/`, `implementations/v2/`, `adapters/`
 
-### Interface-Based Modular Design
+**V1 Implementations (Memory - for dev):**
+- `MemoryPersistence.ts` - **⚠️ CRITICAL ISSUE (see below)**
+- `MemoryRateLimiter.ts`
+- `MemoryQueue.ts`
+- `SimpleValidator.ts`
+- `SimplePlanResolver.ts`
+- `ConnectionOwnerChecker.ts`
+- `WebSocketNotification.ts`
 
-The codebase follows a **strict interface-contract pattern** allowing incremental evolution:
+**V2 Implementations (Persistent - for prod):**
+- `RedisRateLimiter.ts` ✅
+- `DatabaseServiceGate.ts` ✅
+- `DatabasePersistence.ts` - ❌ **NOT IMPLEMENTED YET**
 
-```
-apps/api-gateway/src/
-├── core/
-│   ├── MessageCore.ts              # Orchestrator - receives/sends messages
-│   └── interfaces/                 # Contracts (NEVER change)
-│       ├── IAdapter.ts             # sendMessage(), receiveMessage()
-│       ├── IRateLimiter.ts         # checkLimit()
-│       ├── IPersistenceService.ts  # save(), retrieve()
-│       ├── INotificationService.ts # broadcast()
-│       └── ...
-├── implementations/v1/             # Current implementations (can evolve)
-│   ├── MemoryRateLimiter.ts       # In-memory rate limiting
-│   ├── MemoryPersistence.ts       # In-memory storage
-│   └── ...
-├── middleware/                     # Elysia middleware
-│   ├── rateLimiting.ts            # Rate limit enforcement
-│   ├── validation.ts              # TypeBox validation
-│   ├── timeout.ts                 # Request timeout protection
-│   └── logger.ts                  # HTTP logging
-├── routes/                         # API endpoints
-│   ├── messages.ts                # POST/GET /messages
-│   ├── health.ts                  # GET /health
-│   └── websocket.ts               # WS /realtime
-└── adapters/                       # Channel adapters
-    └── simulators/                # Simulated adapters (Sprint 1)
-```
+**Adapters:**
+- `SimulatedWhatsAppAdapter.ts`
+- `SimulatedTelegramAdapter.ts`
+- `SimulatedSMSAdapter.ts`
+- `AdapterManager.ts`: Manages all adapters
 
-### MessageCore - The Orchestrator
+## MessageEnvelope Contract
 
-`MessageCore` is the central orchestrator that:
-1. Receives messages from any source (adapter, UI, extension)
-2. Persists immediately via `IPersistenceService`
-3. Broadcasts to interested parties via `INotificationService`
-4. Delivers outgoing messages via adapters
+**Location:** `packages/shared/src/types/message-envelope.ts`
 
-**Key principle:** MessageCore is **lightweight** - it delegates to specialized services via interfaces.
+**From ARCHITECTURE.md Section 1.2:**
 
-### Dependency Injection Pattern
-
-Services are injected into `MessageCore`:
 ```typescript
-new MessageCore(
-  persistence: IPersistenceService,    // How to store
-  notifications: INotificationService, // How to notify
-  planResolver: IPlanResolver,         // Which plan?
-  ownerChecker: IOwnerChecker,         // Who owns?
-  adapters: AdapterManager             // How to send?
-)
-```
-
-This allows swapping implementations without changing core logic.
-
-## Critical Gotchas
-
-### 1. Bun Process Architecture
-
-**Bun creates 3 processes per instance - THIS IS NORMAL:**
-```bash
-tasklist | findstr bun.exe
-# Expected output (1 instance):
-bun.exe    XXXXX    Console    6    ~44 KB    ✅
-bun.exe    XXXXX    Console    6    ~23 KB    ✅
-bun.exe    XXXXX    Console    6   ~170 KB    ✅
-
-# PROBLEM (2+ instances):
-bun.exe    ... (6+ lines = multiple instances)
-```
-
-**Fix multiple instances:**
-```bash
-cmd //c "taskkill /F /IM bun.exe"  # Kill all
-timeout /t 2                        # Wait
-bun --cwd apps/api-gateway dev      # Start one
-```
-
-### 2. CORS File Protocol Issue
-
-**The testing dashboard MUST be served via HTTP, NOT opened directly:**
-
-❌ **WRONG:** `file:///C:/Users/.../testing/index.html`
-- Browser blocks all fetch() requests to localhost (CORS policy)
-- Causes "Failed to fetch" on ALL tests
-
-✅ **CORRECT:** `http://localhost:5500`
-- Testing server serves files via HTTP
-- CORS works correctly
-
-**Solution:** Always use `start-testing.bat` (starts HTTP server on port 5500)
-
-### 3. Two Terminals Required
-
-The system requires **TWO separate processes:**
-- **Terminal 1:** API server (port 3000) - `start-server.bat`
-- **Terminal 2:** Testing dashboard server (port 5500) - `start-testing.bat`
-
-### 4. Elysia Middleware Lifecycle Hooks (CRITICAL)
-
-**In Elysia 1.2.0, when applying middleware with `.use()` to scoped instances:**
-
-❌ **DON'T USE:** `.derive()` or `.onBeforeHandle()`
-- These hooks **do NOT execute** when middleware is applied via `.use()` to a sub-route (e.g., `messagesRoutes`)
-- Will cause silent failures - middleware appears registered but never runs
-
-✅ **USE:** `.onRequest()`
-- Executes correctly even when middleware is applied via `.use()` to scoped Elysia instances
-- Runs before all other processing
-
-**Example:**
-```typescript
-// ❌ WRONG - This never executes:
-export function rateLimiting(config) {
-  return new Elysia()
-    .derive(async ({ request, set }) => {
-      set.headers['X-RateLimit-Limit'] = '30';  // Never runs!
-    });
-}
-
-// ✅ CORRECT - This works:
-export function rateLimiting(config) {
-  return new Elysia()
-    .onRequest(async ({ request, set }) => {
-      set.headers['X-RateLimit-Limit'] = '30';  // Runs correctly
-    });
-}
-```
-
-**File:** [apps/api-gateway/src/middleware/rateLimiting.ts](apps/api-gateway/src/middleware/rateLimiting.ts)
-
-## Sprint-Based Development
-
-The project follows incremental sprint-based development:
-
-- ✅ **Sprint 1:** MessageCore + Basic Routes
-- ✅ **Sprint 1.5:** Support Services (Logger, Storage, RateLimiter interfaces)
-- 🔄 **Sprint 2:** Protection & Security (Rate Limiting, Validation, Timeout) - **TESTING PHASE**
-- 📅 **Sprint 3:** WebSocket Real-time (Planned)
-
-## Current State & Session Startup
-
-**ALWAYS read at start of each session:**
-- [PENDIENTES-SPRINT2.md](PENDIENTES-SPRINT2.md) - Current pending tasks, known issues, investigation needed
-
-**Sprint 2 Status:**
-- ✅ Validation: Working (HTTP 422 on invalid payloads)
-- ⚠️ Rate Limiting: Implemented but needs verification (headers not visible in tests)
-- ⚠️ Timeout: Implemented but needs testing with slow requests
-
-## Documentation Structure
-
-```
-inhost/
-├── README.md                   # Project overview
-├── QUICK-START.md             # 4-step startup guide
-├── PENDIENTES-SPRINT2.md      # Current session state (READ FIRST)
-└── docs/
-    ├── architecture/          # System design
-    │   ├── plan-modular.md   # Interface-based architecture explanation
-    │   └── frontend-strategy.md
-    ├── guides/               # Testing guides
-    │   ├── sprint1-testing.md
-    │   └── sprint2-testing.md
-    └── troubleshooting/      # Common issues
-        ├── failed-to-fetch.md      # CORS & multiple instances
-        └── multiple-instances.md   # Bun process management
-```
-
-## Common Patterns
-
-### Adding a New Interface
-
-1. Define interface in `core/interfaces/`:
-```typescript
-export interface IMyService {
-  doSomething(input: string): Promise<Result>;
-}
-```
-
-2. Create V1 implementation in `implementations/v1/`:
-```typescript
-export class SimpleMyService implements IMyService {
-  async doSomething(input: string): Promise<Result> {
-    // Simple implementation
-  }
-}
-```
-
-3. Inject into `MessageCore` or middleware
-4. Later: Create V2 implementation **without changing interface**
-
-### Adding Middleware to Routes
-
-Middleware is applied via Elysia's `.use()`:
-```typescript
-// routes/messages.ts
-export const messagesRoutes = new Elysia()
-  .use(httpLogger)              // HTTP logging
-  .use(validateJSON())          // Validation
-  .use(rateLimiting({...}))     // Rate limiting
-  .use(timeout(30000))          // Timeout protection
-  .post('/messages', handler)   // Route handler
-```
-
-## Tech Stack
-
-- **Runtime:** Bun
-- **Framework:** Elysia.js (Bun-optimized Express alternative)
-- **Validation:** TypeBox (Type-safe schemas)
-- **Database:** PostgreSQL via Prisma
-- **Testing:** Custom HTML/JS dashboard + curl
-- **WebSocket:** Built into Elysia
-
-## Troubleshooting Quick Reference
-
-| Symptom | Likely Cause | Fix |
-|---------|--------------|-----|
-| "Failed to fetch" (all tests) | Dashboard opened from `file://` | Use `start-testing.bat` → `http://localhost:5500` |
-| "Failed to fetch" (intermittent) | Multiple server instances | Kill all bun processes, restart one instance |
-| 6+ bun.exe processes | 2+ server instances running | `taskkill /F /IM bun.exe` → restart |
-| Server won't start | Previous instance not killed | `taskkill /F /IM bun.exe` |
-| Tests work in curl, fail in dashboard | Dashboard not served via HTTP | Must use `http://localhost:5500` not `file://` |
-
-## Message Format
-
-All messages follow `MessageEnvelopeV2` schema:
-```typescript
-{
+interface MessageEnvelopeV2 {
   id: string;
-  type: 'incoming' | 'outgoing' | 'system' | 'status';
-  channel: 'whatsapp' | 'telegram' | 'web' | 'sms';
+  type: MessageType;  // incoming | outgoing | system | status
+  channel: MessageChannel;  // whatsapp | telegram | web | sms
   content: {
-    text: string;
-    // ... optional media, buttons, etc.
+    text?: string;
+    contentType: string;
+    media?: { url, type, caption };
+    location?: { latitude, longitude, name };
+    buttons?: Array<{ id, text, type }>;
   };
   metadata: {
     from: string;
     to: string;
-    timestamp: string;
+    timestamp: string;  // ISO 8601
+    messageId?: string;
+    conversationId?: string;
+    ownerId?: string;
+    platformMessageId?: string;
+    tenantId?: string;
   };
-  status?: MessageStatus;
+  statusChain: Array<{  // APPEND-ONLY
+    status: MessageStatus;
+    timestamp: string;
+    messageId: string;
+    details?: string;
+  }>;
+  context: {
+    plan: 'free' | 'premium';
+    timestamp: string;
+    source?: string;
+    extension?: { id, name, latency };
+    [key: string]: unknown;
+  };
 }
 ```
 
-## WebSocket Real-time (Sprint 3)
+**⚠️ RULES:**
+- Never mutate statusChain entries, only append
+- Always preserve all fields
+- Validate structure before sending to MessageCore
 
-### Endpoint
-- **WS** `/realtime` - Real-time communication with protections
+## Multi-Tenancy
 
-### Protections Implemented
+**From ARCHITECTURE.md Section 7.4:**
 
-**1. Rate Limiting** (Same as HTTP)
-- Free: 12 messages/minute
-- Premium: 30 messages/minute
-- Error response: `{ type: 'error', code: 'RATE_LIMIT_EXCEEDED', retryAfter: 60 }`
+**Database Schema:**
+- `tenants`: Organizations with plans (starter, professional, enterprise)
+- `adminUsers`: Dashboard users with roles (owner, admin, agent, viewer)
+- `endUsers`: External customers (WhatsApp contacts)
+- `conversations`, `messages`: Scoped to `tenantId`
 
-**2. Message Validation** (TypeBox schemas)
-- Valid message types: `typing`, `new_message`, `message_received`
-- Required fields validated
-- Error response: `{ type: 'error', code: 'INVALID_MESSAGE', errors: [...] }`
+**⚠️ CRITICAL RULE:** ALL queries MUST filter by `tenantId` from JWT.
 
-**3. Size Validation**
-- Max message size: 1MB
-- Error response: `{ type: 'error', code: 'MESSAGE_TOO_LARGE', size: 1048576 }`
+**Example:**
+```typescript
+const conversations = await db.query.conversations.findMany({
+  where: and(
+    eq(conversations.tenantId, auth.tenantId),  // ALWAYS
+    eq(conversations.status, 'active')
+  )
+});
+```
 
-### Testing WebSocket
+## Authentication
 
+**From ARCHITECTURE.md Section 9.1:**
+
+**JWT Structure:**
+```json
+{
+  "sub": "user-id",
+  "email": "admin@company.com",
+  "tenant_id": "tenant-123",
+  "role": "admin",
+  "iat": 1234567890,
+  "exp": 1234654290  // 24h default
+}
+```
+
+**Roles:**
+- `owner`: Full access
+- `admin`: Team + conversations management
+- `agent`: Conversations only
+- `viewer`: Read-only
+
+**Middleware:** `jwt-auth.ts` extracts JWT → validates → adds to `store.auth`
+
+## CRITICAL ISSUES from AUDIT-REPORT.md
+
+### P0 - BLOQUEANTES (fix before production)
+
+**1. Merge Conflicts (Section 1.1):**
+- Files: `routes/index.ts` (lines 6-83), `routes/admin/auth.ts` (lines 1-683)
+- **Impact:** Code does not compile
+- **Action:** Resolve conflicts immediately
+
+**2. Duplicate Auth Dependencies (Section 1.2):**
+- `bcrypt + jsonwebtoken` vs `jose + @elysiajs/jwt`
+- **Impact:** Inconsistency, security risk
+- **Action:** Choose ONE (recommend `jose + @elysiajs/jwt` for Elysia)
+
+**3. MemoryPersistence in Production (Section 1.3):**
+```typescript
+// services/index.ts:59
+export const persistence = new MemoryPersistence();  // ⚠️ DATA LOSS ON RESTART
+```
+- **Impact:** ALL messages lost on server restart
+- **Action:** Implement `DatabasePersistence` using PostgreSQL
+
+**4. JWT_SECRET Hardcoded Fallback (Section 1.4):**
+```typescript
+jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-in-production'  // ⚠️ SECURITY RISK
+```
+- **Impact:** Anyone can forge tokens if env var missing
+- **Action:** Make JWT_SECRET required, throw error if missing
+
+**5. SQL Injection Risk (Section 1.6):**
+- **Issue:** Some endpoints may use string interpolation in queries
+- **Action:** ALWAYS use parameterized queries ($1, $2, ...) or Drizzle ORM
+
+**6. No Automated Tests (Section 1.5):**
+- **Coverage:** 0%
+- **Impact:** No regression detection, unsafe refactoring
+- **Action:** Implement Bun Test framework, start with MessageCore
+
+**7. Passwords in Logs (Section 1.8):**
+- **Risk:** Logging request body without sanitization
+- **Action:** Implement `sanitizeForLogging()` function
+
+### P1 - URGENT (fix this sprint)
+
+**From AUDIT-REPORT.md Section 2:**
+- Implement rate limiting on auth endpoints (Section 3.2)
+- Create services/repositories layer (Section 2.2)
+- Optimize N+1 queries (Section 4.1)
+- Add input validation to all endpoints (Section 2.3)
+
+## Database Management
+
+**Schema:** `packages/shared/src/database/schema.ts` (Drizzle ORM)
+
+**Migrations:**
 ```bash
-# Automated testing script
-bun scripts/test-websocket.js
+# 1. Edit schema.ts
+# 2. Generate migration
+bun run db:generate
 
-# Expected output:
-# ✓ Connection test
-# ✓ Valid message accepted
-# ✓ Invalid message rejected
-# ✓ Large message rejected
-# ✓ Rate limiting enforced (~12 messages)
+# 3. Review migration in drizzle/migrations/
+# 4. Apply (PRODUCTION - safe)
+bun run db:migrate
+
+# OR push directly (DEV ONLY - dangerous)
+bun run db:push
 ```
 
-### WebSocket Message Flow
+**Connection:** `packages/shared/src/database/config.ts`
 
+## WebSocket Events
+
+**Endpoint:** `ws://localhost:3000/realtime`
+
+**Emitted to clients:**
+- `connection`: Connection established
+- `message:new`: New message
+- `message:status`: Status updated
+- `typing:indicator`: User typing
+- `conversation:updated`: Conversation changed
+- `client_toggle`, `extension_toggle`: Simulation events
+
+**Received from clients:**
+- `typing`: Typing indicator
+- `message_received`: Message acknowledgment
+
+## Adding a New Route
+
+**From ARCHITECTURE.md Section 3.1:**
+
+```typescript
+// routes/admin/my-feature.ts
+import { Elysia } from 'elysia';
+import { jwtAuth } from '../../middleware/jwt-auth';
+
+export const myFeatureRoutes = new Elysia({ prefix: '/admin' })
+  .use(jwtAuth())  // Require auth
+  .get('/my-feature', async ({ store }) => {
+    const auth = store.auth as AuthenticatedRequest;
+    // auth.tenantId, auth.tenantUserId, auth.role available
+    return { data: 'something' };
+  });
 ```
-Client → WS /realtime
-  ↓
-[Size Check] → Reject if >1MB
-  ↓
-[Validation] → Reject if invalid schema
-  ↓
-[Rate Limit] → Reject if limit exceeded
-  ↓
-[Process] → Echo + Broadcast
+
+Then register in `routes/index.ts`.
+
+## Error Handling
+
+**From ARCHITECTURE.md Section 3.1:**
+
+```typescript
+import { createError } from '../middleware/errorHandler';
+
+throw createError.validation('Invalid message format');
+throw createError.unauthorized('Token expired');
+throw createError.notFound('Conversation not found');
+throw createError.rateLimit('Too many requests');
 ```
 
-### Key Implementation Details
+## Performance Optimizations (from ARCHITECTURE.md Section 8.3)
 
-**File:** [apps/api-gateway/src/routes/websocket.ts](apps/api-gateway/src/routes/websocket.ts)
-- Rate limiting uses same `MemoryRateLimiter` as HTTP
-- Validation in [middleware/websocketValidation.ts](apps/api-gateway/src/middleware/websocketValidation.ts)
-- Plan resolution via `planResolver.getPlan(userId)`
+**Connection Pooling:**
+```typescript
+const pool = new Pool({
+  max: 20,
+  min: 2,
+  idleTimeoutMillis: 30000,
+});
+```
 
-**Important:** WebSocket rate limit shares counter with HTTP endpoints (same userId, same counter)
+**Avoid N+1 Queries:**
+```typescript
+// ✅ GOOD - Use Drizzle WITH for JOINs
+const conversations = await db.query.conversations.findMany({
+  with: {
+    endUser: true,      // JOIN
+    assignedTo: true,   // JOIN
+  }
+});
+```
+
+**Add Indexes:**
+```typescript
+// schema.ts
+export const conversations = pgTable('conversations', {
+  // ...
+}, (table) => ({
+  tenantStatusIdx: index().on(table.tenantId, table.status),
+}));
+```
+
+## Configuration
+
+**Location:** `apps/api-gateway/src/config/index.ts`
+
+**Loads from environment:**
+- Database credentials
+- Redis connection
+- JWT secret and expiration
+- Rate limit settings
+- Feature flags
+
+## Security Rules (from ARCHITECTURE.md Section 9)
+
+**Multi-Tenancy Isolation:**
+1. ✅ Filter ALL queries by `tenantId`
+2. ✅ JWT includes `tenant_id`
+3. ✅ Validate tenant access in middleware
+4. ❌ Never allow cross-tenant access
+
+**SQL Injection Prevention:**
+```typescript
+// ❌ VULNERABLE
+await pool.query(`SELECT * FROM users WHERE email = '${email}'`);
+
+// ✅ SAFE
+await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+```
+
+**Secrets Management:**
+- ❌ Never hardcode secrets
+- ✅ Always use environment variables
+- ✅ Validate secrets exist on startup
+- ✅ Rotate secrets regularly
+
+## Logging (from ARCHITECTURE.md Section 8.4)
+
+**Structured logs with emoji prefixes:**
+- 🔄 Processing
+- ✅ Success
+- ❌ Error
+- 📢 Broadcast
+- 💾 Persistence
+- 📥 Incoming
+- 📤 Outgoing
+
+**Use:** `utils/observability-logger.ts` for detailed tracing
+
+## Common Patterns
+
+### Creating a Message
+
+```typescript
+import { v4 as uuidv4 } from 'uuid';
+
+const envelope: MessageEnvelopeV2 = {
+  id: uuidv4(),
+  type: 'outgoing',
+  channel: 'whatsapp',
+  content: {
+    text: 'Hello!',
+    contentType: 'text/plain',
+  },
+  metadata: {
+    from: 'agent-123',
+    to: 'customer-456',
+    timestamp: new Date().toISOString(),
+    conversationId: 'conv-789',
+    tenantId: user.tenantId,
+    ownerId: user.userId,
+  },
+  statusChain: [{
+    status: 'pending',
+    timestamp: new Date().toISOString(),
+    messageId: envelope.id,
+  }],
+  context: {
+    plan: 'premium',
+    timestamp: new Date().toISOString(),
+  },
+};
+
+await messageCore.send(envelope);
+```
+
+### Querying with Tenant Isolation
+
+```typescript
+import { db } from '@inhost/shared/database';
+import { eq, and } from 'drizzle-orm';
+
+const results = await db
+  .select()
+  .from(conversations)
+  .where(
+    and(
+      eq(conversations.tenantId, auth.tenantId),  // ALWAYS
+      eq(conversations.id, conversationId)
+    )
+  );
+```
+
+## Contract Changes
+
+When modifying types in `packages/shared/src/types/`:
+
+1. Update backend type definition
+2. **Notify frontend team** (they must mirror manually)
+3. Document changes in commit message
+4. Test both sides together
+5. Consider backward compatibility
+
+## Documentation
+
+- **Architecture:** `docs/ARCHITECTURE.md` (1960 lines)
+- **Audit Report:** `docs/AUDIT-REPORT.md` (1748 lines)
+- **API Documentation:** `docs/API-DOCUMENTATION.md`
+- **Executive Summary:** `docs/EXECUTIVE-SUMMARY.md`
+
+## Deployment Checklist
+
+**Before deploying to production:**
+- [ ] Resolve merge conflicts
+- [ ] Implement DatabasePersistence
+- [ ] Choose ONE auth library
+- [ ] Configure JWT_SECRET (required)
+- [ ] Fix SQL injection vulnerabilities
+- [ ] Implement sanitizeForLogging
+- [ ] Run migrations: `bun run db:migrate`
+- [ ] Configure environment variables
+- [ ] Set up monitoring
+
+## Critical Rules Summary
+
+1. ✅ All message operations through MessageCore
+2. ✅ Always filter by `tenantId`
+3. ✅ Only append to statusChain
+4. ✅ Use parameterized queries
+5. ✅ Validate JWT_SECRET on startup
+6. ✅ Implement DatabasePersistence before production
+7. ❌ Never use MemoryPersistence in production
+8. ❌ Never return data from other tenants
+9. ❌ Never skip auth on /admin/* routes
+10. ❌ Never use `db:push` in production
+
+**For cross-stack issues:** Coordinate with frontend team. Changes to MessageEnvelope, API contracts, or WebSocket events require synchronized updates.
