@@ -41,16 +41,17 @@ function generateSlug(name: string): string {
 export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
   .use(httpLogger)
 
-  // POST /admin/auth/signup - Create new tenant and owner user
+  // POST /admin/auth/signup - Create new tenant and owner user (NO AUTH)
   .post(
     '/signup',
-    async ({ body, error }) => {
+    async ({ body, set }) => {
       const { tenantName, name, email, password, plan = 'starter' } = body;
 
       // Validate password strength
       const passwordValidation = validatePasswordStrength(password);
       if (!passwordValidation.valid) {
-        return error(422, createErrorResponse('VALIDATION_ERROR', passwordValidation.errors.join(', ')));
+        set.status = 422;
+        return createErrorResponse('VALIDATION_ERROR', passwordValidation.errors.join(', '));
       }
 
       try {
@@ -60,7 +61,8 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         });
 
         if (existingUser) {
-          return error(409, createErrorResponse('EMAIL_EXISTS', 'An account with this email already exists'));
+          set.status = 409;
+          return createErrorResponse('EMAIL_EXISTS', 'An account with this email already exists');
         }
 
         // Generate slug for tenant
@@ -72,7 +74,8 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         });
 
         if (existingTenant) {
-          return error(409, createErrorResponse('TENANT_EXISTS', 'A company with this name already exists'));
+          set.status = 409;
+          return createErrorResponse('TENANT_EXISTS', 'A company with this name already exists');
         }
 
         // Hash password
@@ -138,37 +141,41 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
 
         // Database connection errors
         if (err.code === 'ECONNREFUSED') {
-          return error(503, createErrorResponse(
+          set.status = 503;
+          return createErrorResponse(
             'DATABASE_UNAVAILABLE',
             'Database service is currently unavailable. Please try again later or contact support.',
             { hint: 'Make sure PostgreSQL is running (bun run dev:db)' }
-          ));
+          );
         }
 
         // Connection timeout
         if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
-          return error(504, createErrorResponse(
+          set.status = 504;
+          return createErrorResponse(
             'DATABASE_TIMEOUT',
             'Database connection timed out. Please try again.',
             { hint: 'Check database connection settings' }
-          ));
+          );
         }
 
         // Unique constraint violations (duplicate email/slug)
         if (err.code === '23505') {
-          return error(409, createErrorResponse(
+          set.status = 409;
+          return createErrorResponse(
             'DUPLICATE_ENTRY',
             'An account with this information already exists.',
             { hint: 'Try a different email or company name' }
-          ));
+          );
         }
 
         // Generic database error
-        return error(500, createErrorResponse(
+        set.status = 500;
+        return createErrorResponse(
           'SIGNUP_FAILED',
           'Failed to create account due to a server error. Please try again.',
           { hint: err.message }
-        ));
+        );
       }
     },
     {
@@ -187,10 +194,11 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
     }
   )
 
-  // POST /admin/auth/login - Login and receive JWT token
+  // POST /admin/auth/login - Login and receive JWT token (NO AUTH)
   .post(
     '/login',
-    async ({ body, error }) => {
+    async ({ body, set }) => {
+      console.log('🔐 [AUTH] /admin/auth/login called', { email: body.email });
       const { email, password } = body;
 
       try {
@@ -203,18 +211,21 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         });
 
         if (!user) {
-          return error(401, createErrorResponse('INVALID_CREDENTIALS', 'Invalid email or password'));
+          set.status = 401;
+          return createErrorResponse('INVALID_CREDENTIALS', 'Invalid email or password');
         }
 
         // Check if user is active
         if (!user.isActive) {
-          return error(403, createErrorResponse('ACCOUNT_DISABLED', 'Your account has been disabled'));
+          set.status = 403;
+          return createErrorResponse('ACCOUNT_DISABLED', 'Your account has been disabled');
         }
 
         // Verify password
         const isPasswordValid = await verifyPassword(password, user.passwordHash);
         if (!isPasswordValid) {
-          return error(401, createErrorResponse('INVALID_CREDENTIALS', 'Invalid email or password'));
+          set.status = 401;
+          return createErrorResponse('INVALID_CREDENTIALS', 'Invalid email or password');
         }
 
         // Update last login timestamp
@@ -259,28 +270,31 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
 
         // Database connection errors
         if (err.code === 'ECONNREFUSED') {
-          return error(503, createErrorResponse(
+          set.status = 503;
+          return createErrorResponse(
             'DATABASE_UNAVAILABLE',
             'Database service is currently unavailable. Please try again later.',
             { hint: 'The server cannot connect to the database. Contact support if this persists.' }
-          ));
+          );
         }
 
         // Connection timeout
         if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
-          return error(504, createErrorResponse(
+          set.status = 504;
+          return createErrorResponse(
             'DATABASE_TIMEOUT',
             'Login request timed out. Please try again.',
             { hint: 'Database connection is slow. Try again in a moment.' }
-          ));
+          );
         }
 
         // Generic login error
-        return error(500, createErrorResponse(
+        set.status = 500;
+        return createErrorResponse(
           'LOGIN_FAILED',
           'Login failed due to a server error. Please try again.',
           { hint: err.message }
-        ));
+        );
       }
     },
     {
@@ -296,74 +310,79 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
     }
   )
 
-  // GET /admin/auth/me - Get current user information
-  .use(requireAuth())
-  .get(
-    '/me',
-    async ({ user, error }) => {
-      try {
-        // Fetch full user data from database
-        const userData = await db.query.adminUsers.findFirst({
-          where: eq(adminUsers.id, user.userId),
-          with: {
-            tenant: true,
-          },
-        });
+  // GET /admin/auth/me - Get current user information (REQUIRES AUTH)
+  .guard({ beforeHandle: [requireAuth()] }, (app) =>
+    app.get(
+      '/me',
+      async ({ user, set }) => {
+        try {
+          // Fetch full user data from database
+          const userData = await db.query.adminUsers.findFirst({
+            where: eq(adminUsers.id, user.userId),
+            with: {
+              tenant: true,
+            },
+          });
 
-        if (!userData) {
-          return error(404, createErrorResponse('USER_NOT_FOUND', 'User not found'));
+          if (!userData) {
+            set.status = 404;
+            return createErrorResponse('USER_NOT_FOUND', 'User not found');
+          }
+
+          return createSuccessResponse({
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            role: userData.role,
+            isActive: userData.isActive,
+            lastLoginAt: userData.lastLoginAt,
+            createdAt: userData.createdAt,
+            tenant: {
+              id: userData.tenant.id,
+              name: userData.tenant.name,
+              slug: userData.tenant.slug,
+              plan: userData.tenant.plan,
+              subscriptionStatus: userData.tenant.subscriptionStatus,
+              trialEndsAt: userData.tenant.trialEndsAt,
+            },
+          });
+        } catch (err: any) {
+          console.error('Get user error:', err);
+
+          // Database connection errors
+          if (err.code === 'ECONNREFUSED') {
+            set.status = 503;
+            return createErrorResponse(
+              'DATABASE_UNAVAILABLE',
+              'Database service is currently unavailable. Please try again later.',
+              { hint: 'Cannot connect to database' }
+            );
+          }
+
+          // Connection timeout
+          if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
+            set.status = 504;
+            return createErrorResponse(
+              'DATABASE_TIMEOUT',
+              'Request timed out. Please try again.'
+            );
+          }
+
+          // Generic error
+          set.status = 500;
+          return createErrorResponse(
+            'FETCH_FAILED',
+            'Failed to fetch user data due to a server error.',
+            { hint: err.message }
+          );
         }
-
-        return createSuccessResponse({
-          id: userData.id,
-          email: userData.email,
-          name: userData.name,
-          role: userData.role,
-          isActive: userData.isActive,
-          lastLoginAt: userData.lastLoginAt,
-          createdAt: userData.createdAt,
-          tenant: {
-            id: userData.tenant.id,
-            name: userData.tenant.name,
-            slug: userData.tenant.slug,
-            plan: userData.tenant.plan,
-            subscriptionStatus: userData.tenant.subscriptionStatus,
-            trialEndsAt: userData.tenant.trialEndsAt,
-          },
-        });
-      } catch (err: any) {
-        console.error('Get user error:', err);
-
-        // Database connection errors
-        if (err.code === 'ECONNREFUSED') {
-          return error(503, createErrorResponse(
-            'DATABASE_UNAVAILABLE',
-            'Database service is currently unavailable. Please try again later.',
-            { hint: 'Cannot connect to database' }
-          ));
-        }
-
-        // Connection timeout
-        if (err.code === 'ETIMEDOUT' || err.message?.includes('timeout')) {
-          return error(504, createErrorResponse(
-            'DATABASE_TIMEOUT',
-            'Request timed out. Please try again.'
-          ));
-        }
-
-        // Generic error
-        return error(500, createErrorResponse(
-          'FETCH_FAILED',
-          'Failed to fetch user data due to a server error.',
-          { hint: err.message }
-        ));
-      }
-    },
-    {
-      detail: {
-        summary: 'Get Current User',
-        description: 'Get authenticated user information',
-        tags: ['Admin Auth'],
       },
-    }
+      {
+        detail: {
+          summary: 'Get Current User',
+          description: 'Get authenticated user information',
+          tags: ['Admin Auth'],
+        },
+      }
+    )
   );

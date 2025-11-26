@@ -31,8 +31,10 @@ export interface AuthContext {
  * ```
  */
 export function requireAuth() {
-  return new Elysia({ name: 'auth' })
-    .derive(async ({ request, set }: any) => {
+  return (app: Elysia) =>
+    app.derive(async ({ request, set }: any) => {
+      console.log('🔍 [AUTH] requireAuth() derive called');
+
       // Extract token from Authorization header
       const authHeader = request.headers.get('Authorization');
       const token = extractTokenFromHeader(authHeader || undefined);
@@ -52,9 +54,13 @@ export function requireAuth() {
         // Verify token and extract user data
         const user = await verifyToken(token);
 
+        console.log('✅ [AUTH] Token verified successfully:', { userId: user?.userId, tenantId: user?.tenantId });
+
         // Return user to make it available in route handler context
         return { user };
       } catch (err) {
+        console.error('❌ [AUTH] Token verification failed:', err);
+
         set.status = 401;
         throw new Error(JSON.stringify({
           success: false,
