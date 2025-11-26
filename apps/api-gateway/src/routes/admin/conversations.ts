@@ -299,6 +299,7 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
             : null,
           messages: conversation.messages.map((msg) => ({
             id: msg.id,
+            conversationId: msg.conversationId, // ✅ FIX: Include conversationId
             type: msg.type,
             channel: msg.channel,
             content: msg.content,
@@ -370,11 +371,13 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           conversationId: id,
           messages: messagesList.map((msg) => ({
             id: msg.id,
+            conversationId: msg.conversationId, // ✅ FIX: Include conversationId
             type: msg.type,
             channel: msg.channel,
             content: msg.content,
             metadata: msg.metadata,
             statusChain: msg.statusChain,
+            context: msg.context, // ✅ FIX: Include context
             createdAt: msg.createdAt,
             sentByAdminUser: msg.sentByAdminUser
               ? {
@@ -412,7 +415,10 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
     '/:id/messages',
     async ({ user, params, body, error }) => {
       const { id } = params;
-      const { text, type = 'outgoing' } = body;
+      const { type = 'outgoing', content } = body;
+
+      // Extract text from content for mentions parsing
+      const text = content.text || '';
 
       try {
         // Verify conversation belongs to tenant
@@ -427,14 +433,14 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           return error(404, createErrorResponse('CONVERSATION_NOT_FOUND', 'Conversation not found'));
         }
 
-        // Create message
+        // Create message with full MessageEnvelope content format
         const [newMessage] = await db
           .insert(messages)
           .values({
             conversationId: id,
             type,
             channel: conversation.channel,
-            content: { text },
+            content: content, // Store full content object
             metadata: {
               from: type === 'outgoing' ? 'admin' : conversation.endUser.externalId,
               to: type === 'outgoing' ? conversation.endUser.externalId : 'admin',
@@ -503,10 +509,13 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
         return createSuccessResponse({
           message: {
             id: newMessage.id,
+            conversationId: newMessage.conversationId, // ✅ FIX: Include conversationId
             type: newMessage.type,
             channel: newMessage.channel,
             content: newMessage.content,
             metadata: newMessage.metadata,
+            statusChain: newMessage.statusChain, // ✅ FIX: Include statusChain
+            context: newMessage.context, // ✅ FIX: Include context
             createdAt: newMessage.createdAt,
           },
         });
@@ -520,8 +529,11 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
         id: t.String(),
       }),
       body: t.Object({
-        text: t.String(),
         type: t.Optional(t.Union([t.Literal('incoming'), t.Literal('outgoing')])),
+        content: t.Object({
+          text: t.String(),
+          contentType: t.String(),
+        }),
       }),
       detail: {
         summary: 'Create Message',
