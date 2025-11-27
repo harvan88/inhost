@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/implementations/v1/MemoryPersistence.ts"
+ *   type: "service"
+ *   layer: "backend"
+ *   domain: "database"
+ *   purpose: "Implementación V1 de IPersistenceService usando almacenamiento en memoria (Map) para desarrollo y testing, simula IndexedDB con pérdida de datos al reiniciar"
+ *
+ * DEPENDENCIES:
+ *   internal: ["@inhost/shared", "../../core/interfaces", "../../middleware/logger"]
+ *   external: []
+ *   infrastructure: ["memory"]
+ *
+ * CONTRACTS:
+ *   exports: ["MemoryPersistence"]
+ *   inputs: ["MessageEnvelope", "MessageQuery", "string:messageId", "MessageStatus"]
+ *   outputs: ["Promise<PersistenceResult>", "Promise<void>", "Promise<MessageEnvelope | null>", "Promise<MessageEnvelope[]>"]
+ *   errors: ["SAVE_ERROR"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[MessageCore] → [save/updateStatus/query/delete methods] → [in-memory Map<string, MessageEnvelope>] → [results]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["MessageCore", "services/index.ts"]
+ *   uses: ["IPersistenceService", "middleware/logger"]
+ *   critical: true
+ *
+ * === DOC_END :: MemoryPersistence.ts ===
+ */
+
+/**
  * MemoryPersistence (V1)
  *
  * Implementación simple de persistencia en memoria.

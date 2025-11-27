@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/middleware/logger.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "config"
+ *   purpose: "Sistema de logging estructurado con niveles configurables y middleware HTTP para tracking de requests/responses"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["Logger", "logger", "httpLogger", "LogLevel"]
+ *   inputs: ["string:message", "Record:context", "LogLevel"]
+ *   outputs: ["void", "LogEntry"]
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[Application code] → [logger.method()] → [structured log] → [console output]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["routes/*", "services/*", "middleware/*", "providers/WebSocketProvider"]
+ *   uses: []
+ *   critical: true
+ *
+ * === DOC_END :: logger.ts ===
+ */
+
 import { Elysia } from 'elysia';
 
 /**

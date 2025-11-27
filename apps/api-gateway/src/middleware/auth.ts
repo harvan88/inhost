@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/middleware/auth.ts"
+ *   type: "service"
+ *   layer: "backend"
+ *   domain: "auth"
+ *   purpose: "Middleware de autenticación JWT para proteger rutas y agregar contexto de usuario autenticado a request handlers"
+ *
+ * DEPENDENCIES:
+ *   internal: ["@inhost/shared"]
+ *   external: ["elysia"]
+ *   infrastructure: ["jwt"]
+ *
+ * CONTRACTS:
+ *   exports: ["requireAuth", "optionalAuth", "AuthContext"]
+ *   inputs: ["string:JWT_token"]
+ *   outputs: ["AuthContext", "AdminJWTPayload"]
+ *   errors: ["UNAUTHORIZED", "INVALID_TOKEN"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[HTTP Request + Authorization header] → [extractToken] → [verifyToken] → [user context] → [route handler]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["routes/admin/*"]
+ *   uses: ["@inhost/shared/auth"]
+ *   critical: true
+ *
+ * === DOC_END :: auth.ts ===
+ */
+
+/**
  * Authentication Middleware
  *
  * Protects routes by requiring valid JWT authentication.

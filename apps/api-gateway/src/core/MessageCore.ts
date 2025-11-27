@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/core/MessageCore.ts"
+ *   type: "service"
+ *   layer: "backend"
+ *   domain: "messaging"
+ *   purpose: "Orquestador central de mensajería: recibe, persiste, notifica y envía mensajes a través de adapters, coordinando el ciclo de vida completo de mensajes"
+ *
+ * DEPENDENCIES:
+ *   internal: ["@inhost/shared", "./interfaces", "../adapters/manager", "../middleware/logger"]
+ *   external: []
+ *   infrastructure: ["persistence-backend", "websocket", "messaging-adapters"]
+ *
+ * CONTRACTS:
+ *   exports: ["MessageCore", "MessageCoreConfig"]
+ *   inputs: ["MessageEnvelope", "MessageCoreConfig", "IPersistenceService", "INotificationService", "IPlanResolver", "IOwnerChecker", "AdapterManager"]
+ *   outputs: ["Promise<void>", "Promise<SendResult>", "Promise<MessageEnvelope | null>", "Promise<boolean>"]
+ *   errors: ["PLAN_LIMIT_EXCEEDED", "INTERNAL_ERROR"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[Adapter/UI/Extension] → [receive/send methods] → [persistence.save] → [notifications.broadcast] → [WebSocket clients]"
+ *   events_emitted: ["message:new", "message:status"]
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["services/index.ts", "routes/websocket.ts"]
+ *   uses: ["IPersistenceService", "INotificationService", "IPlanResolver", "IOwnerChecker", "AdapterManager"]
+ *   critical: true
+ *
+ * === DOC_END :: MessageCore.ts ===
+ */
+
+/**
  * MessageCore
  *
  * Núcleo de mensajería - Orquestador LIGERO

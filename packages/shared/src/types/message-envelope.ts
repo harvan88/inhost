@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "packages/shared/src/types/message-envelope.ts"
+ *   type: "type"
+ *   layer: "shared"
+ *   domain: "messaging"
+ *   purpose: "Contrato central que define MessageEnvelopeV2 y tipos relacionados: el formato universal de mensajes usado por frontend y backend, establece el contrato de comunicación"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["MessageEnvelopeV2", "MessageType", "MessageChannel", "MessageStatus", "MessageContent", "MessageMetadata", "MessageStatusEvent", "MessageContext"]
+ *   inputs: []
+ *   outputs: []
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[Type definitions] ← [Backend: MessageCore, persistence, services] & [Frontend: store, WebSocketProvider, components]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["MessageCore", "IPersistenceService", "MemoryPersistence", "frontend:types/index.ts", "frontend:WebSocketProvider", "frontend:store"]
+ *   uses: []
+ *   critical: true
+ *
+ * === DOC_END :: message-envelope.ts ===
+ */
+
 export enum MessageType {
   INCOMING = 'incoming',
   OUTGOING = 'outgoing', 

@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/routes/admin/conversations.ts"
+ *   type: "controller"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "CRUD completo de conversaciones multi-tenant con aislamiento por tenantId. Endpoints: GET/POST conversations, PATCH/:id, assign agent, close, mark as read. Emite eventos WebSocket para sincronización real-time"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/auth","../../middleware/logger","../../services","../../types/api"]
+ *   external: ["@inhost/shared","elysia"]
+ *   infrastructure: ["PostgreSQL", "WebSocket"]
+ *
+ * CONTRACTS:
+ *   exports: ["adminConversationsRoutes"]
+ *   inputs: ["JWT user", "ConversationFilters", "UpdateConversationDTO", "AssignAgentDTO"]
+ *   outputs: ["Conversation[]", "Conversation", "{ success: boolean }"]
+ *   errors: ["UNAUTHORIZED", "END_USER_NOT_FOUND", "CONVERSATION_NOT_FOUND", "FORBIDDEN"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[HTTP request] → [requireAuth] → [validate tenantId] → [PostgreSQL CRUD] → [notifications.broadcast WebSocket event] → [JSON response]"
+ *   events_emitted: ["conversation:updated (WebSocket)", "conversation:assigned (WebSocket)", "conversation:closed (WebSocket)"]
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["routes/index.ts"]
+ *   uses: ["../../middleware/auth","../../middleware/logger","../../services","../../types/api","@inhost/shared","elysia"]
+ *   critical: true
+ *
+ * === DOC_END :: conversations.ts ===
+ */
+
+/**
  * Admin Conversations Management Routes
  *
  * Endpoints:

@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/routes/admin/auth.ts"
+ *   type: "controller"
+ *   layer: "backend"
+ *   domain: "auth"
+ *   purpose: "Rutas de autenticación para admin: signup, login, refresh token, y obtención de perfil de usuario"
+ *
+ * DEPENDENCIES:
+ *   internal: ["@inhost/shared", "../../types/api", "../../middleware/auth", "../../middleware/logger"]
+ *   external: ["elysia", "drizzle-orm"]
+ *   infrastructure: ["postgresql", "jwt"]
+ *
+ * CONTRACTS:
+ *   exports: ["adminAuthRoutes"]
+ *   inputs: ["SignupRequest", "LoginRequest", "RefreshTokenRequest"]
+ *   outputs: ["AuthResponse", "UserResponse", "ApiResponse"]
+ *   errors: ["EMAIL_EXISTS", "TENANT_EXISTS", "INVALID_CREDENTIALS", "VALIDATION_ERROR", "UNAUTHORIZED"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[HTTP POST] → [validation] → [password hash] → [DB insert/query] → [JWT generation] → [ApiResponse]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["routes/index.ts", "frontend login/signup pages"]
+ *   uses: ["@inhost/shared/auth", "middleware/auth", "database"]
+ *   critical: true
+ *
+ * === DOC_END :: auth.ts ===
+ */
+
+/**
  * Admin Authentication Routes
  *
  * Endpoints:
@@ -23,6 +57,8 @@ import {
 import { createSuccessResponse, createErrorResponse } from '../../types/api';
 import { requireAuth } from '../../middleware/auth';
 import { httpLogger } from '../../middleware/logger';
+import { sanitizeForLogging } from '../../utils/security';
+import { authRateLimit } from '../../middleware/auth-rate-limit';
 
 /**
  * Generate unique slug from company name
@@ -137,7 +173,7 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
           },
         });
       } catch (err: any) {
-        console.error('Signup error:', err);
+        console.error('Signup error:', sanitizeForLogging(err));
 
         // Database connection errors
         if (err.code === 'ECONNREFUSED') {
@@ -173,12 +209,13 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         set.status = 500;
         return createErrorResponse(
           'SIGNUP_FAILED',
-          'Failed to create account due to a server error. Please try again.',
-          { hint: err.message }
+          err?.message || 'Failed to create account due to a server error. Please try again.',
+          { details: err?.message || String(err) }
         );
       }
     },
     {
+      beforeHandle: [authRateLimit()],
       body: t.Object({
         tenantName: t.String({ minLength: 2, maxLength: 255 }),
         name: t.String({ minLength: 2, maxLength: 255 }),
@@ -198,7 +235,7 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
   .post(
     '/login',
     async ({ body, set }) => {
-      console.log('🔐 [AUTH] /admin/auth/login called', { email: body.email });
+      console.log('🔐 [AUTH] /admin/auth/login called', sanitizeForLogging({ email: body.email }));
       const { email, password } = body;
 
       try {
@@ -266,7 +303,7 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
           },
         });
       } catch (err: any) {
-        console.error('Login error:', err);
+        console.error('Login error:', sanitizeForLogging(err));
 
         // Database connection errors
         if (err.code === 'ECONNREFUSED') {
@@ -292,12 +329,13 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
         set.status = 500;
         return createErrorResponse(
           'LOGIN_FAILED',
-          'Login failed due to a server error. Please try again.',
-          { hint: err.message }
+          err?.message || 'Login failed due to a server error. Please try again.',
+          { details: err?.message || String(err) }
         );
       }
     },
     {
+      beforeHandle: [authRateLimit()],
       body: t.Object({
         email: t.String({ format: 'email' }),
         password: t.String(),
@@ -347,7 +385,7 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
             },
           });
         } catch (err: any) {
-          console.error('Get user error:', err);
+          console.error('Get user error:', sanitizeForLogging(err));
 
           // Database connection errors
           if (err.code === 'ECONNREFUSED') {
@@ -372,8 +410,8 @@ export const adminAuthRoutes = new Elysia({ prefix: '/admin/auth' })
           set.status = 500;
           return createErrorResponse(
             'FETCH_FAILED',
-            'Failed to fetch user data due to a server error.',
-            { hint: err.message }
+            err?.message || 'Failed to fetch user data due to a server error.',
+            { details: err?.message || String(err) }
           );
         }
       },

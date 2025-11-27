@@ -513,3 +513,106 @@ When modifying types in `packages/shared/src/types/`:
 10. ❌ Never use `db:push` in production
 
 **For cross-stack issues:** Coordinate with frontend team. Changes to MessageEnvelope, API contracts, or WebSocket events require synchronized updates.
+
+---
+
+## Documentation System (SDT-SPEC-1.0)
+
+**Sprint 1 Status:** ✅ Infrastructure established
+
+### Documented Critical Files
+
+**Location:** `docs/documented-files.json`
+
+1. **[apps/api-gateway/src/routes/index.ts](apps/api-gateway/src/routes/index.ts)** - Route aggregation
+2. **[apps/api-gateway/src/routes/admin/auth.ts](apps/api-gateway/src/routes/admin/auth.ts)** - Authentication routes
+3. **[apps/api-gateway/src/routes/websocket.ts](apps/api-gateway/src/routes/websocket.ts)** - Real-time WebSocket
+
+### Architecture Overview
+
+**Location:** [docs/architecture-overview.md](docs/architecture-overview.md)
+
+Provides:
+- Complete architecture map of documented files
+- Dependency graph and integration points
+- Layer-domain matrix
+- Critical issues from audit report
+
+### Using Documentation System
+
+**Scripts:** See `../documentation-scripts/README.md`
+
+```bash
+# Validate documentation format
+cd ../documentation-scripts
+npm run validate:backend
+
+# Generate AI context
+npm run context:backend
+
+# Analyze dependencies and impact
+npm run analyze:backend
+```
+
+### Documentation Format
+
+All critical files include structured metadata at the top:
+
+```typescript
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/routes/example.ts"
+ *   type: "controller|service|model|utility"
+ *   layer: "backend"
+ *   domain: "api|auth|sync|database|config"
+ *   purpose: "Brief description"
+ *
+ * DEPENDENCIES:
+ *   internal: ["@inhost/shared", "../middleware/auth"]
+ *   external: ["elysia", "drizzle-orm"]
+ *   infrastructure: ["postgresql", "jwt", "websocket"]
+ *
+ * CONTRACTS:
+ *   exports: ["routes", "handler"]
+ *   inputs: ["RequestType", "BodyType"]
+ *   outputs: ["ApiResponse", "WebSocketEvent"]
+ *   errors: ["VALIDATION_ERROR", "UNAUTHORIZED"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[HTTP] → [middleware] → [controller] → [service] → [DB]"
+ *   events_emitted: ["message_received", "status_update"]
+ *   events_consumed: ["client_message"]
+ *
+ * IMPACT:
+ *   used_by: ["routes/index.ts"]
+ *   uses: ["services/auth", "middleware/logger"]
+ *   critical: true|false
+ *
+ * === DOC_END :: example.ts ===
+ */
+```
+
+### Benefits for AI Context
+
+- **70% token reduction** - Only load relevant context
+- **Impact analysis** - Understand change consequences before making them
+- **Dependency tracking** - Clear service and middleware relationships
+- **Cross-reference** - Find related files and audit issues quickly
+
+### Integration with Audit Report
+
+Documentation includes references to critical issues from [docs/AUDIT-REPORT.md](docs/AUDIT-REPORT.md):
+
+- P0 blockers (merge conflicts, MemoryPersistence, JWT_SECRET)
+- Security vulnerabilities (SQL injection, auth issues)
+- Architecture improvements needed
+
+### Next Steps
+
+- [ ] Document remaining high-priority files (services, middleware)
+- [ ] Integrate validation in CI/CD pipeline
+- [ ] Generate context for specific debugging tasks
+- [ ] Maintain documentation as code evolves
+- [ ] Link audit findings to specific files

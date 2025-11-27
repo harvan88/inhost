@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/routes/admin/sync.ts"
+ *   type: "controller"
+ *   layer: "backend"
+ *   domain: "sync"
+ *   purpose: "Endpoint crítico de sincronización inicial GET /admin/sync/initial. Retorna conversaciones (last 50), mensajes recientes y end users para hidratación del frontend después del login. ⚠️ ISSUE: Posible race condition con WebSocket mencionada en AUDIT-REPORT.md"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/auth","../../middleware/logger","../../types/api"]
+ *   external: ["@inhost/shared","elysia"]
+ *   infrastructure: ["PostgreSQL"]
+ *
+ * CONTRACTS:
+ *   exports: ["adminSyncRoutes"]
+ *   inputs: ["user from JWT (tenantId, userId)"]
+ *   outputs: ["SyncInitialData { conversations, messages, endUsers }"]
+ *   errors: ["UNAUTHORIZED", "DATABASE_ERROR"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[JWT auth] → [query PostgreSQL filtered by tenantId] → [map with denormalized lastMessage] → [JSON response to frontend]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["routes/index.ts"]
+ *   uses: ["../../middleware/auth","../../middleware/logger","../../types/api","@inhost/shared","elysia"]
+ *   critical: true
+ *
+ * === DOC_END :: sync.ts ===
+ */
+
+/**
  * Admin Sync Routes
  *
  * Endpoints:
@@ -20,9 +54,17 @@ export const adminSyncRoutes = new Elysia({ prefix: '/admin/sync' })
   .use(requireAuth())
 
   // GET /admin/sync/initial - Initial data hydration after login
-  .get('/initial', async ({ user, error }) => {
+  .get('/initial', async ({ user }) => {
+    console.log('🔍 [SYNC] /admin/sync/initial called', { user });
+
+    if (!user) {
+      console.error('❌ [SYNC] User is undefined - auth middleware failed!');
+      return createErrorResponse('UNAUTHORIZED', 'User not authenticated');
+    }
+
     try {
       // 1. Fetch conversations (last 50)
+      console.log('🔍 [SYNC] Fetching conversations for tenant:', user.tenantId);
       const conversationsList = await db.query.conversations.findMany({
         where: eq(conversations.tenantId, user.tenantId),
         with: {

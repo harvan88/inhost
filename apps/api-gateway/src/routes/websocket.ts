@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/routes/websocket.ts"
+ *   type: "controller"
+ *   layer: "backend"
+ *   domain: "sync"
+ *   purpose: "Rutas de WebSocket para comunicación en tiempo real con rate limiting, validación y broadcast a todos los clientes conectados"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../middleware/logger", "../types/api", "./simulation", "../services", "../middleware/websocketValidation"]
+ *   external: ["elysia"]
+ *   infrastructure: ["websocket"]
+ *
+ * CONTRACTS:
+ *   exports: ["websocketRoutes", "broadcastToAll"]
+ *   inputs: ["WebSocketDTO", "any:message"]
+ *   outputs: ["void", "WebSocketResponse"]
+ *   errors: ["MESSAGE_TOO_LARGE", "VALIDATION_ERROR", "RATE_LIMIT_EXCEEDED"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[WebSocket Client] → [/realtime] → [validation] → [rate limit] → [business logic] → [broadcast/response]"
+ *   events_emitted: ["connection", "echo", "typing", "new_message", "status_update", "message_received", "message_processing", "extension_response"]
+ *   events_consumed: ["WebSocket messages from clients"]
+ *
+ * IMPACT:
+ *   used_by: ["routes/index.ts", "frontend WebSocketProvider", "simulation routes"]
+ *   uses: ["services/notifications", "services/rateLimiter", "middleware/websocketValidation"]
+ *   critical: true
+ *
+ * === DOC_END :: websocket.ts ===
+ */
+
 import { Elysia } from 'elysia';
 import { logger } from '../middleware/logger';
 import type { WebSocketDTO } from '../types/api';

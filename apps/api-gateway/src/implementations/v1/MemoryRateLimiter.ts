@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/implementations/v1/MemoryRateLimiter.ts"
+ *   type: "service"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Implementación V1 de IRateLimiter usando memoria (Map) para rate limiting por plan de usuario. Límites aumentados para desarrollo: free=100/min, premium=200/min, enterprise=500/min"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../core/interfaces", "../../middleware/logger"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["MemoryRateLimiter"]
+ *   inputs: ["string:userId", "Plan"]
+ *   outputs: ["Promise<RateLimitResult>", "Promise<void>"]
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[HTTP Request] → [middleware/rateLimiting] → [checkLimit] → [Map lookup] → [allow/deny response]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["services/index.ts", "middleware/rateLimiting.ts"]
+ *   uses: ["core/interfaces/IRateLimiter", "middleware/logger"]
+ *   critical: true
+ *
+ * === DOC_END :: MemoryRateLimiter.ts ===
+ */
+
+/**
  * Memory Rate Limiter V1
  *
  * Implementación simple de rate limiting en memoria.
@@ -35,16 +69,16 @@ export class MemoryRateLimiter implements IRateLimiter {
   private config: RateLimiterConfig = {
     limits: {
       free: {
-        messagesPerMinute: 12,
-        burstAllowance: 5
+        messagesPerMinute: 100,  // Aumentado de 12 a 100 para desarrollo
+        burstAllowance: 20
       },
       premium: {
-        messagesPerMinute: 30,
-        burstAllowance: 10
+        messagesPerMinute: 200,  // Aumentado de 30 a 200
+        burstAllowance: 50
       },
       enterprise: {
-        messagesPerMinute: 100,
-        burstAllowance: 20
+        messagesPerMinute: 500,  // Aumentado de 100 a 500
+        burstAllowance: 100
       }
     }
   };

@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "packages/shared/src/database/schema.ts"
+ *   type: "model"
+ *   layer: "shared"
+ *   domain: "database"
+ *   purpose: "Esquema completo PostgreSQL con Drizzle ORM para sistema multi-tenant. Define 8 tablas: tenants, adminUsers, endUsers, conversations, messages, messageReads, mentions, messageFeedback. Incluye índices para performance y relaciones 1:N/N:M. Usa denormalización en conversations (lastMessage) para optimización"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../types/message-envelope"]
+ *   external: ["drizzle-orm/pg-core", "drizzle-orm"]
+ *   infrastructure: ["PostgreSQL"]
+ *
+ * CONTRACTS:
+ *   exports: ["AdminUser","Conversation","EndUser","Mention","Message","MessageFeedback","MessageRead","NewAdminUser","NewConversation","NewEndUser","NewMention","NewMessage","NewMessageFeedback","NewMessageRead","NewTenant","Tenant","adminUsers","adminUsersRelations","conversations","conversationsRelations","endUsers","endUsersRelations","mentions","mentionsRelations","messageFeedback","messageFeedbackRelations","messageReads","messageReadsRelations","messages","messagesRelations","tenants","tenantsRelations"]
+ *   inputs: []
+ *   outputs: ["Drizzle table definitions", "TypeScript types inferred from schema"]
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[schema definition] → [Drizzle ORM] → [PostgreSQL migrations] → [type-safe query builder in controllers]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["database/config.ts", "routes/admin/*", "todos los controllers que acceden DB"]
+ *   uses: ["../types/message-envelope"]
+ *   critical: true
+ *
+ * === DOC_END :: schema.ts ===
+ */
+
 import { pgTable, uuid, text, timestamp, jsonb, varchar, boolean, integer, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { MessageType, MessageChannel, MessageStatus } from '../types/message-envelope';

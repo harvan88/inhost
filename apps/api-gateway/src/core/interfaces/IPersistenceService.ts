@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/core/interfaces/IPersistenceService.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "database"
+ *   purpose: "Interface contract que define el contrato para servicios de persistencia de mensajes con garantías locales y sincronización remota"
+ *
+ * DEPENDENCIES:
+ *   internal: ["@inhost/shared"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["IPersistenceService", "PersistenceResult", "MessageQuery"]
+ *   inputs: ["MessageEnvelope", "MessageQuery", "string:messageId", "MessageStatus"]
+ *   outputs: ["Promise<PersistenceResult>", "Promise<void>", "Promise<MessageEnvelope | null>", "Promise<MessageEnvelope[]>"]
+ *   errors: ["PersistenceResult.error"]
+ *
+ * INTEGRATION:
+ *   data_flow: "[Persistence implementations] → [interface contract] ← [MessageCore consumers]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["MessageCore", "implementations/v1/MemoryPersistence"]
+ *   uses: ["@inhost/shared"]
+ *   critical: true
+ *
+ * === DOC_END :: IPersistenceService.ts ===
+ */
+
+/**
  * IPersistenceService
  *
  * Contrato para servicios de persistencia de mensajes.

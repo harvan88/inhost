@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/routes/index.ts"
+ *   type: "controller"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Configuración centralizada de todas las rutas del API Gateway, compone módulos de rutas en aplicación Elysia unificada"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./messages", "./health", "./websocket", "./simulation", "./admin/auth", "./admin/tenant", "./admin/conversations", "./admin/messages", "./admin/end-users", "./admin/team", "./admin/account", "./admin/integrations", "./admin/sync", "./admin/mentions", "./admin/feedback"]
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["routes"]
+ *   inputs: []
+ *   outputs: ["Elysia"]
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[HTTP Request] → [routes] → [specific route module] → [service layer] → [HTTP Response]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["src/index.ts"]
+ *   uses: ["all route modules"]
+ *   critical: true
+ *
+ * === DOC_END :: index.ts ===
+ */
+
 import { Elysia } from 'elysia';
 import { messagesRoutes } from './messages';
 import { healthRoutes } from './health';

@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "packages/shared/src/auth/password.ts"
+ *   type: "utility"
+ *   layer: "shared"
+ *   domain: "auth"
+ *   purpose: "Utilidades de hashing de contraseñas usando Bun.password (bcrypt interno con cost=10). Exporta hashPassword (async), verifyPassword (async) y validatePasswordStrength (sync con reglas: min 8 chars, uppercase, lowercase, number). Sin dependencias externas ya que usa built-in de Bun"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: ["Bun.password (bcrypt built-in)"]
+ *
+ * CONTRACTS:
+ *   exports: ["hashPassword", "verifyPassword", "validatePasswordStrength"]
+ *   inputs: ["password: string", "hash: string"]
+ *   outputs: ["Promise<string> (hashed password)", "Promise<boolean> (verification result)", "{ valid: boolean, errors: string[] }"]
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[signup] → [validatePasswordStrength] → [hashPassword with bcrypt cost=10] → [store in adminUsers.passwordHash] → [login] → [verifyPassword(plaintext, hash)] → [boolean result]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["routes/admin/auth.ts (signup, login)"]
+ *   uses: []
+ *   critical: true
+ *
+ * === DOC_END :: password.ts ===
+ */
+
+/**
  * Password Hashing Utilities
  *
  * Uses Bun's built-in password hashing (based on bcrypt)

@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/services/index.ts"
+ *   type: "service"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Agregador de servicios singleton: inicializa y exporta adapterManager, rateLimiter, messageCore, notifications, y otros servicios core"
+ *
+ * DEPENDENCIES:
+ *   internal: ["@inhost/shared", "../adapters/manager", "../implementations/v1", "../implementations/v2", "../core/MessageCore", "../middleware/logger", "../config/redis"]
+ *   external: []
+ *   infrastructure: ["redis"]
+ *
+ * CONTRACTS:
+ *   exports: ["adapterManager", "rateLimiter", "messageQueue", "validator", "persistence", "notifications", "planResolver", "ownerChecker", "messageCore", "initializeServices", "shutdownServices"]
+ *   inputs: []
+ *   outputs: ["ServiceSingletons"]
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[App startup] → [initializeServices] → [Service singletons] → [Route handlers + WebSocket]"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: ["src/index.ts", "routes/*", "routes/websocket.ts"]
+ *   uses: ["adapters", "implementations", "core/MessageCore", "config"]
+ *   critical: true
+ *
+ * === DOC_END :: index.ts ===
+ */
+
 import { MessageChannel } from '@inhost/shared';
 /**
  * Services - Servicios centralizados del sistema
@@ -25,10 +59,11 @@ import {
   SimplePlanResolver,
   ConnectionOwnerChecker
 } from '../implementations/v1';
-import { RedisRateLimiter } from '../implementations/v2';
+import { RedisRateLimiter, DatabasePersistence } from '../implementations/v2';
 import { MessageCore } from '../core/MessageCore';
 import { logger } from '../middleware/logger';
 import { shouldUseRedis, checkRedisConnection } from '../config/redis';
+import { startAuthRateLimitCleanup } from '../middleware/auth-rate-limit';
 
 /**
  * Adapter Manager - Gestión centralizada de adaptadores
@@ -54,9 +89,11 @@ export const messageQueue = new MemoryQueue();
 export const validator = new SimpleValidator();
 
 /**
- * Persistence V1 - Almacenamiento en memoria
+ * Persistence V2 - Almacenamiento en PostgreSQL
+ * CRÍTICO: DatabasePersistence persiste mensajes en PostgreSQL (producción)
+ * Para desarrollo/testing, usar MemoryPersistence si es necesario
  */
-export const persistence = new MemoryPersistence();
+export const persistence = new DatabasePersistence();
 
 /**
  * Notification V1 - WebSocket broadcast
@@ -117,13 +154,16 @@ export async function initializeServices(): Promise<void> {
   // 3. Iniciar rate limiter cleanup
   rateLimiter.startCleanup();
 
-  // 4. Iniciar owner checker cleanup
+  // 4. Iniciar auth rate limit cleanup
+  startAuthRateLimitCleanup();
+
+  // 5. Iniciar owner checker cleanup
   ownerChecker.startAutoCleanup(5);
 
-  // 5. Iniciar adaptadores
+  // 6. Iniciar adaptadores
   await adapterManager.startAll();
 
-  // 6. Configurar queue auto-reset
+  // 7. Configurar queue auto-reset
   messageQueue.startAutoReset();
 
   logger.info('✅ Services initialized successfully', {
@@ -131,7 +171,7 @@ export async function initializeServices(): Promise<void> {
     rateLimiter: usingRedis ? 'RedisRateLimiter (V2)' : 'MemoryRateLimiter (V1)',
     queue: 'MemoryQueue (V1)',
     validator: 'SimpleValidator (V1)',
-    persistence: 'MemoryPersistence (V1)',
+    persistence: 'DatabasePersistence (V2) - PostgreSQL',
     notifications: 'WebSocketNotification (V1)',
     planResolver: 'SimplePlanResolver (V1)',
     ownerChecker: 'ConnectionOwnerChecker (V1)',

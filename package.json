@@ -24,7 +24,10 @@
     "db:studio": "drizzle-kit studio",
     "migrate": "bun run scripts/migrate.ts",
     "test:whatsapp": "bun scripts/test-whatsapp-flow.ts",
-    "test:messaging": "bun scripts/test-messaging-flow.ts"
+    "test:messaging": "bun scripts/test-messaging-flow.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
   },
   "devDependencies": {
     "@types/bun": "latest",

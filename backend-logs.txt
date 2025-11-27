@@ -1,0 +1,1382 @@
+$ bun --cwd apps/api-gateway dev
+$ bun --watch src/index.ts
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+🔍 [SYNC] /admin/sync/initial called {
+  user: undefined,
+}
+❌ [SYNC] User is undefined - auth middleware failed!
+List conversations error: 128 |     async ({ user, query, error }) => {
+129 |       const { status = 'active', channel, assignedTo, limit = 50, offset = 0 } = query;
+130 | 
+131 |       try {
+132 |         // Build where conditions
+133 |         const conditions = [eq(conversations.tenantId, user.tenantId)];
+                                                             ^
+TypeError: undefined is not an object (evaluating 'user.tenantId')
+      at <anonymous> (C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\routes\admin\conversations.ts:133:56)
+      at <anonymous> (C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\routes\admin\conversations.ts:128:5)
+      at handle (file:///C:/Users/harva/Documents/Trabajos/meetgar/FluxCoreChat/inhost-backend/node_modules/elysia/dist/bun/index.js:7:166)
+      at handle (file:///C:/Users/harva/Documents/Trabajos/meetgar/FluxCoreChat/inhost-backend/node_modules/elysia/dist/bun/index.js:6:63)
+
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+🔍 [AUTH] requireAuth() derive called
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764002831,
+    exp: 1764607631,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764002907,
+    exp: 1764607707,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764002971,
+    exp: 1764607771,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764003061,
+    exp: 1764607861,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764003502,
+    exp: 1764608302,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764004058,
+    exp: 1764608858,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764004632,
+    exp: 1764609432,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764005424,
+    exp: 1764610224,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764005546,
+    exp: 1764610346,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+🔍 [AUTH] requireAuth() derive called
+🔍 [AUTH] requireAuth() derive called
+ℹ️ [INFO] 🧹 Cleanup completed
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+1 | (function (entry, fetcher)
+              ^
+SyntaxError: Export named 'adminAuthRoutes' not found in module 'C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\routes\admin\auth.ts'.
+      at loadAndEvaluateModule (1:11)
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+1 | (function (entry, fetcher)
+              ^
+SyntaxError: Export named 'adminAuthRoutes' not found in module 'C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\routes\admin\auth.ts'.
+      at loadAndEvaluateModule (1:11)
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+Login error: 213 |         }
+214 | 
+215 |         // Verify password
+216 |         const isPasswordValid = await verifyPassword(password, user.passwordHash);
+217 |         if (!isPasswordValid) {
+218 |           return error(401, createErrorResponse('INVALID_CREDENTIALS', 'Invalid email or password'));
+                       ^
+TypeError: error is not a function. (In 'error(401, createErrorResponse("INVALID_CREDENTIALS", "Invalid email or password"))', 'error' is undefined)
+      at <anonymous> (C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\routes\admin\auth.ts:218:18)
+
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\index.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\types\message-envelope.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\password.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\db.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\auth\jwt.ts is not in the project directory and will not be watched
+warn: File C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\packages\shared\src\database\schema.ts is not in the project directory and will not be watched
+ℹ️ [INFO] 📋 SimplePlanResolver initialized with static configuration
+📋 Configuration loaded: {
+  env: "development",
+  port: 3000,
+  database: "localhost:5432",
+  redis: "localhost:6379",
+}
+ℹ️ [INFO] 🔧 Initializing services...
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Adapter registered
+ℹ️ [INFO] Initializing all adapters
+ℹ️ [INFO] All adapters initialized
+ℹ️ [INFO] Rate limiter cleanup started
+ℹ️ [INFO] 🧹 Auto cleanup started
+ℹ️ [INFO] Starting all adapters
+ℹ️ [INFO] All adapters started
+ℹ️ [INFO] Queue auto-reset started (every 24h)
+ℹ️ [INFO] ✅ Services initialized successfully
+ℹ️ [INFO] 🏥 Adapters health check
+ℹ️ [INFO] 📊 MessageCore stats
+ℹ️ [INFO] 🦊 Inhost API Gateway is running
+ℹ️ [INFO] 🗄️  Database configuration
+ℹ️ [INFO] 📍 Available routes
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764006441,
+    exp: 1764611241,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764006517,
+    exp: 1764611317,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764007007,
+    exp: 1764611807,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764007609,
+    exp: 1764612409,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764008019,
+    exp: 1764612819,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+⚠️ [WARN] WebSocket message validation failed
+⚠️ [WARN] WebSocket message validation failed
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764010837,
+    exp: 1764615637,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764010851,
+    exp: 1764615651,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764011865,
+    exp: 1764616665,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+ℹ️ [INFO] 🧹 Cleanup completed
+🔐 [AUTH] /admin/auth/login called {
+  email: "admin@test.com",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764013080,
+    exp: 1764617880,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+ℹ️ [INFO] 🧹 Cleanup completed
+ℹ️ [INFO] 🧹 Cleanup completed
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764013080,
+    exp: 1764617880,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764013080,
+    exp: 1764617880,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764013080,
+    exp: 1764617880,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764013080,
+    exp: 1764617880,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+🔍 [SYNC] /admin/sync/initial called {
+  user: {
+    userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+    tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+    email: "admin@test.com",
+    role: "owner",
+    iat: 1764013080,
+    exp: 1764617880,
+  },
+}
+🔍 [SYNC] Fetching conversations for tenant: 7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05
+🔍 [AUTH] requireAuth() derive called
+✅ [AUTH] Token verified successfully: {
+  userId: "847a57b5-37f0-44a4-b10e-a32fcd168028",
+  tenantId: "7c9da3c1-9f0e-4f27-a9f8-7f34c4e5eb05",
+}
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded
+⚠️ [WARN] Rate limit exceeded

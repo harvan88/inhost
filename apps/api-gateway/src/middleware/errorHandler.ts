@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "apps/api-gateway/src/middleware/errorHandler.ts"
+ *   type: "middleware"
+ *   layer: "backend"
+ *   domain: "core"
+ *   purpose: "Middleware global de manejo de errores con formato estandarizado. Intercepta todos los errores en Elysia y los convierte a StandardErrorResponse { success: false, error: { code, message, details, timestamp } }. Incluye AppError class y helpers createError.* para errores específicos (validation, unauthorized, notFound, etc)"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["AppError","ErrorCodes","StandardErrorResponse","createError","errorHandler"]
+ *   inputs: ["Error (any error thrown in routes)"]
+ *   outputs: ["StandardErrorResponse with proper HTTP status"]
+ *   errors: []
+ *
+ * INTEGRATION:
+ *   data_flow: "[route throws error] → [.onError interceptor] → [map to StandardErrorResponse] → [set HTTP status] → [JSON response to client]"
+ *   events_emitted: []
+ *   events_consumed: ["Elysia .onError event"]
+ *
+ * IMPACT:
+ *   used_by: ["index.ts (app-wide)"]
+ *   uses: ["elysia"]
+ *   critical: true
+ *
+ * === DOC_END :: errorHandler.ts ===
+ */
+
 import { Elysia } from 'elysia';
 
 /**

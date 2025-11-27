@@ -1,0 +1,253 @@
+[
+  {
+    "file": "apps/api-gateway/src/routes/index.ts",
+    "type": "controller",
+    "layer": "backend",
+    "domain": "api",
+    "critical": true,
+    "exports": [
+      "routes"
+    ],
+    "purpose": "Configuración centralizada de todas las rutas del API Gateway"
+  },
+  {
+    "file": "apps/api-gateway/src/routes/admin/auth.ts",
+    "type": "controller",
+    "layer": "backend",
+    "domain": "auth",
+    "critical": true,
+    "exports": [
+      "adminAuthRoutes"
+    ],
+    "purpose": "Rutas de autenticación para admin (signup, login, refresh, me)"
+  },
+  {
+    "file": "apps/api-gateway/src/routes/websocket.ts",
+    "type": "controller",
+    "layer": "backend",
+    "domain": "sync",
+    "critical": true,
+    "exports": [
+      "websocketRoutes",
+      "broadcastToAll"
+    ],
+    "purpose": "Rutas de WebSocket para comunicación en tiempo real"
+  },
+  {
+    "file": "apps/api-gateway/src/middleware/auth.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "auth",
+    "critical": true,
+    "exports": [
+      "requireAuth",
+      "optionalAuth",
+      "AuthContext"
+    ],
+    "purpose": "Middleware de autenticación JWT para proteger rutas"
+  },
+  {
+    "file": "apps/api-gateway/src/middleware/logger.ts",
+    "type": "utility",
+    "layer": "backend",
+    "domain": "config",
+    "critical": true,
+    "exports": [
+      "Logger",
+      "logger",
+      "httpLogger",
+      "LogLevel"
+    ],
+    "purpose": "Sistema de logging estructurado con niveles configurables"
+  },
+  {
+    "file": "apps/api-gateway/src/services/index.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "api",
+    "critical": true,
+    "exports": [
+      "adapterManager",
+      "rateLimiter",
+      "messageCore",
+      "notifications",
+      "initializeServices"
+    ],
+    "purpose": "Agregador de servicios singleton del sistema"
+  },
+  {
+    "file": "apps/api-gateway/src/core/MessageCore.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "messaging",
+    "critical": true,
+    "exports": [
+      "MessageCore",
+      "MessageCoreConfig"
+    ],
+    "purpose": "Orquestador central de mensajería: recibe, persiste, notifica y envía mensajes a través de adapters, coordinando el ciclo de vida completo de mensajes"
+  },
+  {
+    "file": "apps/api-gateway/src/core/interfaces/IPersistenceService.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "database",
+    "critical": true,
+    "exports": [
+      "IPersistenceService",
+      "PersistenceResult",
+      "MessageQuery"
+    ],
+    "purpose": "Interface contract que define el contrato para servicios de persistencia de mensajes con garantías locales y sincronización remota"
+  },
+  {
+    "file": "apps/api-gateway/src/implementations/v1/MemoryPersistence.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "database",
+    "critical": true,
+    "exports": [
+      "MemoryPersistence"
+    ],
+    "purpose": "Implementación V1 de IPersistenceService usando almacenamiento en memoria (Map) para desarrollo y testing, simula IndexedDB con pérdida de datos al reiniciar"
+  },
+  {
+    "file": "packages/shared/src/types/message-envelope.ts",
+    "type": "type",
+    "layer": "shared",
+    "domain": "messaging",
+    "critical": true,
+    "exports": [
+      "MessageEnvelopeV2",
+      "MessageType",
+      "MessageChannel",
+      "MessageStatus",
+      "MessageContent",
+      "MessageMetadata",
+      "MessageStatusEvent",
+      "MessageContext"
+    ],
+    "purpose": "Contrato central que define MessageEnvelopeV2 y tipos relacionados: el formato universal de mensajes usado por frontend y backend, establece el contrato de comunicación"
+  },
+  {
+    "file": "apps/api-gateway/src/implementations/v2/DatabasePersistence.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "database",
+    "critical": true,
+    "exports": [
+      "DatabasePersistence"
+    ],
+    "purpose": "Implementación V2 de IPersistenceService usando PostgreSQL con Drizzle ORM para persistencia permanente de mensajes"
+  },
+  {
+    "file": "apps/api-gateway/src/implementations/v1/MemoryRateLimiter.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "api",
+    "critical": true,
+    "exports": [
+      "MemoryRateLimiter"
+    ],
+    "purpose": "Implementación V1 de IRateLimiter usando memoria (Map) para rate limiting por plan de usuario. Límites aumentados para desarrollo: free=100/min, premium=200/min, enterprise=500/min"
+  },
+  {
+    "file": "apps/api-gateway/src/routes/admin/sync.ts",
+    "type": "controller",
+    "layer": "backend",
+    "domain": "sync",
+    "critical": true,
+    "exports": [
+      "adminSyncRoutes"
+    ],
+    "purpose": "Endpoint crítico de sincronización inicial GET /admin/sync/initial. Retorna conversaciones (last 50), mensajes recientes y end users para hidratación del frontend después del login. ⚠️ ISSUE: Posible race condition con WebSocket mencionada en AUDIT-REPORT.md"
+  },
+  {
+    "file": "apps/api-gateway/src/routes/admin/conversations.ts",
+    "type": "controller",
+    "layer": "backend",
+    "domain": "api",
+    "critical": true,
+    "exports": [
+      "adminConversationsRoutes"
+    ],
+    "purpose": "CRUD completo de conversaciones multi-tenant con aislamiento por tenantId. Endpoints: GET/POST conversations, PATCH/:id, assign agent, close, mark as read. Emite eventos WebSocket para sincronización real-time"
+  },
+  {
+    "file": "packages/shared/src/database/schema.ts",
+    "type": "model",
+    "layer": "shared",
+    "domain": "database",
+    "critical": true,
+    "exports": [
+      "AdminUser",
+      "Conversation",
+      "EndUser",
+      "Mention",
+      "Message",
+      "MessageFeedback",
+      "MessageRead",
+      "Tenant",
+      "adminUsers",
+      "adminUsersRelations",
+      "conversations",
+      "conversationsRelations",
+      "endUsers",
+      "endUsersRelations",
+      "mentions",
+      "mentionsRelations",
+      "messageFeedback",
+      "messageFeedbackRelations",
+      "messageReads",
+      "messageReadsRelations",
+      "messages",
+      "messagesRelations",
+      "tenants",
+      "tenantsRelations"
+    ],
+    "purpose": "Esquema completo PostgreSQL con Drizzle ORM para sistema multi-tenant. Define 8 tablas: tenants, adminUsers, endUsers, conversations, messages, messageReads, mentions, messageFeedback. Incluye índices para performance y relaciones 1:N/N:M. Usa denormalización en conversations (lastMessage) para optimización"
+  },
+  {
+    "file": "packages/shared/src/auth/jwt.ts",
+    "type": "utility",
+    "layer": "shared",
+    "domain": "auth",
+    "critical": true,
+    "exports": [
+      "AdminJWTPayload",
+      "createToken",
+      "verifyToken",
+      "createRefreshToken",
+      "extractTokenFromHeader"
+    ],
+    "purpose": "Utilidades JWT usando librería jose para creación, verificación y extracción de tokens. Implementa validación estricta de JWT_SECRET (min 32 chars, warnings para dev secrets). ⚠️ ISSUE: JWT_SECRET con fallback mencionado en AUDIT-REPORT.md 1.4"
+  },
+  {
+    "file": "packages/shared/src/auth/password.ts",
+    "type": "utility",
+    "layer": "shared",
+    "domain": "auth",
+    "critical": true,
+    "exports": [
+      "hashPassword",
+      "verifyPassword",
+      "validatePasswordStrength"
+    ],
+    "purpose": "Utilidades de hashing de contraseñas usando Bun.password (bcrypt interno con cost=10). Exporta hashPassword (async), verifyPassword (async) y validatePasswordStrength (sync con reglas: min 8 chars, uppercase, lowercase, number)"
+  },
+  {
+    "file": "apps/api-gateway/src/middleware/errorHandler.ts",
+    "type": "middleware",
+    "layer": "backend",
+    "domain": "core",
+    "critical": true,
+    "exports": [
+      "AppError",
+      "ErrorCodes",
+      "StandardErrorResponse",
+      "createError",
+      "errorHandler"
+    ],
+    "purpose": "Middleware global de manejo de errores con formato estandarizado. Intercepta todos los errores en Elysia y los convierte a StandardErrorResponse { success: false, error: { code, message, details, timestamp } }"
+  }
+]
