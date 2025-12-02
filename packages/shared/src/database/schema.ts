@@ -32,7 +32,7 @@
  * === DOC_END :: schema.ts ===
  */
 
-import { pgTable, uuid, text, timestamp, jsonb, varchar, boolean, integer, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, varchar, boolean, integer, index, real } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { MessageType, MessageChannel, MessageStatus } from '../types/message-envelope';
 
@@ -216,6 +216,35 @@ export const messageReads = pgTable('message_reads', {
 });
 
 // ============================================
+// EXTENSION HOST: Enrichments (v3.0)
+// ============================================
+
+// Tabla de enrichments producidos por extensiones
+export const messageEnrichments = pgTable('message_enrichments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  messageId: uuid('message_id').references(() => messages.id, { onDelete: 'cascade' }).notNull(),
+  tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
+  extensionId: varchar('extension_id', { length: 100 }).notNull(), // ID de la extensión que lo produjo
+  type: varchar('type', { 
+    enum: ['sentiment', 'keywords', 'intent', 'ai_suggestion', 'entity_extraction', 'language_detection', 'priority_score', 'custom'] 
+  }).notNull(),
+  payload: jsonb('payload').notNull(), // Datos específicos del enriquecimiento
+  confidence: real('confidence'), // 0.0 - 1.0
+  processingTimeMs: integer('processing_time_ms').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  expiresAt: timestamp('expires_at'), // TTL opcional para datos efímeros
+}, (table) => {
+  return {
+    messageIdx: index('message_enrichments_message_id_idx').on(table.messageId),
+    tenantIdx: index('message_enrichments_tenant_id_idx').on(table.tenantId),
+    extensionIdx: index('message_enrichments_extension_id_idx').on(table.extensionId),
+    typeIdx: index('message_enrichments_type_idx').on(table.type),
+    // Índice compuesto para queries frecuentes: "dame todos los enrichments de un mensaje"
+    messageTypeIdx: index('message_enrichments_message_type_idx').on(table.messageId, table.type),
+  };
+});
+
+// ============================================
 // RELACIONES
 // ============================================
 
@@ -270,6 +299,7 @@ export const messagesRelations = relations(messages, ({ one, many }) => ({
   }),
   feedback: many(messageFeedback),
   reads: many(messageReads), // Quiénes han leído este mensaje
+  enrichments: many(messageEnrichments), // Enrichments de extensiones
 }));
 
 export const mentionsRelations = relations(mentions, ({ one }) => ({
@@ -313,6 +343,17 @@ export const messageReadsRelations = relations(messageReads, ({ one }) => ({
   }),
 }));
 
+export const messageEnrichmentsRelations = relations(messageEnrichments, ({ one }) => ({
+  message: one(messages, {
+    fields: [messageEnrichments.messageId],
+    references: [messages.id],
+  }),
+  tenant: one(tenants, {
+    fields: [messageEnrichments.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
 // ============================================
 // TIPOS TYPESCRIPT
 // ============================================
@@ -340,6 +381,9 @@ export type NewMessageFeedback = typeof messageFeedback.$inferInsert;
 
 export type MessageRead = typeof messageReads.$inferSelect;
 export type NewMessageRead = typeof messageReads.$inferInsert;
+
+export type MessageEnrichment = typeof messageEnrichments.$inferSelect;
+export type NewMessageEnrichment = typeof messageEnrichments.$inferInsert;
 
 // Legacy alias (mantener compatibilidad)
 export type User = AdminUser;

@@ -54,7 +54,8 @@ import type {
   StatusUpdate,
   TypingIndicator,
   ConversationReadEvent,
-  ConversationUpdatedEvent
+  ConversationUpdatedEvent,
+  EnrichmentBatchEvent
 } from '../../core/interfaces';
 import { logger } from '../../middleware/logger';
 
@@ -184,6 +185,29 @@ export class WebSocketNotification implements INotificationService {
     logger.debug('🔄 WebSocketNotification: Conversation updated event sent', {
       conversationId: event.conversationId,
       updates: Object.keys(event.updates)
+    });
+  }
+
+  async broadcastEnrichments(
+    event: EnrichmentBatchEvent,
+    target?: NotificationTarget
+  ): Promise<void> {
+    const payload = {
+      type: 'enrichment:batch',
+      data: event,
+      timestamp: new Date().toISOString()
+    };
+
+    if (target?.userId) {
+      await this.broadcastToUser(target.userId, payload);
+    } else {
+      await this.broadcastToAll(payload);
+    }
+
+    logger.debug('🧩 WebSocketNotification: Enrichments broadcasted', {
+      messageId: event.messageId,
+      enrichmentCount: event.enrichments.length,
+      processingTimeMs: event.processingTimeMs
     });
   }
 

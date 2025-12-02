@@ -83,7 +83,10 @@ export type {
   INotificationService,
   NotificationTarget,
   StatusUpdate,
-  TypingIndicator
+  TypingIndicator,
+  ConversationReadEvent,
+  ConversationUpdatedEvent,
+  EnrichmentBatchEvent
 } from './INotificationService';
 
 // Plan Resolver

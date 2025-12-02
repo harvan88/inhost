@@ -14,7 +14,7 @@
  *   infrastructure: []
  *
  * CONTRACTS:
- *   exports: ["ConversationReadEvent","ConversationUpdatedEvent","INotificationService","NotificationTarget","StatusUpdate","TypingIndicator"]
+ *   exports: ["ConversationReadEvent","ConversationUpdatedEvent","EnrichmentBatchEvent","INotificationService","NotificationTarget","StatusUpdate","TypingIndicator"]
  *   inputs: "None"
  *   outputs: "void"
  *   errors: "None"
@@ -92,6 +92,22 @@ export interface ConversationUpdatedEvent {
   timestamp: string;
 }
 
+/**
+ * Evento de batch de enrichments procesados por ExtensionHost
+ */
+export interface EnrichmentBatchEvent {
+  messageId: string;
+  enrichments: Array<{
+    id: string;
+    extensionId: string;
+    type: string;
+    payload: unknown;
+    confidence?: number;
+    processingTimeMs: number;
+  }>;
+  processingTimeMs: number;
+}
+
 export interface INotificationService {
   /**
    * Broadcast de mensaje a destinatarios
@@ -117,6 +133,11 @@ export interface INotificationService {
    * Broadcast de actualización de conversación (lastMessage, unreadCount, etc.)
    */
   broadcastConversationUpdated(event: ConversationUpdatedEvent, target?: NotificationTarget): Promise<void>;
+
+  /**
+   * Broadcast de enrichments procesados por ExtensionHost
+   */
+  broadcastEnrichments(event: EnrichmentBatchEvent, target?: NotificationTarget): Promise<void>;
 
   /**
    * Registra una conexión de cliente

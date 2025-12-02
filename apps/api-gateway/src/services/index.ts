@@ -181,6 +181,9 @@ export async function initializeServices(): Promise<void> {
   extensionHost.register(new SentimentExtension());
   extensionHost.register(new KeywordExtension());
 
+  // 9. Conectar Extension Host al Message Core
+  messageCore.setExtensionHost(extensionHost);
+
   logger.info('✅ Services initialized successfully', {
     adapters: ['whatsapp', 'telegram', 'sms'],
     rateLimiter: usingRedis ? 'RedisRateLimiter (V2)' : 'MemoryRateLimiter (V1)',

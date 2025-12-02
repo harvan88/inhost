@@ -9,9 +9,9 @@
  *   purpose: "Orquestador central de mensajería: recibe, persiste, notifica y envía mensajes a través de adapters, coordinando el ciclo de vida completo de mensajes"
  *
  * DEPENDENCIES:
- *   internal: ["@inhost/shared", "./interfaces", "../adapters/manager", "../middleware/logger"]
+ *   internal: ["@inhost/shared", "./interfaces", "../adapters/manager", "../middleware/logger", "../extensions"]
  *   external: []
- *   infrastructure: ["persistence-backend", "websocket", "messaging-adapters"]
+ *   infrastructure: ["persistence-backend", "websocket", "messaging-adapters", "extension-host"]
  *
  * CONTRACTS:
  *   exports: ["MessageCore", "MessageCoreConfig"]
@@ -20,8 +20,8 @@
  *   errors: ["PLAN_LIMIT_EXCEEDED", "INTERNAL_ERROR"]
  *
  * INTEGRATION:
- *   data_flow: "[Adapter/UI/Extension] → [receive/send methods] → [persistence.save] → [notifications.broadcast] → [WebSocket clients]"
- *   events_emitted: ["message:new", "message:status"]
+ *   data_flow: "[Adapter/UI/Extension] → [receive/send methods] → [persistence.save] → [extensionHost.processMessage] → [notifications.broadcast] → [WebSocket clients]"
+ *   events_emitted: ["message:new", "message:status", "enrichment:batch"]
  *   events_consumed: []
  *
  * IMPACT:
@@ -58,19 +58,24 @@ import type {
 } from './interfaces';
 import type { AdapterManager } from '../adapters/manager';
 import { logger } from '../middleware/logger';
+import type { IExtensionHost, ExtensionContext, ProcessingResult } from '../extensions';
 
 export interface MessageCoreConfig {
   enablePersistence?: boolean;
   enableNotifications?: boolean;
   enablePlanChecks?: boolean;
+  enableExtensions?: boolean;
 }
 
 export class MessageCore {
   private config: MessageCoreConfig = {
     enablePersistence: true,
     enableNotifications: true,
-    enablePlanChecks: true
+    enablePlanChecks: true,
+    enableExtensions: true
   };
+
+  private extensionHost: IExtensionHost | null = null;
 
   constructor(
     private persistence: IPersistenceService,
@@ -79,6 +84,14 @@ export class MessageCore {
     private ownerChecker: IOwnerChecker,
     private adapters: AdapterManager
   ) {}
+
+  /**
+   * Configura el Extension Host (opcional)
+   */
+  setExtensionHost(host: IExtensionHost): void {
+    this.extensionHost = host;
+    logger.info('🧩 ExtensionHost attached to MessageCore');
+  }
 
   /**
    * Configura el núcleo
@@ -115,6 +128,11 @@ export class MessageCore {
       // 3. Si es mensaje entrante, actualizar estado
       if (envelope.type === MessageType.INCOMING) {
         await this.updateStatus(envelope.id, MessageStatus.RECEIVED);
+      }
+
+      // 4. Procesar extensiones (solo mensajes entrantes)
+      if (this.config.enableExtensions && this.extensionHost && envelope.type === MessageType.INCOMING) {
+        await this.processExtensions(envelope);
       }
 
       logger.info('✅ MessageCore: Message received successfully', {
@@ -268,6 +286,75 @@ export class MessageCore {
    */
   async isOwnerOnline(userId: string): Promise<boolean> {
     return await this.ownerChecker.isOnline(userId);
+  }
+
+  /**
+   * Procesa extensiones para un mensaje entrante
+   * Construye ExtensionContext y llama al ExtensionHost
+   */
+  private async processExtensions(envelope: MessageEnvelope): Promise<void> {
+    if (!this.extensionHost) return;
+
+    const startTime = Date.now();
+
+    try {
+      // Construir ExtensionContext desde MessageEnvelope
+      const context: ExtensionContext = {
+        tenantId: envelope.metadata?.tenantId || 'default',
+        messageId: envelope.id,
+        conversationId: envelope.metadata?.conversationId || envelope.id,
+        text: envelope.content?.text || '',
+        contentType: envelope.content?.type || 'text/plain',
+        channel: envelope.channel,
+        type: envelope.type === MessageType.INCOMING ? 'incoming' : 'outgoing',
+        from: envelope.metadata?.from || '',
+        to: envelope.metadata?.to || '',
+        timestamp: envelope.metadata?.timestamp || new Date().toISOString(),
+      };
+
+      logger.debug('🧩 Processing extensions for message', {
+        messageId: envelope.id,
+        tenantId: context.tenantId,
+      });
+
+      // Ejecutar extensiones
+      const result: ProcessingResult = await this.extensionHost.processMessage(context);
+
+      logger.info('🧩 Extensions processed', {
+        messageId: envelope.id,
+        enrichmentCount: result.enrichments.length,
+        errorCount: result.errors.length,
+        totalTimeMs: result.totalTimeMs,
+      });
+
+      // Broadcast enrichments si hay resultados
+      if (result.enrichments.length > 0 && this.config.enableNotifications) {
+        await this.notifications.broadcastEnrichments({
+          messageId: envelope.id,
+          enrichments: result.enrichments,
+          processingTimeMs: result.totalTimeMs,
+        });
+        logger.debug('📢 Enrichments broadcasted', {
+          messageId: envelope.id,
+          count: result.enrichments.length,
+        });
+      }
+
+      // Log errores si los hay
+      if (result.errors.length > 0) {
+        logger.warn('⚠️ Extension errors during processing', {
+          messageId: envelope.id,
+          errors: result.errors,
+        });
+      }
+    } catch (error) {
+      // No romper el flujo principal por errores de extensiones
+      logger.error('❌ Error processing extensions', {
+        messageId: envelope.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        duration: Date.now() - startTime,
+      });
+    }
   }
 
   /**
