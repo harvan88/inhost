@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\core\interfaces\IValidator.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles i validator functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["IValidator","ValidationError","ValidationResult","ValidationRules"]
+ *   inputs: "None"
+ *   outputs: "ValidationResult"
+ *   errors: "ValidationError"
+ *
+ * INTEGRATION:
+ *   data_flow: "Input → Processing → Output"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: []
+ *   critical: false
+ *
+ * === DOC_END :: IValidator.ts ===
+ */
+
 import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
 
 /**

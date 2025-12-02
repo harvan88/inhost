@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\utils\observability-logger.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles observability-logger functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./utils/observability-logger"]
+ *   external: ["fs","path"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["LogComponent","LogLevel","ObservabilityLogger","observeLog"]
+ *   inputs: "None"
+ *   outputs: "string"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["./utils/observability-logger","fs","path"]
+ *   critical: false
+ *
+ * === DOC_END :: observability-logger.ts ===
+ */
+
+/**
  * Observability Logger
  *
  * Sistema centralizado de logging para debugging y observabilidad.

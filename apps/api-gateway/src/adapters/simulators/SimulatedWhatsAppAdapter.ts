@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\adapters\simulators\SimulatedWhatsAppAdapter.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles simulated whats app adapter functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../utils/observability-logger"]
+ *   external: ["@inhost/shared"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["SimulatedWhatsAppAdapter"]
+ *   inputs: "None"
+ *   outputs: "Promise<void>"
+ *   errors: "Error"
+ *
+ * INTEGRATION:
+ *   data_flow: "Input → Processing → Output"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../utils/observability-logger","@inhost/shared"]
+ *   critical: false
+ *
+ * === DOC_END :: SimulatedWhatsAppAdapter.ts ===
+ */
+
 import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
 import { MessageChannel, MessageType, MessageStatus } from '@inhost/shared';
 import type { IAdapter, SendResult, AdapterConfig } from '../../core/interfaces';

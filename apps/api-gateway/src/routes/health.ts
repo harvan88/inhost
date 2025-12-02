@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "routes/health.ts"
+ *   type: "controller"
+ *   layer: "frontend"
+ *   domain: "api"
+ *   purpose: "Handles health API routes"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../config","../config/redis","../middleware/logger","../services/messageService","../types/api"]
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["healthRoutes"]
+ *   inputs: "None"
+ *   outputs: "void"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../config","../config/redis","../middleware/logger","../services/messageService","../types/api","elysia"]
+ *   critical: false
+ *
+ * === DOC_END :: health.ts ===
+ */
+
 import { Elysia } from 'elysia';
 import { messageService } from '../services/messageService';
 import { config } from '../config';

@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\types\api.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles api functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["ApiErrorResponse","ApiResponse","ApiSuccessResponse","ConnectionMessage","CreateRequest","CreateResponse","DetailedResponse","EchoMessage","ListResponse","Message","NewMessageNotification","Response","StatusUpdateMessage","TypingMessage","createErrorResponse","createSuccessResponse"]
+ *   inputs: "string, string, unknown"
+ *   outputs: "ApiSuccessResponse<T>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: []
+ *   critical: true
+ *
+ * === DOC_END :: api.ts ===
+ */
+
+/**
  * Tipos y contratos de API
  *
  * Define la forma de todas las respuestas y peticiones de la API

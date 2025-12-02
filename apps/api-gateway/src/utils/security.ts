@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\utils\security.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles security functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["sanitizeForLogging"]
+ *   inputs: "any"
+ *   outputs: "any"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: []
+ *   critical: false
+ *
+ * === DOC_END :: security.ts ===
+ */
+
+/**
  * Security Utilities
  *
  * Provides utilities for secure logging and data sanitization

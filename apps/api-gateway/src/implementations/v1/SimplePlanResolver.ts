@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\implementations\v1\SimplePlanResolver.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles simple plan resolver functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/logger"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["SimplePlanResolver"]
+ *   inputs: "None"
+ *   outputs: "Promise<Plan>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../middleware/logger"]
+ *   critical: false
+ *
+ * === DOC_END :: SimplePlanResolver.ts ===
+ */
+
+/**
  * SimplePlanResolver (V1)
  *
  * Implementación simple de resolución de planes.

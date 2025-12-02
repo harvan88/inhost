@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\routes\admin\messages.ts"
+ *   type: "controller"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles messages API routes"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/auth","../../middleware/logger","../../types/api"]
+ *   external: ["@inhost/shared","elysia"]
+ *   infrastructure: ["PostgreSQL"]
+ *
+ * CONTRACTS:
+ *   exports: ["adminMessagesRoutes"]
+ *   inputs: "None"
+ *   outputs: "void"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../middleware/auth","../../middleware/logger","../../types/api","@inhost/shared","elysia"]
+ *   critical: false
+ *
+ * === DOC_END :: messages.ts ===
+ */
+
+/**
  * Admin Messages Management Routes
  *
  * Endpoints:

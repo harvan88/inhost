@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\routes\admin\integrations.ts"
+ *   type: "controller"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles integrations API routes"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/auth","../../middleware/logger","../../types/api"]
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["adminIntegrationsRoutes"]
+ *   inputs: "string"
+ *   outputs: "string"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Component → API → Backend"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../middleware/auth","../../middleware/logger","../../types/api","elysia"]
+ *   critical: false
+ *
+ * === DOC_END :: integrations.ts ===
+ */
+
+/**
  * Admin Integrations Management Routes
  *
  * Endpoints:

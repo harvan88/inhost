@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "database/db.ts"
+ *   type: "utility"
+ *   layer: "frontend"
+ *   domain: "database"
+ *   purpose: "Handles db functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./schema"]
+ *   external: []
+ *   infrastructure: ["PostgreSQL"]
+ *
+ * CONTRACTS:
+ *   exports: ["db","pool"]
+ *   inputs: "None"
+ *   outputs: "Promise<boolean>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["./schema"]
+ *   critical: false
+ *
+ * === DOC_END :: db.ts ===
+ */
+
+/**
  * Drizzle Database Client
  *
  * Cliente de base de datos PostgreSQL usando Drizzle ORM

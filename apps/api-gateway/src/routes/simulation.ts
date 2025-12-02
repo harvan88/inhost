@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "routes/simulation.ts"
+ *   type: "controller"
+ *   layer: "frontend"
+ *   domain: "api"
+ *   purpose: "Handles simulation API routes"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../middleware/logger","../services","../simulators/clients","../simulators/extensions","../types/api"]
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["setBroadcastFunction","simulationRoutes"]
+ *   inputs: "(data:"
+ *   outputs: "void"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../middleware/logger","../services","../simulators/clients","../simulators/extensions","../types/api","elysia"]
+ *   critical: true
+ *
+ * === DOC_END :: simulation.ts ===
+ */
+
 import { Elysia, t } from 'elysia';
 import { logger } from '../middleware/logger';
 import { createSuccessResponse } from '../types/api';

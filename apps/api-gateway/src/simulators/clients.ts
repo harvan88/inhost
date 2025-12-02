@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\simulators\clients.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles clients functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: ["@inhost/shared"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["SimulatedClient","createClientMessage","getClientsStatus","simulatedClients","toggleClientConnection"]
+ *   inputs: "string, string"
+ *   outputs: "MessageEnvelope"
+ *   errors: "Error"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["@inhost/shared"]
+ *   critical: false
+ *
+ * === DOC_END :: clients.ts ===
+ */
+
 import { MessageChannel, MessageType } from '@inhost/shared';
 import type { MessageEnvelope } from '@inhost/shared';
 

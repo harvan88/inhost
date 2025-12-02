@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\core\interfaces\IMessageQueue.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles i message queue functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["IMessageQueue","MessageQueueConfig","QueueStats"]
+ *   inputs: "None"
+ *   outputs: "Promise<void>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Input → Processing → Output"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: []
+ *   critical: false
+ *
+ * === DOC_END :: IMessageQueue.ts ===
+ */
+
 import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
 
 /**

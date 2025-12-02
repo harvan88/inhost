@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\core\interfaces\IOwnerChecker.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles i owner checker functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["DeviceInfo","IOwnerChecker","OwnerPresence"]
+ *   inputs: "None"
+ *   outputs: "Promise<"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: []
+ *   critical: true
+ *
+ * === DOC_END :: IOwnerChecker.ts ===
+ */
+
+/**
  * IOwnerChecker
  *
  * Contrato para verificar estado de conexión de owners.

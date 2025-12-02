@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\implementations\v1\WebSocketNotification.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles web socket notification functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/logger"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["WebSocketNotification"]
+ *   inputs: "None"
+ *   outputs: "Promise<void>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../middleware/logger"]
+ *   critical: true
+ *
+ * === DOC_END :: WebSocketNotification.ts ===
+ */
+
+/**
  * WebSocketNotification (V1)
  *
  * Implementación simple de notificaciones vía WebSocket.

@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "middleware/timeout.ts"
+ *   type: "middleware"
+ *   layer: "frontend"
+ *   domain: "api"
+ *   purpose: "Handles timeout functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./logger"]
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["CircuitBreaker","TimeoutConfig","simpleTimeout","timeoutProtection","withAdapterTimeout"]
+ *   inputs: "TimeoutConfig"
+ *   outputs: "boolean"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["./logger","elysia"]
+ *   critical: true
+ *
+ * === DOC_END :: timeout.ts ===
+ */
+
+/**
  * Timeout Protection Middleware
  *
  * Middleware que implementa:

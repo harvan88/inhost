@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\implementations\v2\RedisRateLimiter.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles redis rate limiter functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../config/redis","../../middleware/logger"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["RedisRateLimiter"]
+ *   inputs: "None"
+ *   outputs: "Promise<RateLimitResult>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../config/redis","../../middleware/logger"]
+ *   critical: false
+ *
+ * === DOC_END :: RedisRateLimiter.ts ===
+ */
+
+/**
  * Redis Rate Limiter V2 (Sprint 4)
  *
  * Implementación de rate limiting con Redis usando operaciones atómicas.

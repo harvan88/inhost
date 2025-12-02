@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\services\messageService.ts"
+ *   type: "service"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles message operations"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../middleware/errorHandler","./index"]
+ *   external: ["@inhost/shared"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["MessageService","messageService"]
+ *   inputs: "None"
+ *   outputs: "["
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Component → API → Backend"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../middleware/errorHandler","./index","@inhost/shared"]
+ *   critical: true
+ *
+ * === DOC_END :: messageService.ts ===
+ */
+
+/**
  * Message Service (Facade)
  *
  * Servicio de alto nivel que delega a MessageCore.

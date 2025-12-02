@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\implementations\v1\MemoryQueue.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles memory queue functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/logger"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["MemoryQueue"]
+ *   inputs: "None"
+ *   outputs: "Promise<void>"
+ *   errors: "Error"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../middleware/logger"]
+ *   critical: false
+ *
+ * === DOC_END :: MemoryQueue.ts ===
+ */
+
+/**
  * Memory Queue V1
  *
  * Implementación simple de cola en memoria usando un array.

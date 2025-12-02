@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\simulators\extensions.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles extensions functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: ["@inhost/shared"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["SimulatedExtension","getExtensionsStatus","setExtensionLatency","simulatedExtensions","toggleExtension"]
+ *   inputs: "number"
+ *   outputs: "Promise<void>"
+ *   errors: "Error"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["@inhost/shared"]
+ *   critical: false
+ *
+ * === DOC_END :: extensions.ts ===
+ */
+
 import type { MessageEnvelope } from '@inhost/shared';
 import { MessageType } from '@inhost/shared';
 

@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\implementations\v1\SimpleValidator.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles simple validator functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/logger"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["SimpleValidator"]
+ *   inputs: "None"
+ *   outputs: "ValidationResult"
+ *   errors: "Error, ValidationError"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../middleware/logger"]
+ *   critical: false
+ *
+ * === DOC_END :: SimpleValidator.ts ===
+ */
+
+/**
  * Simple Validator V1
  *
  * Implementación simple de validación de mensajes.

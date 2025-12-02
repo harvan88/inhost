@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\core\interfaces\INotificationService.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles i notification operations"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: ["@inhost/shared"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["ConversationReadEvent","ConversationUpdatedEvent","INotificationService","NotificationTarget","StatusUpdate","TypingIndicator"]
+ *   inputs: "None"
+ *   outputs: "void"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["@inhost/shared"]
+ *   critical: true
+ *
+ * === DOC_END :: INotificationService.ts ===
+ */
+
+/**
  * INotificationService
  *
  * Contrato para servicios de notificación en tiempo real.

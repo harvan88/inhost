@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\core\interfaces\index.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Barrel export for interfaces module"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: []
+ *   inputs: "None"
+ *   outputs: "void"
+ *   errors: "ValidationError"
+ *
+ * INTEGRATION:
+ *   data_flow: "Input → Processing → Output"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: []
+ *   critical: false
+ *
+ * === DOC_END :: index.ts ===
+ */
+
+/**
  * Core Interfaces - Contratos que NUNCA cambian
  *
  * Estas interfaces definen los contratos fundamentales del sistema.

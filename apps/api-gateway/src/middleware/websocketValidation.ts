@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\middleware\websocketValidation.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles websocket validation functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./logger"]
+ *   external: ["@sinclair/typebox","@sinclair/typebox/value"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["NewMessage","NewMessageSchema","TypingMessage","TypingMessageSchema","WebSocketMessage","WebSocketMessageSchema","validateMessageSize","validateWebSocketMessage"]
+ *   inputs: "unknown"
+ *   outputs: "void"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["./logger","@sinclair/typebox","@sinclair/typebox/value"]
+ *   critical: true
+ *
+ * === DOC_END :: websocketValidation.ts ===
+ */
+
+/**
  * WebSocket Message Validation (Sprint 3)
  *
  * Validación de mensajes WebSocket usando TypeBox.

@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\implementations\v1\ConnectionOwnerChecker.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles connection owner checker functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../../middleware/logger"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["ConnectionOwnerChecker"]
+ *   inputs: "None"
+ *   outputs: "Promise<boolean>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../../middleware/logger"]
+ *   critical: true
+ *
+ * === DOC_END :: ConnectionOwnerChecker.ts ===
+ */
+
+/**
  * ConnectionOwnerChecker (V1)
  *
  * Implementación simple de verificación de presencia.

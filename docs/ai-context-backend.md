@@ -1,90 +1,129 @@
-# Project Architecture Context
+# AI Context: Backend
 
-Generated: 2025-11-27T18:43:07.064Z
+**Auto-generated Documentation Coverage Report**
+**Last Updated:** 2025-12-01T23:57:22.208Z
 
-## Statistics
+---
 
-- **Total Files Documented:** 18
-- **Critical Files:** 18
-- **Total Dependencies:** 92
+## Coverage Statistics
 
-## Architecture Overview
+| Metric | Value |
+|--------|-------|
+| **Total Files** | 69 |
+| **Documented** | 69 |
+| **Undocumented** | 0 |
+| **Coverage** | 100.0% |
+| **Critical Files** | 18 |
 
-### Layers
+---
 
-- **backend:** 14 files (14 critical)
-- **shared:** 4 files (4 critical)
+## Documented Files (69)
 
-### Domains
+- ✅ `apps\api-gateway\src\adapters\manager\AdapterManager.ts`
+- ✅ `apps\api-gateway\src\adapters\manager\index.ts`
+- ✅ `apps\api-gateway\src\adapters\simulators\SimulatedSMSAdapter.ts`
+- ✅ `apps\api-gateway\src\adapters\simulators\SimulatedTelegramAdapter.ts`
+- ✅ `apps\api-gateway\src\adapters\simulators\SimulatedWhatsAppAdapter.ts`
+- ✅ `apps\api-gateway\src\adapters\simulators\index.ts`
+- ✅ `apps\api-gateway\src\config\index.ts`
+- ✅ `apps\api-gateway\src\config\redis.ts`
+- ✅ `apps\api-gateway\src\core\MessageCore.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\IAdapter.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\IMessageQueue.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\INotificationService.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\IOwnerChecker.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\IPersistenceService.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\IPlanResolver.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\IRateLimiter.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\IValidator.ts`
+- ✅ `apps\api-gateway\src\core\interfaces\index.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\ConnectionOwnerChecker.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\MemoryPersistence.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\MemoryQueue.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\MemoryRateLimiter.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\SimplePlanResolver.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\SimpleValidator.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\WebSocketNotification.ts`
+- ✅ `apps\api-gateway\src\implementations\v1\index.ts`
+- ✅ `apps\api-gateway\src\implementations\v2\DatabasePersistence.ts`
+- ✅ `apps\api-gateway\src\implementations\v2\RedisRateLimiter.ts`
+- ✅ `apps\api-gateway\src\implementations\v2\index.ts`
+- ✅ `apps\api-gateway\src\index.ts`
+- ✅ `apps\api-gateway\src\middleware\auth-rate-limit.ts`
+- ✅ `apps\api-gateway\src\middleware\auth.ts`
+- ✅ `apps\api-gateway\src\middleware\errorHandler.ts`
+- ✅ `apps\api-gateway\src\middleware\logger.ts`
+- ✅ `apps\api-gateway\src\middleware\rateLimiting.ts`
+- ✅ `apps\api-gateway\src\middleware\timeout.ts`
+- ✅ `apps\api-gateway\src\middleware\validation.ts`
+- ✅ `apps\api-gateway\src\middleware\websocketValidation.ts`
+- ✅ `apps\api-gateway\src\routes\admin\account.ts`
+- ✅ `apps\api-gateway\src\routes\admin\auth.ts`
+- ✅ `apps\api-gateway\src\routes\admin\conversations.ts`
+- ✅ `apps\api-gateway\src\routes\admin\end-users.ts`
+- ✅ `apps\api-gateway\src\routes\admin\feedback.ts`
+- ✅ `apps\api-gateway\src\routes\admin\integrations.ts`
+- ✅ `apps\api-gateway\src\routes\admin\mentions.ts`
+- ✅ `apps\api-gateway\src\routes\admin\messages.ts`
+- ✅ `apps\api-gateway\src\routes\admin\sync.ts`
+- ✅ `apps\api-gateway\src\routes\admin\team.ts`
+- ✅ `apps\api-gateway\src\routes\admin\tenant.ts`
+- ✅ `apps\api-gateway\src\routes\health.ts`
+- ✅ `apps\api-gateway\src\routes\index.ts`
+- ✅ `apps\api-gateway\src\routes\messages.ts`
+- ✅ `apps\api-gateway\src\routes\simulation.ts`
+- ✅ `apps\api-gateway\src\routes\websocket.ts`
+- ✅ `apps\api-gateway\src\services\index.ts`
+- ✅ `apps\api-gateway\src\services\messageService.ts`
+- ✅ `apps\api-gateway\src\simulators\clients.ts`
+- ✅ `apps\api-gateway\src\simulators\extensions.ts`
+- ✅ `apps\api-gateway\src\types\api.ts`
+- ✅ `apps\api-gateway\src\utils\mentions-parser.ts`
+- ✅ `apps\api-gateway\src\utils\observability-logger.ts`
+- ✅ `apps\api-gateway\src\utils\security.ts`
+- ✅ `packages\shared\src\auth\jwt.ts`
+- ✅ `packages\shared\src\auth\password.ts`
+- ✅ `packages\shared\src\database\config.ts`
+- ✅ `packages\shared\src\database\db.ts`
+- ✅ `packages\shared\src\database\schema.ts`
+- ✅ `packages\shared\src\index.ts`
+- ✅ `packages\shared\src\types\message-envelope.ts`
 
-- **database:** 4 files (4 critical)
-- **messaging:** 2 files (2 critical)
-- **api:** 4 files (4 critical)
-- **auth:** 4 files (4 critical)
-- **core:** 1 files (1 critical)
-- **config:** 1 files (1 critical)
-- **sync:** 2 files (2 critical)
+---
 
-## Critical Files
+## Files Pending Documentation (0)
 
-- **..\inhost-backend\apps\api-gateway\src\core\interfaces\IPersistenceService.ts** [backend/database]
-  - Type: type
-  - Exports: IPersistenceService, PersistenceResult, MessageQuery
-- **..\inhost-backend\apps\api-gateway\src\core\MessageCore.ts** [backend/messaging]
-  - Type: service
-  - Exports: MessageCore, MessageCoreConfig
-- **..\inhost-backend\apps\api-gateway\src\implementations\v1\MemoryPersistence.ts** [backend/database]
-  - Type: service
-  - Exports: MemoryPersistence
-- **..\inhost-backend\apps\api-gateway\src\implementations\v1\MemoryRateLimiter.ts** [backend/api]
-  - Type: service
-  - Exports: MemoryRateLimiter
-- **..\inhost-backend\apps\api-gateway\src\implementations\v2\DatabasePersistence.ts** [backend/database]
-  - Type: service
-  - Exports: DatabasePersistence
-- **..\inhost-backend\apps\api-gateway\src\middleware\auth.ts** [backend/auth]
-  - Type: service
-  - Exports: requireAuth, optionalAuth, AuthContext
-- **..\inhost-backend\apps\api-gateway\src\middleware\errorHandler.ts** [backend/core]
-  - Type: middleware
-  - Exports: AppError, ErrorCodes, StandardErrorResponse, createError, errorHandler
-- **..\inhost-backend\apps\api-gateway\src\middleware\logger.ts** [backend/config]
-  - Type: utility
-  - Exports: Logger, logger, httpLogger, LogLevel
-- **..\inhost-backend\apps\api-gateway\src\routes\admin\auth.ts** [backend/auth]
-  - Type: controller
-  - Exports: adminAuthRoutes
-- **..\inhost-backend\apps\api-gateway\src\routes\admin\conversations.ts** [backend/api]
-  - Type: controller
-  - Exports: adminConversationsRoutes
-- **..\inhost-backend\apps\api-gateway\src\routes\admin\sync.ts** [backend/sync]
-  - Type: controller
-  - Exports: adminSyncRoutes
-- **..\inhost-backend\apps\api-gateway\src\routes\index.ts** [backend/api]
-  - Type: controller
-  - Exports: routes
-- **..\inhost-backend\apps\api-gateway\src\routes\websocket.ts** [backend/sync]
-  - Type: controller
-  - Exports: websocketRoutes, broadcastToAll
-- **..\inhost-backend\apps\api-gateway\src\services\index.ts** [backend/api]
-  - Type: service
-  - Exports: adapterManager, rateLimiter, messageQueue, validator, persistence, notifications, planResolver, ownerChecker, messageCore, initializeServices, shutdownServices
-- **..\inhost-backend\packages\shared\src\auth\jwt.ts** [shared/auth]
-  - Type: utility
-  - Exports: AdminJWTPayload, createToken, verifyToken, createRefreshToken, extractTokenFromHeader
-- **..\inhost-backend\packages\shared\src\auth\password.ts** [shared/auth]
-  - Type: utility
-  - Exports: hashPassword, verifyPassword, validatePasswordStrength
-- **..\inhost-backend\packages\shared\src\database\schema.ts** [shared/database]
-  - Type: model
-  - Exports: AdminUser, Conversation, EndUser, Mention, Message, MessageFeedback, MessageRead, NewAdminUser, NewConversation, NewEndUser, NewMention, NewMessage, NewMessageFeedback, NewMessageRead, NewTenant, Tenant, adminUsers, adminUsersRelations, conversations, conversationsRelations, endUsers, endUsersRelations, mentions, mentionsRelations, messageFeedback, messageFeedbackRelations, messageReads, messageReadsRelations, messages, messagesRelations, tenants, tenantsRelations
-- **..\inhost-backend\packages\shared\src\types\message-envelope.ts** [shared/messaging]
-  - Type: type
-  - Exports: MessageEnvelopeV2, MessageType, MessageChannel, MessageStatus, MessageContent, MessageMetadata, MessageStatusEvent, MessageContext
+_No files pending documentation_
 
-## Layer-Domain Matrix
+---
 
-| Layer \ Domain | database | messaging | api | auth | core | config | sync |
-|------|---|---|---|---|---|---|---|
-| backend | 3 | 1 | 4 | 2 | 1 | 1 | 2 |
-| shared | 1 | 1 | - | 2 | - | - | - |
+## Priority Suggestions
+
+### High Priority (Likely Critical)
+_No high priority files detected_
+
+### Medium Priority (Components/Utilities)
+_No medium priority files detected_
+
+### Low Priority (Types/Config)
+_No low priority files detected_
+
+---
+
+## Documentation Commands
+
+```bash
+# Validate current documentation
+npm run validate:backend
+
+# Generate architecture overview
+npm run overview:backend
+
+# Update this coverage report
+npm run coverage:backend
+```
+
+---
+
+**Generated by:** `documentation-scripts/core/generate-coverage-report.js`
+**Specification:** SDT-SPEC-1.0

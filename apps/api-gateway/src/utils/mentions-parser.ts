@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\utils\mentions-parser.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles mentions-parser functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./utils/mentions-parser"]
+ *   external: ["@inhost/shared"]
+ *   infrastructure: ["PostgreSQL"]
+ *
+ * CONTRACTS:
+ *   exports: ["MentionType","ParsedMention","ResolvedMention","extractContext","parseMentions"]
+ *   inputs: "string"
+ *   outputs: "Array<"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["./utils/mentions-parser","@inhost/shared"]
+ *   critical: true
+ *
+ * === DOC_END :: mentions-parser.ts ===
+ */
+
+/**
  * Mentions Parser
  *
  * Parser universal para detectar menciones (@username) en cualquier string del sistema.

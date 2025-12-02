@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\adapters\simulators\SimulatedSMSAdapter.ts"
+ *   type: "type"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles simulated s m s adapter functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: []
+ *   external: ["@inhost/shared"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["SimulatedSMSAdapter"]
+ *   inputs: "None"
+ *   outputs: "Promise<void>"
+ *   errors: "Error"
+ *
+ * INTEGRATION:
+ *   data_flow: "Input → Processing → Output"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["@inhost/shared"]
+ *   critical: false
+ *
+ * === DOC_END :: SimulatedSMSAdapter.ts ===
+ */
+
 import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
 import { MessageChannel, MessageType, MessageStatus } from '@inhost/shared';
 import type { IAdapter, SendResult, AdapterConfig } from '../../core/interfaces';

@@ -27,13 +27,20 @@
     "test:messaging": "bun scripts/test-messaging-flow.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage"
+    "test:coverage": "bun test --coverage",
+    "deadcode:exports": "ts-prune",
+    "deadcode:files": "unimported",
+    "deadcode:deps": "depcheck",
+    "deadcode:all": "bun run deadcode:exports && bun run deadcode:files"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/pg": "^8.11.10",
+    "depcheck": "^1.4.7",
     "drizzle-kit": "^0.31.6",
-    "typescript": "^5.0.0"
+    "ts-prune": "^0.10.3",
+    "typescript": "^5.0.0",
+    "unimported": "^1.31.1"
   },
   "trustedDependencies": [
     "@elysiajs/cors",

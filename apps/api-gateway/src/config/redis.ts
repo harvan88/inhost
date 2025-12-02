@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\config\redis.ts"
+ *   type: "config"
+ *   layer: "backend"
+ *   domain: "api"
+ *   purpose: "Handles redis functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../middleware/logger"]
+ *   external: ["ioredis"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["RATE_LIMIT_BACKEND","getRedisClient","shouldUseRedis"]
+ *   inputs: "None"
+ *   outputs: "Redis"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../middleware/logger","ioredis"]
+ *   critical: false
+ *
+ * === DOC_END :: redis.ts ===
+ */
+
+/**
  * Redis Configuration (Sprint 4)
  *
  * Configuración centralizada de Redis para toda la aplicación.

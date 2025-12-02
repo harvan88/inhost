@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "index.ts"
+ *   type: "type"
+ *   layer: "frontend"
+ *   domain: "api"
+ *   purpose: "Barrel export for src module"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./config","./middleware/errorHandler","./middleware/logger","./routes","./services"]
+ *   external: ["@elysiajs/cors","elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["App"]
+ *   inputs: "None"
+ *   outputs: "void"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["./config","./middleware/errorHandler","./middleware/logger","./routes","./services","@elysiajs/cors","elysia"]
+ *   critical: true
+ *
+ * === DOC_END :: index.ts ===
+ */
+
 import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { routes } from './routes';

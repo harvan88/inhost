@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "middleware/rateLimiting.ts"
+ *   type: "middleware"
+ *   layer: "frontend"
+ *   domain: "api"
+ *   purpose: "Handles rate limiting functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["./logger"]
+ *   external: ["elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["RateLimitConfig","rateLimiting","wsRateLimiting"]
+ *   inputs: "RateLimitConfig"
+ *   outputs: "Promise<boolean>"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "WebSocket → Handler → Store → UI"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["./logger","elysia"]
+ *   critical: true
+ *
+ * === DOC_END :: rateLimiting.ts ===
+ */
+
+/**
  * Rate Limiting Middleware
  *
  * Middleware de Elysia que implementa rate limiting para proteger la API.

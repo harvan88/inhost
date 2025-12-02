@@ -1,0 +1,12 @@
+{
+  "entry": [
+    "apps/api-gateway/src/index.ts"
+  ],
+  "extensions": [".ts"],
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

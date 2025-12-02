@@ -1,3 +1,37 @@
+/**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "routes/messages.ts"
+ *   type: "controller"
+ *   layer: "frontend"
+ *   domain: "api"
+ *   purpose: "Handles messages API routes"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../middleware/errorHandler","../middleware/logger","../middleware/rateLimiting","../middleware/timeout","../middleware/validation","../services","../services/messageService","../types/api"]
+ *   external: ["@inhost/shared","elysia"]
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["messagesRoutes"]
+ *   inputs: "None"
+ *   outputs: "void"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../middleware/errorHandler","../middleware/logger","../middleware/rateLimiting","../middleware/timeout","../middleware/validation","../services","../services/messageService","../types/api","@inhost/shared","elysia"]
+ *   critical: false
+ *
+ * === DOC_END :: messages.ts ===
+ */
+
 import { Elysia, t } from 'elysia';
 import { MessageType, MessageChannel } from '@inhost/shared';
 import { messageService } from '../services/messageService';

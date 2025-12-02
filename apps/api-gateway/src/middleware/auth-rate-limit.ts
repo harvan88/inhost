@@ -1,4 +1,38 @@
 /**
+ * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
+ *
+ * IDENTITY:
+ *   file: "C:\Users\harva\Documents\Trabajos\meetgar\FluxCoreChat\inhost-backend\apps\api-gateway\src\middleware\auth-rate-limit.ts"
+ *   type: "utility"
+ *   layer: "backend"
+ *   domain: "auth"
+ *   purpose: "Handles auth-rate-limit functionality"
+ *
+ * DEPENDENCIES:
+ *   internal: ["../types/api"]
+ *   external: []
+ *   infrastructure: []
+ *
+ * CONTRACTS:
+ *   exports: ["authRateLimit","startAuthRateLimitCleanup"]
+ *   inputs: "Request"
+ *   outputs: "string"
+ *   errors: "None"
+ *
+ * INTEGRATION:
+ *   data_flow: "Request → Middleware → Handler → Response"
+ *   events_emitted: []
+ *   events_consumed: []
+ *
+ * IMPACT:
+ *   used_by: "To be determined via dependency analysis"
+ *   uses: ["../types/api"]
+ *   critical: true
+ *
+ * === DOC_END :: auth-rate-limit.ts ===
+ */
+
+/**
  * Auth Rate Limiting Middleware
  *
  * Provides IP-based rate limiting for authentication endpoints to prevent brute force attacks.
