@@ -1,14 +1,261 @@
 # CLAUDE.md - INHOST Backend
 
-This file provides guidance to Claude Code when working with the **INHOST backend monorepo**.
+**INHOST** es una plataforma SaaS multi-tenant de mensajería omnicanal que permite a organizaciones gestionar conversaciones de clientes desde WhatsApp, Telegram, SMS y Web en una interfaz unificada.
 
-**Source:** This file is based EXCLUSIVELY on `docs/ARCHITECTURE.md` and `docs/AUDIT-REPORT.md`.
+---
 
-## Project Identity
+## ¿Qué es INHOST?
 
-**This is the BACKEND monorepo only.** The frontend lives at `../inhost-frontend/` as a completely separate monorepo.
+**INHOST Backend** es el motor de mensajería que:
 
-## Stack (from ARCHITECTURE.md)
+1. **Recibe mensajes** de múltiples canales (WhatsApp, Telegram, Web, SMS)
+2. **Procesa mensajes** a través de un sistema extensible de plugins (AI Assistant, Sentiment Analysis, CRM Integration)
+3. **Persiste datos** en PostgreSQL con aislamiento por tenant
+4. **Distribuye en tiempo real** vía WebSocket a dashboards web
+5. **Controla acceso** mediante JWT con roles (owner, admin, agent, viewer)
+
+**Casos de uso:**
+- Equipos de soporte con bandeja unificada para todos los canales
+- Automatización con respuestas AI + clasificación de intenciones
+- Analytics de sentimiento y calidad de respuestas
+- Enrutamiento inteligente según carga de trabajo y especialización
+
+---
+
+## Arquitectura de Extensiones por Tenant
+
+**Modelo de Enriquecimiento Conversacional Extensible** (v3.0)
+
+### Concepto Fundamental
+
+El sistema separa el **núcleo conversacional** (inmutable) de las **capas de enriquecimiento** (extensiones):
+
+```
+MessageEnvelopeCore (Núcleo Puro)
+    ↓ lee (read-only)
+MessageEnrichments (Capas de Extensiones por Tenant)
+    - AI Assistant → suggestions (tenant A habilitado, tenant B no)
+    - Sentiment Analyzer → emotions (todos los tenants)
+    - CRM Integration → customer data (solo tenant premium)
+```
+
+**Beneficios:**
+- ✅ Cada tenant elige qué extensiones activar
+- ✅ Extensiones de terceros pueden agregarse sin modificar el núcleo
+- ✅ Datos de extensiones aislados del núcleo (no contamina MessageEnvelope)
+- ✅ Versionado independiente por extensión
+
+### Sistema de Extensiones
+
+**IMessageExtension Interface:**
+
+```typescript
+interface IMessageExtension extends IExtension {
+  /**
+   * ID único de la extensión (para registro en marketplace)
+   */
+  id: string;  // "ai-assistant", "sentiment-analyzer", "crm-integration"
+
+  /**
+   * Procesa un mensaje y devuelve enriquecimiento (no modifica el mensaje)
+   */
+  enrich(
+    message: MessageEnvelopeCore,
+    context: ExtensionContext
+  ): Promise<EnrichmentResult>;
+
+  /**
+   * Define el esquema de datos que la extensión produce (para validación)
+   */
+  getEnrichmentSchema(): EnrichmentSchema;
+}
+```
+
+**Persistencia Separada:**
+
+```sql
+-- Núcleo (inmutable)
+CREATE TABLE messages (
+  id UUID PRIMARY KEY,
+  conversation_id UUID NOT NULL,
+  type VARCHAR(20) NOT NULL,
+  channel VARCHAR(20) NOT NULL,
+  content JSONB NOT NULL,
+  -- ... solo datos esenciales
+);
+
+-- Enriquecimientos (extensiones)
+CREATE TABLE message_enrichments (
+  id UUID PRIMARY KEY,
+  message_id UUID NOT NULL REFERENCES messages(id),
+  extension_id VARCHAR(100) NOT NULL,  -- "ai-assistant"
+  extension_version VARCHAR(20),        -- "1.2.0"
+  data JSONB NOT NULL,                  -- Datos de la extensión
+  tenant_id UUID NOT NULL,              -- ← Aislamiento por tenant
+  ttl INTEGER,                          -- Time-to-live (segundos)
+  persistent BOOLEAN DEFAULT TRUE,
+
+  UNIQUE(message_id, extension_id, tenant_id)
+);
+
+-- Extensiones habilitadas por tenant
+CREATE TABLE tenant_extensions (
+  id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  extension_id VARCHAR(100) NOT NULL,   -- "ai-assistant"
+  enabled BOOLEAN DEFAULT TRUE,
+  config JSONB,                         -- Configuración específica del tenant
+  expires_at TIMESTAMP,                 -- Para trials o suscripciones
+
+  UNIQUE(tenant_id, extension_id)
+);
+```
+
+### Extensiones de Terceros
+
+**Modelo de Desarrollo:**
+
+1. **Registro en Marketplace:**
+   ```typescript
+   // Extensión desarrollada por tercero
+   class CustomCRMExtension implements IMessageExtension {
+     id = 'custom-crm-connector';
+     name = 'Custom CRM Connector';
+     version = '1.0.0';
+     publisher = 'ThirdPartyCompany';
+
+     getEnrichmentSchema(): EnrichmentSchema {
+       return {
+         extensionId: this.id,
+         version: this.version,
+         dataSchema: {
+           type: 'object',
+           properties: {
+             customerId: { type: 'string' },
+             tier: { type: 'string', enum: ['free', 'premium', 'enterprise'] },
+             // ...
+           },
+           required: ['customerId']
+         }
+       };
+     }
+
+     async enrich(message: MessageEnvelopeCore, context: ExtensionContext) {
+       // Llamada a CRM externo
+       const customerData = await this.crmClient.lookup(message.metadata.from);
+
+       return {
+         success: true,
+         data: {
+           customerId: customerData.id,
+           tier: customerData.tier,
+           // ...
+         },
+         metadata: {
+           persistent: true  // guardar para histórico
+         }
+       };
+     }
+   }
+   ```
+
+2. **Sandbox de Seguridad:**
+   - Extensiones ejecutan en Workers aislados (Bun WorkerPool)
+   - Timeout configurable (default 5s)
+   - Rate limiting por extensión
+   - Auditoría de accesos
+
+3. **Permisos Granulares:**
+   ```typescript
+   interface ExtensionPermissions {
+     readMessages: boolean;           // Leer mensajes del chat
+     readConversationHistory: boolean; // Acceder al historial completo
+     writeEnrichments: boolean;       // Escribir enriquecimientos
+     callExternalAPIs: string[];      // Whitelist de dominios
+     accessTenantConfig: boolean;     // Acceder a config del tenant
+   }
+   ```
+
+4. **Validación de Schemas:**
+   - JSONSchema para validar datos de salida
+   - Validación automática antes de persistir
+   - Errores de schema no bloquean el flujo
+
+### Gestión por Tenant
+
+**Habilitar/Deshabilitar Extensiones:**
+
+```typescript
+// Tenant Admin UI → Backend API
+POST /admin/extensions/:extensionId/enable
+{
+  "config": {
+    "aiModel": "gpt-4",
+    "maxSuggestions": 3,
+    "languages": ["es", "en"]
+  }
+}
+
+// Backend verifica:
+// 1. ¿El plan del tenant incluye esta extensión?
+// 2. ¿La extensión está aprobada en marketplace?
+// 3. ¿Hay créditos disponibles (si es de pago)?
+
+// Crea registro en tenant_extensions
+INSERT INTO tenant_extensions (tenant_id, extension_id, enabled, config)
+VALUES ($1, 'ai-assistant', true, $2);
+```
+
+**MessageCore Modificado:**
+
+```typescript
+class MessageCore {
+  async receive(envelope: MessageEnvelopeCore): Promise<void> {
+    // 1. Persistir núcleo
+    await this.persistence.save(envelope);
+
+    // 2. Obtener extensiones habilitadas para este tenant
+    const tenantExtensions = await this.extensionRegistry.getEnabledExtensions(
+      envelope.metadata.tenantId
+    );
+
+    // 3. Ejecutar extensiones en paralelo (con timeout)
+    const enrichmentResults = await Promise.allSettled(
+      tenantExtensions.map(ext =>
+        this.executeExtension(ext, envelope)
+      )
+    );
+
+    // 4. Guardar enriquecimientos exitosos
+    for (const result of enrichmentResults) {
+      if (result.status === 'fulfilled' && result.value.success) {
+        await this.enrichmentStore.save({
+          messageId: envelope.id,
+          tenantId: envelope.metadata.tenantId,
+          extensionId: result.value.extensionId,
+          data: result.value.data,
+          // ...
+        });
+      }
+    }
+
+    // 5. Broadcast (núcleo + enrichments)
+    await this.notifications.broadcast({
+      message: envelope,
+      enrichments: await this.enrichmentStore.getByMessageId(
+        envelope.id,
+        envelope.metadata.tenantId  // ← Solo enrichments de este tenant
+      )
+    });
+  }
+}
+```
+
+---
+
+## Stack Tecnológico
+
+**Source:** `docs/ARCHITECTURE.md`
 
 - **Runtime:** Bun 1.x
 - **Framework:** Elysia.js 1.2
@@ -17,11 +264,13 @@ This file provides guidance to Claude Code when working with the **INHOST backen
 - **Cache:** Redis 7 (optional)
 - **Authentication:** JWT (jose + @elysiajs/jwt OR bcrypt + jsonwebtoken - **⚠️ CONFLICT**)
 
-## Development Commands
+---
+
+## Comandos de Desarrollo
 
 ```bash
-# Development
-bun run dev                  # Start API gateway with watch
+# Desarrollo
+bun run dev                  # Start API gateway con watch
 bun run dev:db               # Start PostgreSQL + Redis (Docker)
 bun run dev:db:stop          # Stop database services
 
@@ -31,7 +280,7 @@ bun run type-check           # TypeScript checking
 
 # Database
 bun run db:generate          # Generate migration from schema
-bun run db:push              # Push schema (DEV ONLY - dangerous!)
+bun run db:push              # Push schema (DEV ONLY - peligroso!)
 bun run db:migrate           # Run migrations (PRODUCTION)
 bun run db:studio            # Drizzle Studio (visual DB editor)
 
@@ -40,7 +289,9 @@ bun run test:whatsapp        # Test WhatsApp simulation
 bun run test:messaging       # Test end-to-end messaging
 ```
 
-## Architecture: Clean Architecture with Layers
+---
+
+## Arquitectura: Clean Architecture con Capas
 
 **From ARCHITECTURE.md Section 3:**
 
@@ -71,24 +322,25 @@ bun run test:messaging       # Test end-to-end messaging
 **Location:** `apps/api-gateway/src/core/`, `services/`
 
 **MessageCore** (`core/MessageCore.ts`):
-- **THE HEART OF THE SYSTEM**
-- Orchestrates ALL message operations
-- Dependencies: IPersistenceService, INotificationService, IPlanResolver, IOwnerChecker, AdapterManager, IServiceGate
+- **EL CORAZÓN DEL SISTEMA**
+- Orquesta TODAS las operaciones de mensajes
+- Dependencies: IPersistenceService, INotificationService, IPlanResolver, IOwnerChecker, AdapterManager, IServiceGate, IEnrichmentStore
 
-**Methods:**
-- `receive(envelope)`: Persist → Broadcast → Update status
+**Métodos:**
+- `receive(envelope)`: Persist → Execute extensions → Broadcast → Update status
 - `send(envelope)`: Check capabilities → Persist → Send via adapter → Update status
 - `updateStatus()`: Append to statusChain (never mutate existing)
 
-**⚠️ RULE:** All message operations MUST go through MessageCore.
+**⚠️ REGLA:** Todas las operaciones de mensajes DEBEN pasar por MessageCore.
 
 ### Layer 3: Domain (Interfaces + Extensions)
 
 **Location:** `apps/api-gateway/src/core/interfaces/`, `extensions/`
 
-**Interfaces (Contracts):**
+**Interfaces (Contratos):**
 - `IAdapter.ts`: Channel adapters (WhatsApp, Telegram, etc.)
 - `IPersistenceService.ts`: Message storage
+- `IEnrichmentStore.ts`: Extension enrichments storage
 - `INotificationService.ts`: WebSocket broadcasts
 - `IRateLimiter.ts`: Rate limiting
 - `IMessageQueue.ts`: Message queue
@@ -97,6 +349,7 @@ bun run test:messaging       # Test end-to-end messaging
 - `IOwnerChecker.ts`: Presence checking
 - `IServiceGate.ts`: Capability checking
 - `IExtension.ts`: Pluggable extensions
+- `IExtensionRegistry.ts`: Extension management
 
 ### Layer 4: Infrastructure (Implementations + Adapters)
 
@@ -115,24 +368,35 @@ bun run test:messaging       # Test end-to-end messaging
 - `RedisRateLimiter.ts` ✅
 - `DatabaseServiceGate.ts` ✅
 - `DatabasePersistence.ts` - ❌ **NOT IMPLEMENTED YET**
+- `DatabaseEnrichmentStore.ts` - ❌ **PENDING (for v3.0)**
 
 **Adapters:**
 - `SimulatedWhatsAppAdapter.ts`
 - `SimulatedTelegramAdapter.ts`
 - `SimulatedSMSAdapter.ts`
-- `AdapterManager.ts`: Manages all adapters
+- `AdapterManager.ts`: Gestiona todos los adapters
 
-## MessageEnvelope Contract
+---
+
+## MessageEnvelope Contract (v3.0 - Núcleo Puro)
 
 **Location:** `packages/shared/src/types/message-envelope.ts`
 
-**From ARCHITECTURE.md Section 1.2:**
+**Cambio arquitectónico:** Separar núcleo de extensiones
 
 ```typescript
-interface MessageEnvelopeV2 {
+/**
+ * MessageEnvelopeCore - Núcleo Conversacional Puro (v3.0)
+ * Solo contiene datos esenciales del mensaje
+ */
+interface MessageEnvelopeCore {
+  // Identidad
   id: string;
+  conversationId: string;
   type: MessageType;  // incoming | outgoing | system | status
   channel: MessageChannel;  // whatsapp | telegram | web | sms
+
+  // Contenido
   content: {
     text?: string;
     contentType: string;
@@ -140,46 +404,73 @@ interface MessageEnvelopeV2 {
     location?: { latitude, longitude, name };
     buttons?: Array<{ id, text, type }>;
   };
+
+  // Metadata básica (solo datos operacionales)
   metadata: {
     from: string;
     to: string;
     timestamp: string;  // ISO 8601
-    messageId?: string;
-    conversationId?: string;
-    ownerId?: string;
     platformMessageId?: string;
-    tenantId?: string;
+    tenantId?: string;  // ← Crítico para multi-tenancy
+    ownerId?: string;
   };
+
+  // Status (operacional)
   statusChain: Array<{  // APPEND-ONLY
     status: MessageStatus;
     timestamp: string;
     messageId: string;
     details?: string;
   }>;
+
+  // Context (solo datos del sistema)
   context: {
     plan: 'free' | 'premium';
     timestamp: string;
-    source?: string;
-    extension?: { id, name, latency };
-    [key: string]: unknown;
+    // ❌ NO más campos extensibles aquí (movidos a enrichments)
+  };
+}
+
+/**
+ * MessageEnrichment - Datos aportados por extensiones (v3.0)
+ * Se persisten SEPARADOS del núcleo
+ */
+interface MessageEnrichment {
+  messageId: string;          // FK a MessageEnvelopeCore
+  tenantId: string;           // ← Aislamiento por tenant
+  extensionId: string;        // "ai-assistant", "sentiment-analyzer"
+  extensionVersion: string;   // "1.2.0"
+
+  data: Record<string, unknown>;  // Datos específicos de la extensión
+
+  metadata: {
+    createdAt: string;
+    updatedAt: string;
+    ttl?: number;             // Time-to-live (para datos efímeros)
+    persistent: boolean;      // false = borrar al cerrar conversación
   };
 }
 ```
 
-**⚠️ RULES:**
-- Never mutate statusChain entries, only append
-- Always preserve all fields
-- Validate structure before sending to MessageCore
+**⚠️ REGLAS:**
+- Nunca mutar statusChain entries, solo append
+- Siempre preservar todos los campos
+- Extensiones NO modifican MessageEnvelopeCore
+- Enrichments se guardan en tabla separada
+
+---
 
 ## Multi-Tenancy
 
 **From ARCHITECTURE.md Section 7.4:**
 
 **Database Schema:**
-- `tenants`: Organizations with plans (starter, professional, enterprise)
-- `adminUsers`: Dashboard users with roles (owner, admin, agent, viewer)
+- `tenants`: Organizations con planes (starter, professional, enterprise)
+- `adminUsers`: Dashboard users con roles (owner, admin, agent, viewer)
 - `endUsers`: External customers (WhatsApp contacts)
 - `conversations`, `messages`: Scoped to `tenantId`
+- `tenant_extensions`: Extensiones habilitadas por tenant
+- `message_enrichments`: Enriquecimientos con aislamiento por tenant
 
 **⚠️ CRITICAL RULE:** ALL queries MUST filter by `tenantId` from JWT.
 
@@ -187,11 +478,13 @@ interface MessageEnvelopeV2 {
 ```typescript
 const conversations = await db.query.conversations.findMany({
   where: and(
-    eq(conversations.tenantId, auth.tenantId),  // ALWAYS
+    eq(conversations.tenantId, auth.tenantId),  // SIEMPRE
     eq(conversations.status, 'active')
   )
 });
 ```
+
+---
 
 ## Authentication
 
@@ -216,6 +509,8 @@ const conversations = await db.query.conversations.findMany({
 - `viewer`: Read-only
 
 **Middleware:** `jwt-auth.ts` extracts JWT → validates → adds to `store.auth`
+
+---
 
 ## CRITICAL ISSUES from AUDIT-REPORT.md
 
@@ -267,6 +562,8 @@ jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-in-production'  // ⚠�
 - Optimize N+1 queries (Section 4.1)
 - Add input validation to all endpoints (Section 2.3)
 
+---
+
 ## Database Management
 
 **Schema:** `packages/shared/src/database/schema.ts` (Drizzle ORM)
@@ -287,97 +584,46 @@ bun run db:push
 
 **Connection:** `packages/shared/src/database/config.ts`
 
+---
+
 ## WebSocket Events
 
 **Endpoint:** `ws://localhost:3000/realtime`
 
 **Emitted to clients:**
 - `connection`: Connection established
-- `message:new`: New message
+- `message:new`: New message + enrichments
 - `message:status`: Status updated
 - `typing:indicator`: User typing
 - `conversation:updated`: Conversation changed
+- `enrichment:new`: Nueva capa de enriquecimiento disponible
 - `client_toggle`, `extension_toggle`: Simulation events
 
 **Received from clients:**
 - `typing`: Typing indicator
 - `message_received`: Message acknowledgment
 
-## Adding a New Route
+---
 
-**From ARCHITECTURE.md Section 3.1:**
+## Contract Changes (Extensiones)
 
-```typescript
-// routes/admin/my-feature.ts
-import { Elysia } from 'elysia';
-import { jwtAuth } from '../../middleware/jwt-auth';
+When creating a new extension:
 
-export const myFeatureRoutes = new Elysia({ prefix: '/admin' })
-  .use(jwtAuth())  // Require auth
-  .get('/my-feature', async ({ store }) => {
-    const auth = store.auth as AuthenticatedRequest;
-    // auth.tenantId, auth.tenantUserId, auth.role available
-    return { data: 'something' };
-  });
-```
+1. **Define schema** con `getEnrichmentSchema()`
+2. **Register in marketplace** (futuro: public registry)
+3. **Test isolation** - No debe afectar otras extensiones
+4. **Document permissions** - Qué datos accede
+5. **Provide tenant config UI** - Para que admins configuren
 
-Then register in `routes/index.ts`.
+When modifying types in `packages/shared/src/types/`:
 
-## Error Handling
+1. Update backend type definition
+2. **Notify frontend team** (they must mirror manually)
+3. Document changes in commit message
+4. Test both sides together
+5. Consider backward compatibility
 
-**From ARCHITECTURE.md Section 3.1:**
-
-```typescript
-import { createError } from '../middleware/errorHandler';
-
-throw createError.validation('Invalid message format');
-throw createError.unauthorized('Token expired');
-throw createError.notFound('Conversation not found');
-throw createError.rateLimit('Too many requests');
-```
-
-## Performance Optimizations (from ARCHITECTURE.md Section 8.3)
-
-**Connection Pooling:**
-```typescript
-const pool = new Pool({
-  max: 20,
-  min: 2,
-  idleTimeoutMillis: 30000,
-});
-```
-
-**Avoid N+1 Queries:**
-```typescript
-// ✅ GOOD - Use Drizzle WITH for JOINs
-const conversations = await db.query.conversations.findMany({
-  with: {
-    endUser: true,      // JOIN
-    assignedTo: true,   // JOIN
-  }
-});
-```
-
-**Add Indexes:**
-```typescript
-// schema.ts
-export const conversations = pgTable('conversations', {
-  // ...
-}, (table) => ({
-  tenantStatusIdx: index().on(table.tenantId, table.status),
-}));
-```
-
-## Configuration
-
-**Location:** `apps/api-gateway/src/config/index.ts`
-
-**Loads from environment:**
-- Database credentials
-- Redis connection
-- JWT secret and expiration
-- Rate limit settings
-- Feature flags
+---
 
 ## Security Rules (from ARCHITECTURE.md Section 9)
 
@@ -385,7 +631,15 @@ export const conversations = pgTable('conversations', {
 1. ✅ Filter ALL queries by `tenantId`
 2. ✅ JWT includes `tenant_id`
 3. ✅ Validate tenant access in middleware
-4. ❌ Never allow cross-tenant access
+4. ✅ Extensiones solo leen datos de su tenant
+5. ❌ Never allow cross-tenant access
+
+**Extension Sandbox:**
+1. ✅ Execute extensions in Workers (isolated)
+2. ✅ Timeout per extension (default 5s)
+3. ✅ Rate limiting per extension
+4. ✅ Validate enrichment schemas
+5. ❌ Never trust extension output without validation
 
 **SQL Injection Prevention:**
 ```typescript
@@ -402,102 +656,71 @@ await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 - ✅ Validate secrets exist on startup
 - ✅ Rotate secrets regularly
 
-## Logging (from ARCHITECTURE.md Section 8.4)
+---
 
-**Structured logs with emoji prefixes:**
-- 🔄 Processing
-- ✅ Success
-- ❌ Error
-- 📢 Broadcast
-- 💾 Persistence
-- 📥 Incoming
-- 📤 Outgoing
+## Extension Development Guide (Third-Party)
 
-**Use:** `utils/observability-logger.ts` for detailed tracing
+**Prerequisites:**
+- TypeScript knowledge
+- Understanding of INHOST MessageEnvelope contract
+- Access to Extension SDK (`@inhost/extension-sdk`)
 
-## Common Patterns
+**Steps:**
 
-### Creating a Message
+1. **Install SDK:**
+   ```bash
+   npm install @inhost/extension-sdk
+   ```
 
-```typescript
-import { v4 as uuidv4 } from 'uuid';
+2. **Implement IMessageExtension:**
+   ```typescript
+   import { IMessageExtension, ExtensionContext } from '@inhost/extension-sdk';
 
-const envelope: MessageEnvelopeV2 = {
-  id: uuidv4(),
-  type: 'outgoing',
-  channel: 'whatsapp',
-  content: {
-    text: 'Hello!',
-    contentType: 'text/plain',
-  },
-  metadata: {
-    from: 'agent-123',
-    to: 'customer-456',
-    timestamp: new Date().toISOString(),
-    conversationId: 'conv-789',
-    tenantId: user.tenantId,
-    ownerId: user.userId,
-  },
-  statusChain: [{
-    status: 'pending',
-    timestamp: new Date().toISOString(),
-    messageId: envelope.id,
-  }],
-  context: {
-    plan: 'premium',
-    timestamp: new Date().toISOString(),
-  },
-};
+   export class MyCustomExtension implements IMessageExtension {
+     id = 'my-custom-extension';
+     name = 'My Custom Extension';
+     version = '1.0.0';
+     publisher = 'YourCompany';
 
-await messageCore.send(envelope);
-```
+     getEnrichmentSchema() {
+       return {
+         extensionId: this.id,
+         version: this.version,
+         dataSchema: {
+           type: 'object',
+           properties: {
+             customField: { type: 'string' }
+           }
+         }
+       };
+     }
 
-### Querying with Tenant Isolation
+     async enrich(message, context) {
+       // Your logic here
+       return {
+         success: true,
+         data: { customField: 'value' }
+       };
+     }
+   }
+   ```
 
-```typescript
-import { db } from '@inhost/shared/database';
-import { eq, and } from 'drizzle-orm';
+3. **Test Locally:**
+   ```bash
+   npm run test:extension
+   ```
 
-const results = await db
-  .select()
-  .from(conversations)
-  .where(
-    and(
-      eq(conversations.tenantId, auth.tenantId),  // ALWAYS
-      eq(conversations.id, conversationId)
-    )
-  );
-```
+4. **Submit to Marketplace:**
+   - Package extension: `npm run build:extension`
+   - Submit via INHOST Developer Portal
+   - Aguardar aprobación (security review)
 
-## Contract Changes
+5. **Tenant Installation:**
+   - Tenant admin enables extension from marketplace
+   - Configure permissions and settings
+   - Extension runs automatically on new messages
 
-When modifying types in `packages/shared/src/types/`:
-
-1. Update backend type definition
-2. **Notify frontend team** (they must mirror manually)
-3. Document changes in commit message
-4. Test both sides together
-5. Consider backward compatibility
-
-## Documentation
-
-- **Architecture:** `docs/ARCHITECTURE.md` (1960 lines)
-- **Audit Report:** `docs/AUDIT-REPORT.md` (1748 lines)
-- **API Documentation:** `docs/API-DOCUMENTATION.md`
-- **Executive Summary:** `docs/EXECUTIVE-SUMMARY.md`
-
-## Deployment Checklist
-
-**Before deploying to production:**
-- [ ] Resolve merge conflicts
-- [ ] Implement DatabasePersistence
-- [ ] Choose ONE auth library
-- [ ] Configure JWT_SECRET (required)
-- [ ] Fix SQL injection vulnerabilities
-- [ ] Implement sanitizeForLogging
-- [ ] Run migrations: `bun run db:migrate`
-- [ ] Configure environment variables
-- [ ] Set up monitoring
+---
 
 ## Critical Rules Summary
 
@@ -507,149 +730,44 @@ When modifying types in `packages/shared/src/types/`:
 4. ✅ Use parameterized queries
 5. ✅ Validate JWT_SECRET on startup
 6. ✅ Implement DatabasePersistence before production
-7. ❌ Never use MemoryPersistence in production
-8. ❌ Never return data from other tenants
-9. ❌ Never skip auth on /admin/* routes
-10. ❌ Never use `db:push` in production
+7. ✅ Extensions enrich, never modify MessageEnvelopeCore
+8. ✅ Validate extension schemas before persisting
+9. ❌ Never use MemoryPersistence in production
+10. ❌ Never return data from other tenants
+11. ❌ Never skip auth on /admin/* routes
+12. ❌ Never use `db:push` in production
+13. ❌ Never trust extension output without validation
 
 **For cross-stack issues:** Coordinate with frontend team. Changes to MessageEnvelope, API contracts, or WebSocket events require synchronized updates.
 
 ---
 
-## Documentation System (SDT-SPEC-1.0)
+## Deployment Checklist
 
-**Status:** ✅ Production-ready (Sprint 3 + skeleton masivo completado)
-**Coverage:** 69/69 files documented (100.0%) ✅
+**Before deploying to production:**
+- [ ] Resolve merge conflicts
+- [ ] Implement DatabasePersistence
+- [ ] Implement DatabaseEnrichmentStore (v3.0)
+- [ ] Choose ONE auth library
+- [ ] Configure JWT_SECRET (required)
+- [ ] Fix SQL injection vulnerabilities
+- [ ] Implement sanitizeForLogging
+- [ ] Run migrations: `bun run db:migrate`
+- [ ] Configure environment variables
+- [ ] Set up monitoring
+- [ ] Configure extension sandbox (Workers)
+- [ ] Enable extension marketplace (if applicable)
 
-### Documented Files
+---
 
-**Location:** `docs/documented-files.json`
+## Documentation
 
-**Fully documented (Sprint 1-3):**
-1. **[apps/api-gateway/src/routes/index.ts](apps/api-gateway/src/routes/index.ts)** - Route aggregation
-2. **[apps/api-gateway/src/routes/admin/auth.ts](apps/api-gateway/src/routes/admin/auth.ts)** - Authentication routes
-3. **[apps/api-gateway/src/routes/websocket.ts](apps/api-gateway/src/routes/websocket.ts)** - Real-time WebSocket
-4. **[apps/api-gateway/src/middleware/auth.ts](apps/api-gateway/src/middleware/auth.ts)** - JWT authentication middleware
-5. **[apps/api-gateway/src/middleware/logger.ts](apps/api-gateway/src/middleware/logger.ts)** - HTTP logging middleware
-6. **[apps/api-gateway/src/services/index.ts](apps/api-gateway/src/services/index.ts)** - Service aggregator
-7. Plus 12 more files (see [docs/ai-context-backend.md](docs/ai-context-backend.md))
+- **Architecture:** `docs/ARCHITECTURE.md` (1960 lines)
+- **Audit Report:** `docs/AUDIT-REPORT.md` (1748 lines)
+- **API Documentation:** `docs/API-DOCUMENTATION.md`
+- **Extension Guide:** `docs/EXTENSION-DEVELOPMENT.md` (pending)
+- **Enrichment Architecture:** `../ENRICHMENT-ANALYSIS.md` (detailed design)
 
-**Skeleton generated (placeholders pending):**
-- [apps/api-gateway/src/index.ts](apps/api-gateway/src/index.ts) - Backend entry point
-- [apps/api-gateway/src/routes/health.ts](apps/api-gateway/src/routes/health.ts) - Health check endpoint
-- [apps/api-gateway/src/routes/messages.ts](apps/api-gateway/src/routes/messages.ts) - Messages API routes
-- [apps/api-gateway/src/routes/simulation.ts](apps/api-gateway/src/routes/simulation.ts) - Simulation API routes
-- [apps/api-gateway/src/middleware/timeout.ts](apps/api-gateway/src/middleware/timeout.ts) - Timeout middleware
-- [apps/api-gateway/src/middleware/validation.ts](apps/api-gateway/src/middleware/validation.ts) - Request validation
-- [apps/api-gateway/src/middleware/rateLimiting.ts](apps/api-gateway/src/middleware/rateLimiting.ts) - Rate limiting
-- [packages/shared/src/index.ts](packages/shared/src/index.ts) - Shared package exports
-- [packages/shared/src/database/db.ts](packages/shared/src/database/db.ts) - Database connection
-- [packages/shared/src/database/config.ts](packages/shared/src/database/config.ts) - Database configuration
+---
 
-### Architecture Overview
-
-**Location:** [docs/architecture-overview.md](docs/architecture-overview.md)
-
-Provides:
-- Complete architecture map of documented files
-- Dependency graph and integration points
-- Layer-domain matrix
-- Critical issues from audit report
-
-### Using Documentation System
-
-**Scripts:** See `../documentation-scripts/README.md`
-
-```bash
-# Validate documentation format
-cd ../documentation-scripts
-npm run validate:backend
-
-# Generate AI context
-npm run context:backend
-
-# Coverage reports (Sprint 3)
-npm run coverage:backend    # List documented/undocumented files
-
-# Analyze dependencies and impact
-npm run analyze:backend
-```
-
-**Dead Code Detection (Professional Tools - Sprint 3):**
-```bash
-cd inhost-backend/
-
-# Run professional tools
-bun run deadcode:all        # ts-prune + unimported
-bun run deadcode:exports    # Unused TypeScript exports
-bun run deadcode:files      # Files without imports
-bun run deadcode:deps       # Unused npm dependencies
-```
-
-**Tools installed:**
-- **ts-prune** - Detects unused exports (75% more accurate than custom scripts)
-- **unimported** - Detects files without imports
-- **depcheck** - Detects unused npm dependencies
-
-### Documentation Format
-
-All critical files include structured metadata at the top:
-
-```typescript
-/**
- * === DOC_START :: VERSION=1.0 :: TYPE=FILE_DOCUMENTATION ===
- *
- * IDENTITY:
- *   file: "apps/api-gateway/src/routes/example.ts"
- *   type: "controller|service|model|utility"
- *   layer: "backend"
- *   domain: "api|auth|sync|database|config"
- *   purpose: "Brief description"
- *
- * DEPENDENCIES:
- *   internal: ["@inhost/shared", "../middleware/auth"]
- *   external: ["elysia", "drizzle-orm"]
- *   infrastructure: ["postgresql", "jwt", "websocket"]
- *
- * CONTRACTS:
- *   exports: ["routes", "handler"]
- *   inputs: ["RequestType", "BodyType"]
- *   outputs: ["ApiResponse", "WebSocketEvent"]
- *   errors: ["VALIDATION_ERROR", "UNAUTHORIZED"]
- *
- * INTEGRATION:
- *   data_flow: "[HTTP] → [middleware] → [controller] → [service] → [DB]"
- *   events_emitted: ["message_received", "status_update"]
- *   events_consumed: ["client_message"]
- *
- * IMPACT:
- *   used_by: ["routes/index.ts"]
- *   uses: ["services/auth", "middleware/logger"]
- *   critical: true|false
- *
- * === DOC_END :: example.ts ===
- */
-```
-
-### Benefits for AI Context
-
-- **70% token reduction** - Only load relevant context
-- **Impact analysis** - Understand change consequences before making them
-- **Dependency tracking** - Clear service and middleware relationships
-- **Cross-reference** - Find related files and audit issues quickly
-
-### Integration with Audit Report
-
-Documentation includes references to critical issues from [docs/AUDIT-REPORT.md](docs/AUDIT-REPORT.md):
-
-- P0 blockers (merge conflicts, MemoryPersistence, JWT_SECRET)
-- Security vulnerabilities (SQL injection, auth issues)
-- Architecture improvements needed
-
-### Next Steps
-
-- [ ] Document remaining high-priority files (services, middleware)
-- [ ] Integrate validation in CI/CD pipeline
-- [ ] Generate context for specific debugging tasks
-- [ ] Maintain documentation as code evolves
-- [ ] Link audit findings to specific files
+**This is the BACKEND monorepo.** Frontend lives at `../inhost-frontend/` as a completely separate monorepo.

@@ -14,7 +14,7 @@
  *   infrastructure: ["redis"]
  *
  * CONTRACTS:
- *   exports: ["adapterManager", "rateLimiter", "messageQueue", "validator", "persistence", "notifications", "planResolver", "ownerChecker", "messageCore", "initializeServices", "shutdownServices"]
+ *   exports: ["adapterManager", "rateLimiter", "messageQueue", "validator", "persistence", "notifications", "planResolver", "ownerChecker", "messageCore", "extensionHost", "initializeServices", "shutdownServices"]
  *   inputs: []
  *   outputs: ["ServiceSingletons"]
  *   errors: []
@@ -64,6 +64,11 @@ import { MessageCore } from '../core/MessageCore';
 import { logger } from '../middleware/logger';
 import { shouldUseRedis, checkRedisConnection } from '../config/redis';
 import { startAuthRateLimitCleanup } from '../middleware/auth-rate-limit';
+import {
+  ExtensionHost,
+  SentimentExtension,
+  KeywordExtension,
+} from '../extensions';
 
 /**
  * Adapter Manager - Gestión centralizada de adaptadores
@@ -122,6 +127,12 @@ export const messageCore = new MessageCore(
 );
 
 /**
+ * Extension Host - Orquestador de extensiones
+ * Gestiona el ciclo de vida y ejecución de extensiones de enriquecimiento
+ */
+export const extensionHost = new ExtensionHost();
+
+/**
  * Inicializar todos los servicios
  */
 export async function initializeServices(): Promise<void> {
@@ -166,6 +177,10 @@ export async function initializeServices(): Promise<void> {
   // 7. Configurar queue auto-reset
   messageQueue.startAutoReset();
 
+  // 8. Inicializar Extension Host con extensiones builtin
+  extensionHost.register(new SentimentExtension());
+  extensionHost.register(new KeywordExtension());
+
   logger.info('✅ Services initialized successfully', {
     adapters: ['whatsapp', 'telegram', 'sms'],
     rateLimiter: usingRedis ? 'RedisRateLimiter (V2)' : 'MemoryRateLimiter (V1)',
@@ -175,7 +190,8 @@ export async function initializeServices(): Promise<void> {
     notifications: 'WebSocketNotification (V1)',
     planResolver: 'SimplePlanResolver (V1)',
     ownerChecker: 'ConnectionOwnerChecker (V1)',
-    messageCore: 'MessageCore (initialized)'
+    messageCore: 'MessageCore (initialized)',
+    extensionHost: `ExtensionHost (${extensionHost.getStats().totalExtensions} extensions)`
   });
 
   // Health check inicial
@@ -189,6 +205,14 @@ export async function initializeServices(): Promise<void> {
   // Stats de MessageCore
   const coreStats = await messageCore.getStats();
   logger.info('📊 MessageCore stats', coreStats);
+
+  // Stats de ExtensionHost
+  const extStats = extensionHost.getStats();
+  logger.info('🧩 ExtensionHost stats', { ...extStats });
+
+  // Health check de extensiones
+  const extHealth = await extensionHost.healthCheck();
+  logger.info('🏥 Extensions health check', Object.fromEntries(extHealth));
 }
 
 /**
