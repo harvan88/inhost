@@ -146,6 +146,9 @@ export class SimulatedTelegramAdapter implements IAdapter {
   }
 
   createIncomingMessage(text: string, from?: string): MessageEnvelope {
+    const sender = from || this.metadata.username;
+    const conversationId = this.generateConsistentUuid(sender, 'conversation');
+    
     return {
       id: crypto.randomUUID(),
       type: MessageType.INCOMING,
@@ -154,9 +157,10 @@ export class SimulatedTelegramAdapter implements IAdapter {
         text
       },
       metadata: {
-        from: from || this.metadata.username,
+        from: sender,
         to: 'inhost',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        conversationId,
       },
       statusChain: [
         {
@@ -166,9 +170,31 @@ export class SimulatedTelegramAdapter implements IAdapter {
         }
       ],
       context: {
-        plan: 'free'
+        plan: 'free',
+        sessionId: `telegram-${sender}`,
+        deviceId: 'telegram-simulator',
+        userAgent: 'Telegram Simulator',
+        ipAddress: '127.0.0.1',
       }
     };
+  }
+
+  private generateConsistentUuid(input: string, prefix: string): string {
+    const str = `${prefix}-${input}`;
+    let hash1 = 0;
+    let hash2 = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash1 = ((hash1 << 5) - hash1) + char;
+      hash1 = hash1 & hash1;
+      hash2 = ((hash2 << 3) + hash2) ^ char;
+      hash2 = hash2 & hash2;
+    }
+    const hex1 = Math.abs(hash1).toString(16).padStart(8, '0');
+    const hex2 = Math.abs(hash2).toString(16).padStart(8, '0');
+    const hex3 = Math.abs(hash1 ^ hash2).toString(16).padStart(8, '0');
+    const hex4 = Math.abs(hash1 + hash2).toString(16).padStart(8, '0');
+    return `${hex1}-${hex2.substring(0, 4)}-4${hex3.substring(1, 4)}-a${hex4.substring(1, 4)}-${hex2.substring(4)}${hex3}`.substring(0, 36);
   }
 
   toggleConnection(): boolean {

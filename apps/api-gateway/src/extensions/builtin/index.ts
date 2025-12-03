@@ -34,3 +34,4 @@
 
 export { SentimentExtension } from './SentimentExtension';
 export { KeywordExtension } from './KeywordExtension';
+export { FluxCoreExtension } from './FluxCoreExtension';

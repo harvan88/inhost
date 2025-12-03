@@ -40,8 +40,8 @@
  */
 
 import { Elysia, t } from 'elysia';
-import { eq, and } from 'drizzle-orm';
-import { db, messages, conversations } from '@inhost/shared';
+import { eq, and, inArray } from 'drizzle-orm';
+import { db, messages, conversations, messageEnrichments } from '@inhost/shared';
 import { createSuccessResponse, createErrorResponse } from '../../types/api';
 import { requireAuth } from '../../middleware/auth';
 import { httpLogger } from '../../middleware/logger';
@@ -130,6 +130,52 @@ export const adminMessagesRoutes = new Elysia({ prefix: '/admin/messages' })
       detail: {
         summary: 'Update Message Status',
         description: 'Update the delivery status of a message',
+        tags: ['Admin Messages'],
+      },
+    }
+  )
+
+  // GET /admin/messages/enrichments - Get enrichments for multiple messages
+  .get(
+    '/enrichments',
+    async ({ user, query, error }) => {
+      const { messageIds } = query;
+
+      if (!messageIds) {
+        return error(400, createErrorResponse('MISSING_PARAM', 'messageIds is required'));
+      }
+
+      try {
+        const ids = messageIds.split(',').filter(Boolean);
+
+        if (ids.length === 0) {
+          return createSuccessResponse({ enrichments: [] });
+        }
+
+        // Fetch enrichments for the given message IDs (limited to tenant)
+        const enrichments = await db
+          .select()
+          .from(messageEnrichments)
+          .where(
+            and(
+              inArray(messageEnrichments.messageId, ids),
+              eq(messageEnrichments.tenantId, user.tenantId)
+            )
+          );
+
+        return createSuccessResponse({ enrichments });
+      } catch (err: any) {
+        console.error('Get enrichments error:', err);
+        return error(500, createErrorResponse('FETCH_FAILED', 'Failed to fetch enrichments'));
+      }
+    },
+    {
+      query: t.Object({
+        messageIds: t.String({ description: 'Comma-separated message IDs' }),
+      }),
+      detail: {
+        summary: 'Get Message Enrichments',
+        description: 'Get enrichments (sentiment, keywords) for multiple messages',
         tags: ['Admin Messages'],
       },
     }

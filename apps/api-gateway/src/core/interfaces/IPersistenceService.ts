@@ -44,7 +44,7 @@
  * - V3: Multi-región con replicación
  */
 
-import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
+import type { MessageEnvelopeV2 as MessageEnvelope, NewMessageEnrichment } from '@inhost/shared';
 import { MessageStatus } from '@inhost/shared';
 
 export interface PersistenceResult {
@@ -108,4 +108,9 @@ export interface IPersistenceService {
     byStatus: Record<string, number>;
     storage: string;
   }>;
+
+  /**
+   * Guarda enrichments producidos por extensiones
+   */
+  saveEnrichments(enrichments: NewMessageEnrichment[]): Promise<void>;
 }

@@ -33,37 +33,40 @@
  */
 
 import { Elysia, t } from 'elysia';
+import { MessageChannel } from '@inhost/shared';
 import { logger } from '../middleware/logger';
 import { createSuccessResponse } from '../types/api';
 import {
-  createClientMessage,
   toggleClientConnection,
   getClientsStatus
 } from '../simulators/clients';
-import {
-  processMessageThroughExtensions,
-  toggleExtension,
-  getExtensionsStatus,
-  setExtensionLatency
-} from '../simulators/extensions';
-import { messageCore } from '../services';
+
+// NOTA: Extensiones simuladas ELIMINADAS
+// Las extensiones reales se ejecutan vía ExtensionHost en MessageCore.receive()
+// import { processMessageThroughExtensions, ... } from '../simulators/extensions';
+import { messageCore, adapterManager, extensionHost } from '../services';
 
 /**
  * Rutas de Simulación (Production-Ready)
  *
- * Endpoints para simular el flujo completo de mensajería con persistencia real:
- * - Mensajes entrantes de clientes → MessageCore.receive() → PostgreSQL + WebSocket
- * - Procesamiento por extensiones → Respuestas simuladas
- * - Respuestas de extensiones → MessageCore.send() → PostgreSQL + Adapter + WebSocket
+ * Endpoints para simular el flujo completo de mensajería con persistencia REAL:
+ * 
+ * FLUJO CORRECTO:
+ * 1. POST /simulate/client-message → Adapter crea MessageEnvelope
+ * 2. messageCore.receive() ejecuta:
+ *    - Persiste en PostgreSQL (VERIFICADO, retorna resultado real)
+ *    - Broadcast vía WebSocket (message:new)
+ *    - Procesa extensiones REALES (ExtensionHost → enrichments)
+ *    - Actualiza estado
+ * 3. Retorna resultado REAL de persistencia (no hardcodeado)
  *
- * FLUJO COMPLETO:
- * 1. POST /simulate/client-message → Crea mensaje del cliente
- * 2. messageCore.receive() → Persiste + Notifica (message:new)
- * 3. processMessageThroughExtensions() → Genera respuestas
- * 4. messageCore.send() para cada respuesta → Persiste + Envía + Notifica
- * 5. Broadcast eventos de control (message_processing, extension_response)
- *
- * Este sistema está listo para coordinarse con un chat real en producción.
+ * ARQUITECTURA:
+ * - Adapters: Traducen mensajes de plataforma a MessageEnvelope
+ * - MessageCore: Orquestador "tonto" que persiste y notifica
+ * - ExtensionHost: Ejecuta extensiones reales (FluxCore, Sentiment, Keywords)
+ * - PostgreSQL: Persistencia permanente (source of truth)
+ * - WebSocket: Notificaciones en tiempo real
+ * - Frontend IndexedDB: Reflejo local (cache)
  */
 
 // Variable para almacenar el WebSocket broadcast function (se inyectará desde websocket.ts)
@@ -84,82 +87,83 @@ export const simulationRoutes = new Elysia({ prefix: '/simulate' })
       });
 
       try {
-        // 1. Crear mensaje del cliente
-        const clientMessage = createClientMessage(body.clientId, body.text);
-        logger.debug('Client message created', { messageId: clientMessage.id });
+        // 1. Determinar canal a partir del clientId simulado
+        // Formato esperado: "whatsapp:sim-user-001", "telegram:user123", etc.
+        const [channelPrefix] = body.clientId.split(':');
+        const channelMap: Record<string, MessageChannel> = {
+          whatsapp: MessageChannel.WHATSAPP,
+          telegram: MessageChannel.TELEGRAM,
+          web: MessageChannel.WEB,
+          sms: MessageChannel.SMS,
+        };
 
-        // 2. Recibir mensaje a través de MessageCore
-        // Esto automáticamente:
-        // - Persiste en PostgreSQL
-        // - Broadcast vía WebSocketNotification (message:new)
-        // - Actualiza estado a 'received'
-        await messageCore.receive(clientMessage);
-        logger.info('✅ Message received through MessageCore', {
-          messageId: clientMessage.id
-        });
+        const channel = channelMap[channelPrefix] ?? MessageChannel.WHATSAPP;
 
-        // 3. Procesar a través de extensiones
-        const extensionResponses = await processMessageThroughExtensions(clientMessage);
-        logger.debug('Extensions processed', {
-          count: extensionResponses.length
-        });
+        // 2. Obtener el adapter correspondiente (simulado en este entorno)
+        const adapter = adapterManager.getAdapter(channel);
+        if (!adapter) {
+          logger.error('No adapter registered for simulated channel', {
+            channel,
+            clientId: body.clientId,
+          });
+          throw new Error(`No adapter registered for channel: ${channel}`);
+        }
 
-        // Broadcast manual: procesamiento iniciado (evento de control)
-        broadcastToAll?.({
-          type: 'message_processing',
+        // 3. Usar receiveMessage del adapter para traducir desde el mensaje de plataforma
+        //    En este caso, el "platformMessage" es un objeto mínimo con text/from,
+        //    similar a un webhook real de WhatsApp/Telegram/SMS.
+        const platformMessage = {
+          text: body.text,
+          from: body.clientId,
+        };
+
+        const clientMessage = await adapter.receiveMessage(platformMessage);
+        logger.debug('Client message created via adapter', {
           messageId: clientMessage.id,
-          extensionCount: extensionResponses.length,
+          channel: clientMessage.channel,
+        });
+
+        // 4. Recibir mensaje a través de MessageCore
+        // Esto automáticamente:
+        // - Persiste en PostgreSQL (VERIFICADO)
+        // - Broadcast vía WebSocketNotification (message:new)
+        // - Procesa extensiones REALES (ExtensionHost)
+        // - Actualiza estado a 'received'
+        const receiveResult = await messageCore.receive(clientMessage);
+        
+        logger.info('📊 MessageCore.receive result', {
+          messageId: clientMessage.id,
+          channel: clientMessage.channel,
+          persisted: receiveResult.persisted,
+          error: receiveResult.error
+        });
+
+        // Broadcast evento de procesamiento completado
+        broadcastToAll?.({
+          type: 'message_received',
+          messageId: clientMessage.id,
+          persisted: receiveResult.persisted,
+          error: receiveResult.error,
           timestamp: new Date().toISOString()
         });
 
-        // 4. Enviar cada respuesta de extensión a través de MessageCore
-        // Esto automáticamente:
-        // - Persiste en PostgreSQL
-        // - Envía vía adapter
-        // - Broadcast vía WebSocketNotification
-        // - Actualiza estado a 'sent'
-        const sendResults = [];
-        for (const response of extensionResponses) {
-          const result = await messageCore.send(response);
-          sendResults.push(result);
-
-          logger.debug('Extension response sent through MessageCore', {
-            extensionId: response.metadata.extensionId,
-            success: result.success,
-            status: result.status
-          });
-
-          // Broadcast manual: evento de control de extensión
-          broadcastToAll?.({
-            type: 'extension_response',
-            extensionId: response.metadata.extensionId,
-            messageId: response.id,
-            success: result.success,
-            timestamp: new Date().toISOString()
-          });
-        }
-
+        // Retornar resultado REAL (no hardcodeado)
         return createSuccessResponse({
-          clientMessage: {
+          message: {
             id: clientMessage.id,
             type: clientMessage.type,
             channel: clientMessage.channel,
             text: clientMessage.content.text,
-            persisted: true
+            conversationId: clientMessage.metadata?.conversationId
           },
-          extensionResponses: sendResults.map((result, i) => ({
-            extensionId: extensionResponses[i].metadata.extensionId,
-            messageId: result.messageId,
-            success: result.success,
-            status: result.status,
-            persisted: true
-          })),
-          processedCount: extensionResponses.length,
-          summary: {
-            clientMessagePersisted: true,
-            extensionResponsesSent: sendResults.filter(r => r.success).length,
-            totalExtensions: extensionResponses.length
-          }
+          persistence: {
+            success: receiveResult.persisted,
+            error: receiveResult.error,
+            storage: 'postgresql'
+          },
+          // Nota: Las extensiones REALES (FluxCore, Sentiment, Keywords) 
+          // se procesan dentro de messageCore.receive() y generan enrichments
+          // que se persisten automáticamente
         });
       } catch (error) {
         logger.error('❌ Error simulating client message', {
@@ -181,45 +185,8 @@ export const simulationRoutes = new Elysia({ prefix: '/simulate' })
     }
   )
 
-  // POST /simulate/extension-toggle - Activar/desactivar extensión
-  .post(
-    '/extension-toggle',
-    async ({ body }) => {
-      logger.info('Toggling extension', { extensionId: body.extensionId });
-
-      try {
-        const isActive = toggleExtension(body.extensionId);
-
-        // Broadcast cambio de estado
-        broadcastToAll?.({
-          type: 'extension_toggle',
-          extensionId: body.extensionId,
-          active: isActive,
-          timestamp: new Date().toISOString()
-        });
-
-        return createSuccessResponse({
-          extensionId: body.extensionId,
-          active: isActive
-        });
-      } catch (error) {
-        logger.error('Error toggling extension', {
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-        throw error;
-      }
-    },
-    {
-      body: t.Object({
-        extensionId: t.String()
-      }),
-      detail: {
-        summary: 'Toggle extension',
-        description: 'Activa o desactiva una extensión simulada',
-        tags: ['Simulation']
-      }
-    }
-  )
+  // NOTA: /extension-toggle ELIMINADO
+  // Las extensiones reales se gestionan vía ExtensionHost, no simuladores
 
   // POST /simulate/client-toggle - Conectar/desconectar cliente
   .post(
@@ -267,64 +234,37 @@ export const simulationRoutes = new Elysia({ prefix: '/simulate' })
     async () => {
       logger.debug('Getting simulation status');
 
+      // Clientes simulados (adapters)
       const clients = getClientsStatus();
-      const extensions = getExtensionsStatus();
+      const connectedClients = clients.filter((c: { connected: boolean }) => c.connected).length;
 
-      const activeExtensions = extensions.filter(e => e.active).length;
-      const connectedClients = clients.filter(c => c.connected).length;
+      // Extensiones REALES del ExtensionHost
+      const realExtensions = extensionHost.listExtensions();
+      const extStats = extensionHost.getStats();
 
       return createSuccessResponse({
         clients,
-        extensions,
+        extensions: {
+          registered: realExtensions,
+          stats: extStats
+        },
         stats: {
-          activeExtensions,
           connectedClients,
           totalClients: clients.length,
-          totalExtensions: extensions.length
+          totalExtensions: extStats.totalExtensions,
+          extensionsProcessed: extStats.totalProcessed,
+          extensionErrors: extStats.totalErrors
         }
       });
     },
     {
       detail: {
         summary: 'Get simulation status',
-        description: 'Obtiene el estado de todos los simuladores',
-        tags: ['Simulation']
-      }
-    }
-  )
-
-  // PATCH /simulate/extension-latency - Actualizar latencia de extensión
-  .patch(
-    '/extension-latency',
-    async ({ body }) => {
-      logger.info('Updating extension latency', {
-        extensionId: body.extensionId,
-        latency: body.latency
-      });
-
-      try {
-        setExtensionLatency(body.extensionId, body.latency);
-
-        return createSuccessResponse({
-          extensionId: body.extensionId,
-          latency: body.latency
-        });
-      } catch (error) {
-        logger.error('Error updating extension latency', {
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-        throw error;
-      }
-    },
-    {
-      body: t.Object({
-        extensionId: t.String(),
-        latency: t.Number({ minimum: 0, maximum: 5000 })
-      }),
-      detail: {
-        summary: 'Update extension latency',
-        description: 'Actualiza la latencia simulada de una extensión',
+        description: 'Obtiene el estado de clientes simulados y extensiones reales',
         tags: ['Simulation']
       }
     }
   );
+
+  // NOTA: /extension-latency ELIMINADO
+  // Las extensiones reales no tienen latencia simulada configurable

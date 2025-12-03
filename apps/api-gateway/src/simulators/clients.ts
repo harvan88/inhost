@@ -32,8 +32,8 @@
  * === DOC_END :: clients.ts ===
  */
 
-import { MessageChannel, MessageType } from '@inhost/shared';
-import type { MessageEnvelope } from '@inhost/shared';
+import { MessageChannel, MessageType, MessageStatus } from '@inhost/shared';
+import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
 
 /**
  * Simuladores de Clientes
@@ -101,53 +101,111 @@ export const simulatedClients: Record<string, SimulatedClient> = {
 };
 
 /**
- * Crea un MessageEnvelope desde un cliente simulado
+ * Parsea un clientId dinámico con formato "channel:userId" o usa uno predefinido
+ */
+function parseClientId(clientId: string): { channel: MessageChannel; userId: string; phone: string } {
+  // Formato dinámico: "whatsapp:sim-user-001" o "telegram:user123"
+  if (clientId.includes(':')) {
+    const [channelStr, userId] = clientId.split(':');
+    const channelMap: Record<string, MessageChannel> = {
+      whatsapp: MessageChannel.WHATSAPP,
+      telegram: MessageChannel.TELEGRAM,
+      web: MessageChannel.WEB,
+      sms: MessageChannel.SMS,
+    };
+    const channel = channelMap[channelStr] || MessageChannel.WEB;
+    return {
+      channel,
+      userId,
+      phone: `+1${userId.replace(/\D/g, '').slice(0, 10).padEnd(10, '0')}`,
+    };
+  }
+  
+  // Formato legacy: "whatsapp", "telegram", etc.
+  const client = simulatedClients[clientId];
+  if (client) {
+    return {
+      channel: client.channel,
+      userId: client.id,
+      phone: client.metadata.phone || client.metadata.username || 'unknown',
+    };
+  }
+  
+  // Default: web
+  return {
+    channel: MessageChannel.WEB,
+    userId: clientId,
+    phone: clientId,
+  };
+}
+
+/**
+ * Crea un MessageEnvelope desde un cliente simulado (dinámico o predefinido)
  */
 export function createClientMessage(
   clientId: string,
   text: string
 ): MessageEnvelope {
-  const client = simulatedClients[clientId];
-
-  if (!client) {
-    throw new Error(`Cliente no encontrado: ${clientId}`);
-  }
-
-  if (!client.connected && clientId !== 'web') {
-    throw new Error(`Cliente no conectado: ${clientId}`);
-  }
+  const { channel, userId, phone } = parseClientId(clientId);
+  
+  // Para simulación: generar UUIDs consistentes pero válidos para la BD
+  // Usar hash del userId para generar siempre el mismo UUID para el mismo usuario
+  const tenantId = 'default-tenant'; // Tenant fijo para simulación
+  const endUserId = generateConsistentUuid(userId, 'enduser');
+  const conversationId = generateConsistentUuid(userId, 'conversation');
 
   const envelope: MessageEnvelope = {
     id: crypto.randomUUID(),
-    conversationId: `conv-${client.channel}-${Date.now()}`,
     type: MessageType.INCOMING as MessageType,
-    channel: client.channel,
+    channel,
     content: {
-      text,
-      contentType: 'text'
+      text
     },
     metadata: {
-      from: client.metadata.phone || client.metadata.username || 'unknown',
+      from: phone,
       to: 'inhost',
       timestamp: new Date().toISOString(),
-      clientId: client.id,
-      ...client.metadata
+      conversationId, // Aquí va el conversationId según MessageEnvelopeV2
     },
     statusChain: [
       {
-        status: 'received',
+        status: MessageStatus.RECEIVED,
         timestamp: new Date().toISOString(),
         messageId: crypto.randomUUID()
       }
     ],
     context: {
       plan: 'free',
-      timestamp: new Date().toISOString(),
-      source: 'simulator'
+      sessionId: `sim-${userId}`,
+      deviceId: 'simulator',
+      userAgent: 'FluxCore Simulator',
+      ipAddress: '127.0.0.1',
     }
   };
 
   return envelope;
+}
+
+/**
+ * Genera un UUID v4 consistente a partir de un string y un prefijo
+ * Formato: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx (36 caracteres)
+ */
+function generateConsistentUuid(input: string, prefix: string): string {
+  const str = `${prefix}-${input}`;
+  let hash1 = 0;
+  let hash2 = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash1 = ((hash1 << 5) - hash1) + char;
+    hash1 = hash1 & hash1;
+    hash2 = ((hash2 << 3) + hash2) ^ char;
+    hash2 = hash2 & hash2;
+  }
+  const hex1 = Math.abs(hash1).toString(16).padStart(8, '0');
+  const hex2 = Math.abs(hash2).toString(16).padStart(8, '0');
+  const hex3 = Math.abs(hash1 ^ hash2).toString(16).padStart(8, '0');
+  const hex4 = Math.abs(hash1 + hash2).toString(16).padStart(8, '0');
+  return `${hex1}-${hex2.substring(0, 4)}-4${hex3.substring(1, 4)}-a${hex4.substring(1, 4)}-${hex2.substring(4)}${hex3}`.substring(0, 36);
 }
 
 /**

@@ -47,7 +47,7 @@
  * Es autónomo pero no aislado - se comunica mediante contratos claros.
  */
 
-import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
+import type { MessageEnvelopeV2 as MessageEnvelope, NewMessageEnrichment } from '@inhost/shared';
 import { MessageStatus, MessageType } from '@inhost/shared';
 import type {
   IPersistenceService,
@@ -101,10 +101,10 @@ export class MessageCore {
   }
 
   /**
-   * Recibe mensaje entrante desde cualquier fuente
-   * (adapter, UI, extensión)
+   * Recibe mensaje entrante desde cualquier fuente (adapter, UI)
+   * Retorna el resultado de la persistencia para que el caller sepa si tuvo éxito
    */
-  async receive(envelope: MessageEnvelope): Promise<void> {
+  async receive(envelope: MessageEnvelope): Promise<{ persisted: boolean; error?: string }> {
     logger.info('📥 MessageCore: Receiving message', {
       id: envelope.id,
       type: envelope.type,
@@ -112,11 +112,14 @@ export class MessageCore {
       from: envelope.metadata?.from
     });
 
+    let persisted = false;
+
     try {
       // 1. Persistir inmediatamente (garantía local)
       if (this.config.enablePersistence) {
         await this.persistence.save(envelope);
-        logger.debug('💾 Message persisted', { id: envelope.id });
+        persisted = true;
+        logger.info('💾 Message persisted successfully', { id: envelope.id });
       }
 
       // 2. Notificar a interesados (WebSocket, etc.)
@@ -131,19 +134,33 @@ export class MessageCore {
       }
 
       // 4. Procesar extensiones (solo mensajes entrantes)
+      console.log('🔍 Checking extension processing', {
+        enableExtensions: this.config.enableExtensions,
+        hasExtensionHost: !!this.extensionHost,
+        isIncoming: envelope.type === MessageType.INCOMING,
+        messageId: envelope.id
+      });
+      
       if (this.config.enableExtensions && this.extensionHost && envelope.type === MessageType.INCOMING) {
+        console.log('🚀 Processing extensions for message', { messageId: envelope.id });
         await this.processExtensions(envelope);
       }
 
       logger.info('✅ MessageCore: Message received successfully', {
-        id: envelope.id
+        id: envelope.id,
+        persisted
       });
+
+      return { persisted };
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('❌ MessageCore: Error receiving message', {
         id: envelope.id,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage
       });
-      throw error;
+
+      // Retornar error en vez de throw para que el endpoint pueda informar al cliente
+      return { persisted: false, error: errorMessage };
     }
   }
 
@@ -293,18 +310,22 @@ export class MessageCore {
    * Construye ExtensionContext y llama al ExtensionHost
    */
   private async processExtensions(envelope: MessageEnvelope): Promise<void> {
-    if (!this.extensionHost) return;
+    console.log('🎯 processExtensions called', { messageId: envelope.id });
+    if (!this.extensionHost) {
+      console.log('❌ No extension host');
+      return;
+    }
 
     const startTime = Date.now();
 
     try {
       // Construir ExtensionContext desde MessageEnvelope
       const context: ExtensionContext = {
-        tenantId: envelope.metadata?.tenantId || 'default',
+        tenantId: 'default', // tenantId no existe en metadata, usar valor por defecto
         messageId: envelope.id,
         conversationId: envelope.metadata?.conversationId || envelope.id,
         text: envelope.content?.text || '',
-        contentType: envelope.content?.type || 'text/plain',
+        contentType: 'text/plain', // type no existe en content, usar valor por defecto
         channel: envelope.channel,
         type: envelope.type === MessageType.INCOMING ? 'incoming' : 'outgoing',
         from: envelope.metadata?.from || '',
@@ -312,7 +333,7 @@ export class MessageCore {
         timestamp: envelope.metadata?.timestamp || new Date().toISOString(),
       };
 
-      logger.debug('🧩 Processing extensions for message', {
+      console.log('🧩 Processing extensions for message', {
         messageId: envelope.id,
         tenantId: context.tenantId,
       });
@@ -320,24 +341,43 @@ export class MessageCore {
       // Ejecutar extensiones
       const result: ProcessingResult = await this.extensionHost.processMessage(context);
 
-      logger.info('🧩 Extensions processed', {
+      console.log('🧩 Extensions processed', {
         messageId: envelope.id,
         enrichmentCount: result.enrichments.length,
         errorCount: result.errors.length,
         totalTimeMs: result.totalTimeMs,
       });
 
-      // Broadcast enrichments si hay resultados
-      if (result.enrichments.length > 0 && this.config.enableNotifications) {
-        await this.notifications.broadcastEnrichments({
+      // Persistir y broadcast enrichments si hay resultados
+      if (result.enrichments.length > 0) {
+        // 1. Mapear a formato de BD
+        const dbEnrichments: NewMessageEnrichment[] = result.enrichments.map((e) => ({
           messageId: envelope.id,
-          enrichments: result.enrichments,
-          processingTimeMs: result.totalTimeMs,
-        });
-        logger.debug('📢 Enrichments broadcasted', {
-          messageId: envelope.id,
-          count: result.enrichments.length,
-        });
+          tenantId: context.tenantId,
+          extensionId: e.extensionId,
+          type: e.type as any,
+          payload: e.payload,
+          confidence: e.confidence,
+          processingTimeMs: e.processingTimeMs,
+        }));
+
+        // 2. Persistir en PostgreSQL
+        if (this.config.enablePersistence) {
+          await this.persistence.saveEnrichments(dbEnrichments);
+        }
+
+        // 3. Broadcast via WebSocket
+        if (this.config.enableNotifications) {
+          await this.notifications.broadcastEnrichments({
+            messageId: envelope.id,
+            enrichments: result.enrichments,
+            processingTimeMs: result.totalTimeMs,
+          });
+          logger.debug('📢 Enrichments persisted and broadcasted', {
+            messageId: envelope.id,
+            count: result.enrichments.length,
+          });
+        }
       }
 
       // Log errores si los hay

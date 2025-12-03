@@ -47,7 +47,7 @@
  * V3 agregará replicación multi-región
  */
 
-import type { MessageEnvelopeV2 as MessageEnvelope } from '@inhost/shared';
+import type { MessageEnvelopeV2 as MessageEnvelope, NewMessageEnrichment } from '@inhost/shared';
 import { MessageStatus } from '@inhost/shared';
 import type {
   IPersistenceService,
@@ -236,6 +236,15 @@ export class MemoryPersistence implements IPersistenceService {
       byStatus,
       storage: 'memory'
     };
+  }
+
+  /**
+   * Guarda enrichments (V1: no-op, no hay DB)
+   */
+  async saveEnrichments(_enrichments: NewMessageEnrichment[]): Promise<void> {
+    // V1: No persistimos enrichments en memoria
+    // V2: Los guarda en PostgreSQL
+    logger.debug('🧩 MemoryPersistence: saveEnrichments (V1 - noop)');
   }
 
   /**

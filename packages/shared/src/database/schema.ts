@@ -223,10 +223,10 @@ export const messageReads = pgTable('message_reads', {
 export const messageEnrichments = pgTable('message_enrichments', {
   id: uuid('id').primaryKey().defaultRandom(),
   messageId: uuid('message_id').references(() => messages.id, { onDelete: 'cascade' }).notNull(),
-  tenantId: uuid('tenant_id').references(() => tenants.id).notNull(),
+  tenantId: varchar('tenant_id', { length: 100 }).notNull().default('default'), // String para flexibilidad
   extensionId: varchar('extension_id', { length: 100 }).notNull(), // ID de la extensión que lo produjo
   type: varchar('type', { 
-    enum: ['sentiment', 'keywords', 'intent', 'ai_suggestion', 'entity_extraction', 'language_detection', 'priority_score', 'custom'] 
+    enum: ['sentiment', 'keywords', 'intent', 'ai_suggestion', 'ai_response', 'entity_extraction', 'language_detection', 'priority_score', 'custom'] 
   }).notNull(),
   payload: jsonb('payload').notNull(), // Datos específicos del enriquecimiento
   confidence: real('confidence'), // 0.0 - 1.0
@@ -348,10 +348,7 @@ export const messageEnrichmentsRelations = relations(messageEnrichments, ({ one 
     fields: [messageEnrichments.messageId],
     references: [messages.id],
   }),
-  tenant: one(tenants, {
-    fields: [messageEnrichments.tenantId],
-    references: [tenants.id],
-  }),
+  // tenantId ya no es FK - es string libre para flexibilidad
 }));
 
 // ============================================

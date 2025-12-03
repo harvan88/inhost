@@ -120,6 +120,7 @@ export type EnrichmentType =
   | 'keywords'
   | 'intent'
   | 'ai_suggestion'
+  | 'ai_response'
   | 'entity_extraction'
   | 'language_detection'
   | 'priority_score'
@@ -168,6 +169,7 @@ export type EnrichmentPayload =
   | KeywordsPayload
   | IntentPayload
   | AISuggestionPayload
+  | AIResponsePayload
   | EntityExtractionPayload
   | LanguageDetectionPayload
   | PriorityScorePayload
@@ -217,6 +219,24 @@ export interface AISuggestionPayload {
   alternatives?: string[];
   /** Contexto usado para generar */
   context?: string;
+}
+
+/**
+ * Payload para respuestas de AI (FluxCore)
+ */
+export interface AIResponsePayload {
+  /** Modo de respuesta */
+  mode: 'auto' | 'pre-approval' | 'blocked';
+  /** Respuesta generada */
+  response?: string;
+  /** Razón si está bloqueado */
+  reason?: string;
+  /** Límite restante del usuario */
+  remainingLimit?: number;
+  /** Modelo usado */
+  model?: string;
+  /** Tokens usados */
+  tokensUsed?: number;
 }
 
 /**

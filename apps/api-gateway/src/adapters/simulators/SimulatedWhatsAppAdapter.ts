@@ -201,12 +201,18 @@ export class SimulatedWhatsAppAdapter implements IAdapter {
    * (Este método es útil para los endpoints de simulación)
    */
   createIncomingMessage(text: string, from?: string): MessageEnvelope {
+    const sender = from || this.metadata.phone;
+    
     observeLog.adapter('Mensaje recibido del chat simulado (WhatsApp)', {
-      from: from || this.metadata.phone,
+      from: sender,
       text: text.substring(0, 100) // Limitar para no llenar logs
     });
 
     observeLog.adapterDebug('Traduciendo a MessageEnvelope...');
+
+    // Generar conversationId consistente basado en el remitente
+    // Esto asegura que mensajes del mismo usuario vayan a la misma conversación
+    const conversationId = this.generateConsistentUuid(sender, 'conversation');
 
     const envelope: MessageEnvelope = {
       id: crypto.randomUUID(),
@@ -216,9 +222,10 @@ export class SimulatedWhatsAppAdapter implements IAdapter {
         text
       },
       metadata: {
-        from: from || this.metadata.phone,
+        from: sender,
         to: 'inhost',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        conversationId, // Necesario para asociar a conversación en BD
       },
       statusChain: [
         {
@@ -228,7 +235,11 @@ export class SimulatedWhatsAppAdapter implements IAdapter {
         }
       ],
       context: {
-        plan: 'free'
+        plan: 'free',
+        sessionId: `whatsapp-${sender}`,
+        deviceId: 'whatsapp-simulator',
+        userAgent: 'WhatsApp Simulator',
+        ipAddress: '127.0.0.1',
       }
     };
 
@@ -236,10 +247,41 @@ export class SimulatedWhatsAppAdapter implements IAdapter {
       id: envelope.id,
       type: envelope.type,
       channel: envelope.channel,
+      conversationId,
       status: envelope.statusChain[0].status
     });
 
     return envelope;
+  }
+
+  /**
+   * Genera un UUID v4 consistente a partir de un string y un prefijo
+   * Formato: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx (36 caracteres)
+   * El mismo input siempre genera el mismo UUID
+   */
+  private generateConsistentUuid(input: string, prefix: string): string {
+    // Generar dos hashes de 32 bits para tener 64 bits totales
+    const str = `${prefix}-${input}`;
+    let hash1 = 0;
+    let hash2 = 0;
+    
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash1 = ((hash1 << 5) - hash1) + char;
+      hash1 = hash1 & hash1;
+      hash2 = ((hash2 << 3) + hash2) ^ char;
+      hash2 = hash2 & hash2;
+    }
+    
+    // Convertir a hex y combinar para obtener 32 caracteres hex
+    const hex1 = Math.abs(hash1).toString(16).padStart(8, '0');
+    const hex2 = Math.abs(hash2).toString(16).padStart(8, '0');
+    const hex3 = Math.abs(hash1 ^ hash2).toString(16).padStart(8, '0');
+    const hex4 = Math.abs(hash1 + hash2).toString(16).padStart(8, '0');
+    
+    // Formato UUID v4: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+    // donde 4 indica versión 4 y y es 8, 9, a, o b
+    return `${hex1}-${hex2.substring(0, 4)}-4${hex3.substring(1, 4)}-a${hex4.substring(1, 4)}-${hex2.substring(4)}${hex3}`.substring(0, 36);
   }
 
   /**

@@ -249,5 +249,168 @@
       "errorHandler"
     ],
     "purpose": "Middleware global de manejo de errores con formato estandarizado. Intercepta todos los errores en Elysia y los convierte a StandardErrorResponse { success: false, error: { code, message, details, timestamp } }"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/types.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": true,
+    "exports": [
+      "ExtensionMeta",
+      "ExtensionCategory",
+      "ExtensionContext",
+      "Enrichment",
+      "EnrichmentType",
+      "EnrichmentPayload",
+      "SentimentPayload",
+      "KeywordsPayload",
+      "IntentPayload",
+      "AISuggestionPayload",
+      "CustomPayload",
+      "ExtensionResult",
+      "ExtensionError",
+      "TenantExtensionConfig"
+    ],
+    "purpose": "Define tipos fundamentales del sistema de extensiones: ExtensionMeta, ExtensionContext, Enrichment, y payloads específicos por tipo de enriquecimiento"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/interfaces/IExtension.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": true,
+    "exports": [
+      "IExtension"
+    ],
+    "purpose": "Define el contrato que toda extensión debe implementar para integrarse con el Host de Extensiones"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/interfaces/IExtensionHost.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": true,
+    "exports": [
+      "IExtensionHost",
+      "ExtensionHostStats",
+      "ProcessingResult"
+    ],
+    "purpose": "Define el contrato del Host de Extensiones que orquesta el ciclo de vida, ejecución y agregación de extensiones"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/interfaces/index.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": false,
+    "exports": [
+      "IExtension",
+      "IExtensionHost",
+      "ExtensionHostStats",
+      "ProcessingResult"
+    ],
+    "purpose": "Barrel export para interfaces del sistema de extensiones"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/host/ExtensionHost.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": true,
+    "exports": [
+      "ExtensionHost"
+    ],
+    "purpose": "Implementación del Host de Extensiones que orquesta el registro, ejecución paralela con timeout, aislamiento de fallos y agregación de resultados de extensiones"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/host/index.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": false,
+    "exports": [
+      "ExtensionHost"
+    ],
+    "purpose": "Barrel export para el módulo host de extensiones"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/builtin/SentimentExtension.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": false,
+    "exports": [
+      "SentimentExtension"
+    ],
+    "purpose": "Extensión builtin que analiza el sentimiento de mensajes usando reglas simples basadas en keywords (MVP)"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/builtin/KeywordExtension.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": false,
+    "exports": [
+      "KeywordExtension"
+    ],
+    "purpose": "Extensión builtin que extrae keywords relevantes de mensajes filtrando stopwords y calculando relevancia por frecuencia (MVP)"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/builtin/FluxCoreExtension.ts",
+    "type": "service",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": true,
+    "exports": [
+      "FluxCoreExtension",
+      "FluxCoreConfig"
+    ],
+    "purpose": "Extensión builtin que genera respuestas automáticas usando IA, verificando permisos, límites de uso y modo de operación (auto/pre-aprobación)"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/builtin/index.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": false,
+    "exports": [
+      "SentimentExtension",
+      "KeywordExtension",
+      "FluxCoreExtension"
+    ],
+    "purpose": "Barrel export para extensiones builtin del sistema"
+  },
+  {
+    "file": "apps/api-gateway/src/extensions/index.ts",
+    "type": "type",
+    "layer": "backend",
+    "domain": "extensions",
+    "critical": true,
+    "exports": [
+      "ExtensionHost",
+      "SentimentExtension",
+      "KeywordExtension",
+      "FluxCoreExtension",
+      "IExtension",
+      "IExtensionHost",
+      "ExtensionHostStats",
+      "ProcessingResult",
+      "ExtensionMeta",
+      "ExtensionCategory",
+      "ExtensionContext",
+      "Enrichment",
+      "EnrichmentType",
+      "EnrichmentPayload",
+      "SentimentPayload",
+      "KeywordsPayload",
+      "IntentPayload",
+      "AISuggestionPayload",
+      "CustomPayload",
+      "ExtensionResult",
+      "ExtensionError",
+      "TenantExtensionConfig"
+    ],
+    "purpose": "Barrel export principal del módulo de extensiones: tipos, interfaces, host e implementaciones builtin"
   }
 ]

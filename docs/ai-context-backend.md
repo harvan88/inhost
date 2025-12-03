@@ -1,7 +1,7 @@
 # AI Context: Backend
 
 **Auto-generated Documentation Coverage Report**
-**Last Updated:** 2025-12-01T23:57:22.208Z
+**Last Updated:** 2025-12-02T22:55:25.246Z
 
 ---
 
@@ -9,15 +9,15 @@
 
 | Metric | Value |
 |--------|-------|
-| **Total Files** | 69 |
-| **Documented** | 69 |
+| **Total Files** | 80 |
+| **Documented** | 80 |
 | **Undocumented** | 0 |
 | **Coverage** | 100.0% |
-| **Critical Files** | 18 |
+| **Critical Files** | 24 |
 
 ---
 
-## Documented Files (69)
+## Documented Files (80)
 
 - ✅ `apps\api-gateway\src\adapters\manager\AdapterManager.ts`
 - ✅ `apps\api-gateway\src\adapters\manager\index.ts`
@@ -37,6 +37,17 @@
 - ✅ `apps\api-gateway\src\core\interfaces\IRateLimiter.ts`
 - ✅ `apps\api-gateway\src\core\interfaces\IValidator.ts`
 - ✅ `apps\api-gateway\src\core\interfaces\index.ts`
+- ✅ `apps\api-gateway\src\extensions\builtin\FluxCoreExtension.ts`
+- ✅ `apps\api-gateway\src\extensions\builtin\KeywordExtension.ts`
+- ✅ `apps\api-gateway\src\extensions\builtin\SentimentExtension.ts`
+- ✅ `apps\api-gateway\src\extensions\builtin\index.ts`
+- ✅ `apps\api-gateway\src\extensions\host\ExtensionHost.ts`
+- ✅ `apps\api-gateway\src\extensions\host\index.ts`
+- ✅ `apps\api-gateway\src\extensions\index.ts`
+- ✅ `apps\api-gateway\src\extensions\interfaces\IExtension.ts`
+- ✅ `apps\api-gateway\src\extensions\interfaces\IExtensionHost.ts`
+- ✅ `apps\api-gateway\src\extensions\interfaces\index.ts`
+- ✅ `apps\api-gateway\src\extensions\types.ts`
 - ✅ `apps\api-gateway\src\implementations\v1\ConnectionOwnerChecker.ts`
 - ✅ `apps\api-gateway\src\implementations\v1\MemoryPersistence.ts`
 - ✅ `apps\api-gateway\src\implementations\v1\MemoryQueue.ts`

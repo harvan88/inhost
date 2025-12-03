@@ -44,6 +44,7 @@ export type {
   KeywordsPayload,
   IntentPayload,
   AISuggestionPayload,
+  AIResponsePayload,
   EntityExtractionPayload,
   LanguageDetectionPayload,
   PriorityScorePayload,
@@ -65,4 +66,4 @@ export type {
 export { ExtensionHost } from './host';
 
 // ─── Builtin Extensions ───
-export { SentimentExtension, KeywordExtension } from './builtin';
+export { SentimentExtension, KeywordExtension, FluxCoreExtension } from './builtin';

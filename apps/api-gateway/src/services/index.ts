@@ -68,6 +68,7 @@ import {
   ExtensionHost,
   SentimentExtension,
   KeywordExtension,
+  FluxCoreExtension,
 } from '../extensions';
 
 /**
@@ -178,8 +179,16 @@ export async function initializeServices(): Promise<void> {
   messageQueue.startAutoReset();
 
   // 8. Inicializar Extension Host con extensiones builtin
+  logger.info('🔧 Registering extensions...');
   extensionHost.register(new SentimentExtension());
   extensionHost.register(new KeywordExtension());
+  extensionHost.register(new FluxCoreExtension({
+    dailyLimit: 100,
+    requirePreApproval: false, // Cambiar a true para modo pre-aprobación
+    model: 'gpt-3.5-turbo',
+    systemPrompt: 'Eres un asistente de FluxCoreChat. Responde de forma profesional y concisa.',
+  }));
+  logger.info('✅ Extensions registered successfully');
 
   // 9. Conectar Extension Host al Message Core
   messageCore.setExtensionHost(extensionHost);
