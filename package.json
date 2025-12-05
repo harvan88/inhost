@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "dev": "bun run --parallel dev:*",
-    "dev:api": "bun --cwd apps/api-gateway dev",
+    "dev:api": "cd apps/api-gateway && bun --env-file=../../.env dev",
     "dev:db": "docker-compose up -d",
     "dev:db:stop": "docker-compose down",
     "build": "bun run build:*",

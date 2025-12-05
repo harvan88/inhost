@@ -216,6 +216,32 @@ export const messageReads = pgTable('message_reads', {
 });
 
 // ============================================
+// WORKSPACE LAYOUTS: Persistencia cross-device
+// ============================================
+
+// Tabla de layouts de workspace por usuario (sync cross-device)
+export const userWorkspaceLayouts = pgTable('user_workspace_layouts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => adminUsers.id, { onDelete: 'cascade' }).notNull(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
+  layoutData: jsonb('layout_data').notNull(), // WorkspaceLayout serializado
+  deviceId: varchar('device_id', { length: 100 }), // ID del dispositivo que guardó
+  deviceType: varchar('device_type', { length: 20 }), // 'desktop', 'mobile', 'tablet'
+  lastUsedAt: timestamp('last_used_at').defaultNow().notNull(),
+  version: integer('version').notNull().default(1),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    userIdx: index('user_workspace_layouts_user_id_idx').on(table.userId),
+    tenantIdx: index('user_workspace_layouts_tenant_id_idx').on(table.tenantId),
+    lastUsedIdx: index('user_workspace_layouts_last_used_idx').on(table.lastUsedAt),
+    // UNIQUE constraint: un layout por usuario/tenant
+    uniqueUserTenant: index('user_workspace_layouts_user_tenant_unique').on(table.userId, table.tenantId),
+  };
+});
+
+// ============================================
 // EXTENSION HOST: Enrichments (v3.0)
 // ============================================
 
@@ -262,6 +288,7 @@ export const adminUsersRelations = relations(adminUsers, ({ one, many }) => ({
   assignedConversations: many(conversations),
   sentMessages: many(messages),
   readMessages: many(messageReads), // Mensajes leídos por este usuario
+  workspaceLayouts: many(userWorkspaceLayouts), // Layouts guardados del usuario
 }));
 
 export const endUsersRelations = relations(endUsers, ({ one, many }) => ({
@@ -351,6 +378,17 @@ export const messageEnrichmentsRelations = relations(messageEnrichments, ({ one 
   // tenantId ya no es FK - es string libre para flexibilidad
 }));
 
+export const userWorkspaceLayoutsRelations = relations(userWorkspaceLayouts, ({ one }) => ({
+  user: one(adminUsers, {
+    fields: [userWorkspaceLayouts.userId],
+    references: [adminUsers.id],
+  }),
+  tenant: one(tenants, {
+    fields: [userWorkspaceLayouts.tenantId],
+    references: [tenants.id],
+  }),
+}));
+
 // ============================================
 // TIPOS TYPESCRIPT
 // ============================================
@@ -381,6 +419,9 @@ export type NewMessageRead = typeof messageReads.$inferInsert;
 
 export type MessageEnrichment = typeof messageEnrichments.$inferSelect;
 export type NewMessageEnrichment = typeof messageEnrichments.$inferInsert;
+
+export type UserWorkspaceLayout = typeof userWorkspaceLayouts.$inferSelect;
+export type NewUserWorkspaceLayout = typeof userWorkspaceLayouts.$inferInsert;
 
 // Legacy alias (mantener compatibilidad)
 export type User = AdminUser;

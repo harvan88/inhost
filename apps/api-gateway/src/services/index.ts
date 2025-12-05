@@ -32,7 +32,6 @@
  * === DOC_END :: index.ts ===
  */
 
-import { MessageChannel } from '@inhost/shared';
 /**
  * Services - Servicios centralizados del sistema
  *
@@ -45,11 +44,8 @@ import { MessageChannel } from '@inhost/shared';
  */
 
 import { AdapterManager } from '../adapters/manager';
-import {
-  SimulatedWhatsAppAdapter,
-  SimulatedTelegramAdapter,
-  SimulatedSMSAdapter
-} from '../adapters/simulators';
+import { WhatsAppCloudAdapter } from '../adapters/whatsapp';
+import { TestWhatsAppAdapter } from '../adapters/whatsapp/TestWhatsAppAdapter';
 import {
   MemoryRateLimiter,
   MemoryQueue,
@@ -151,14 +147,29 @@ export async function initializeServices(): Promise<void> {
     }
   }
 
-  // 1. Registrar adaptadores simulados
-  const whatsapp = new SimulatedWhatsAppAdapter();
-  const telegram = new SimulatedTelegramAdapter();
-  const sms = new SimulatedSMSAdapter();
+  // 1. Registrar y configurar adapters reales
+  logger.info('🔧 Registering adapters...');
 
-  adapterManager.register(whatsapp);
-  adapterManager.register(telegram);
-  adapterManager.register(sms);
+  // WhatsApp Adapter - Real o Test según credenciales
+  if (process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID) {
+    // Usar adapter REAL de WhatsApp Cloud API
+    const whatsappAdapter = new WhatsAppCloudAdapter();
+    await whatsappAdapter.configure({
+      credentials: {
+        apiKey: process.env.WHATSAPP_ACCESS_TOKEN,
+        phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+        webhookSecret: process.env.WHATSAPP_VERIFY_TOKEN || 'default_verify_token'
+      }
+    });
+    adapterManager.register(whatsappAdapter);
+    logger.info('✅ WhatsApp Cloud API adapter registered (production mode)');
+  } else {
+    // Usar adapter de PRUEBA (no requiere credenciales)
+    const testAdapter = new TestWhatsAppAdapter();
+    await testAdapter.configure({});
+    adapterManager.register(testAdapter);
+    logger.info('✅ WhatsApp Test adapter registered (testing mode - no credentials required)');
+  }
 
   // 2. Inicializar adaptadores
   await adapterManager.initializeAll();
@@ -193,8 +204,13 @@ export async function initializeServices(): Promise<void> {
   // 9. Conectar Extension Host al Message Core
   messageCore.setExtensionHost(extensionHost);
 
+  // Listar adapters registrados
+  const registeredAdapters = Array.from(adapterManager['adapters'].entries()).map(
+    ([channel, adapter]) => `${channel} (${adapter.name} v${adapter.version})`
+  );
+
   logger.info('✅ Services initialized successfully', {
-    adapters: ['whatsapp', 'telegram', 'sms'],
+    adapters: registeredAdapters,
     rateLimiter: usingRedis ? 'RedisRateLimiter (V2)' : 'MemoryRateLimiter (V1)',
     queue: 'MemoryQueue (V1)',
     validator: 'SimpleValidator (V1)',
@@ -206,13 +222,11 @@ export async function initializeServices(): Promise<void> {
     extensionHost: `ExtensionHost (${extensionHost.getStats().totalExtensions} extensions)`
   });
 
-  // Health check inicial
-  const health = await adapterManager.healthCheckAll();
-  logger.info('🏥 Adapters health check', {
-    whatsapp: health.get(MessageChannel.WHATSAPP),
-    telegram: health.get(MessageChannel.TELEGRAM),
-    sms: health.get(MessageChannel.SMS)
-  });
+  // Health check inicial de adapters
+  if (registeredAdapters.length > 0) {
+    const health = await adapterManager.healthCheckAll();
+    logger.info('🏥 Adapters health check', Object.fromEntries(health));
+  }
 
   // Stats de MessageCore
   const coreStats = await messageCore.getStats();

@@ -77,6 +77,30 @@ export class DatabasePersistence implements IPersistenceService {
       // Para simulación: crear entidades relacionadas si no existen
       await this.ensureSimulationEntities(envelope);
 
+      // Preparar datos para insertar
+      const messageData = {
+        id: envelope.id,
+        conversationId: envelope.metadata?.conversationId || envelope.id,
+        type: envelope.type,
+        channel: envelope.channel,
+        content: envelope.content,
+        metadata: envelope.metadata,
+        statusChain: statusChain,
+        context: envelope.context,
+        sentByAdminUserId: envelope.metadata?.ownerId || null,
+        createdAt: new Date(envelope.metadata?.timestamp || new Date().toISOString()),
+        updatedAt: new Date(),
+      };
+
+      logger.info('💾 [DatabasePersistence] Attempting to insert message', {
+        id: messageData.id,
+        conversationId: messageData.conversationId,
+        hasContent: !!messageData.content,
+        hasContext: !!messageData.context,
+        contentKeys: Object.keys(messageData.content || {}),
+        contextKeys: Object.keys(messageData.context || {})
+      });
+
       // Insertar o actualizar mensaje en PostgreSQL
       await db.insert(messages).values({
         id: envelope.id,
@@ -375,28 +399,44 @@ export class DatabasePersistence implements IPersistenceService {
     }
 
     try {
-      // 1. Asegurar tenant (usar un UUID fijo para simulación)
-      const simulationTenantId = '550e8400-e29b-41d4-a716-446655440000'; // UUID fijo
-      
-      await db.insert(tenants).values({
-        id: simulationTenantId,
-        name: 'Simulación',
-        slug: 'simulacion',
-        plan: 'starter',
-        settings: {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).onConflictDoUpdate({
-        target: tenants.id,
-        set: { updatedAt: new Date() }
+      logger.info('🏗️ [ensureSimulationEntities] Starting...', {
+        conversationId,
+        from: envelope.metadata?.from,
+        hasMetadataTenantId: !!envelope.metadata?.tenantId
       });
+
+      // 1. Obtener tenantId del metadata (para test-chat con usuario autenticado)
+      //    o usar UUID fijo para simulación legacy
+      const tenantIdFromMetadata = envelope.metadata?.tenantId;
+      const effectiveTenantId = tenantIdFromMetadata || '550e8400-e29b-41d4-a716-446655440000';
+
+      logger.info('🏗️ [ensureSimulationEntities] Using tenantId', { effectiveTenantId, source: tenantIdFromMetadata ? 'metadata' : 'default' });
+
+      // Solo crear tenant si es el UUID fijo de simulación (no para tenants reales)
+      if (!tenantIdFromMetadata) {
+        logger.info('🏗️ [ensureSimulationEntities] Creating/updating tenant...');
+        await db.insert(tenants).values({
+          id: effectiveTenantId,
+          name: 'Simulación',
+          slug: 'simulacion',
+          plan: 'starter',
+          settings: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).onConflictDoUpdate({
+          target: tenants.id,
+          set: { updatedAt: new Date() }
+        });
+      }
 
       // 2. Asegurar endUser (usar id como target ya que es PK)
       const endUserUuid = this.generateConsistentUuid(userId, 'enduser');
-      
+
+      logger.info('🏗️ [ensureSimulationEntities] Creating/updating end_user...', { endUserUuid, userId });
+
       await db.insert(endUsers).values({
         id: endUserUuid,
-        tenantId: simulationTenantId,
+        tenantId: effectiveTenantId,
         externalId: userId,
         channel: channel as any,
         name: `Usuario ${userId}`,
@@ -411,9 +451,11 @@ export class DatabasePersistence implements IPersistenceService {
       });
 
       // 3. Asegurar conversation
+      logger.info('🏗️ [ensureSimulationEntities] Creating/updating conversation...', { conversationId, endUserUuid });
+
       await db.insert(conversations).values({
         id: conversationId,
-        tenantId: simulationTenantId,
+        tenantId: effectiveTenantId,
         endUserId: endUserUuid,
         channel: channel as any,
         status: 'active',
@@ -431,7 +473,8 @@ export class DatabasePersistence implements IPersistenceService {
       });
 
       logger.debug('🏗️ Simulation entities ensured', {
-        tenantId: simulationTenantId,
+        tenantId: effectiveTenantId,
+        tenantIdSource: tenantIdFromMetadata ? 'metadata (real user)' : 'fixed UUID (simulation)',
         endUserId: endUserUuid,
         conversationId
       });

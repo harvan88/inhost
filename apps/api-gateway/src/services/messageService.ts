@@ -69,17 +69,24 @@ export class MessageService {
     };
     conversationId?: string;
   }) {
-    // Crear MessageEnvelope
-    const envelope: MessageEnvelope = {
-      id: crypto.randomUUID(),
+    const messageId = crypto.randomUUID();
+    
+    // Crear MessageEnvelope con conversationId en metadata Y a nivel raíz
+    // El adapter necesita conversationId para enrutar la respuesta correctamente
+    const envelope: MessageEnvelope & { conversationId?: string } = {
+      id: messageId,
+      conversationId: data.conversationId, // ← A nivel raíz para el adapter
       type: data.type,
       channel: data.channel,
       content: data.content,
-      metadata: data.metadata,
+      metadata: {
+        ...data.metadata,
+        conversationId: data.conversationId, // ← También en metadata para consistencia
+      },
       statusChain: [{
         status: MessageStatus.RECEIVED,
         timestamp: new Date().toISOString(),
-        messageId: crypto.randomUUID()
+        messageId: messageId
       }],
       context: {
         plan: 'free', // TODO: Obtener del usuario autenticado

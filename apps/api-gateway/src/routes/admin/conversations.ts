@@ -49,7 +49,7 @@ import { db, conversations, messages, endUsers, adminUsers, messageReads } from 
 import { createSuccessResponse, createErrorResponse } from '../../types/api';
 import { requireAuth } from '../../middleware/auth';
 import { httpLogger } from '../../middleware/logger';
-import { notifications } from '../../services';
+import { notifications, messageCore, adapterManager } from '../../services';
 
 /**
  * Conversations Management Routes
@@ -447,7 +447,12 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
   // POST /admin/conversations/:id/messages - Create message in conversation
   .post(
     '/:id/messages',
-    async ({ user, params, body, error }) => {
+    async ({ user, params, body, set }) => {
+      console.log('📨 [POST MESSAGES] ===== REQUEST RECEIVED =====');
+      console.log('📨 [POST MESSAGES] conversationId:', params.id);
+      console.log('📨 [POST MESSAGES] body:', JSON.stringify(body, null, 2));
+      console.log('📨 [POST MESSAGES] user:', { userId: user.userId, tenantId: user.tenantId });
+
       const { id } = params;
       const { type = 'outgoing', content } = body;
 
@@ -455,7 +460,10 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
       const text = content.text || '';
 
       try {
+        console.log('📨 [POST MESSAGES] Inside try block');
+
         // Verify conversation belongs to tenant
+        console.log('📨 [POST MESSAGES] Querying conversation...');
         const conversation = await db.query.conversations.findFirst({
           where: and(eq(conversations.id, id), eq(conversations.tenantId, user.tenantId)),
           with: {
@@ -463,9 +471,21 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           },
         });
 
+        console.log('📨 [POST MESSAGES] Query completed:', {
+          found: !!conversation,
+          conversationId: conversation?.id,
+          conversationTenantId: conversation?.tenantId,
+          userTenantId: user.tenantId,
+          match: conversation?.tenantId === user.tenantId
+        });
+
         if (!conversation) {
-          return error(404, createErrorResponse('CONVERSATION_NOT_FOUND', 'Conversation not found'));
+          console.log('📨 [POST MESSAGES] Conversation NOT found, returning 404');
+          set.status = 404;
+          return createErrorResponse('CONVERSATION_NOT_FOUND', 'Conversation not found');
         }
+
+        console.log('📨 [POST MESSAGES] Conversation found, proceeding with message creation');
 
         // Create message with full MessageEnvelope content format
         const [newMessage] = await db
@@ -540,6 +560,44 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           console.error('Failed to broadcast conversation:updated event:', err);
         });
 
+        // Si es mensaje saliente (agente respondiendo), ENVIAR a través del adapter
+        if (type === 'outgoing') {
+          console.log('📤 [POST MESSAGES] Sending outgoing message through adapter', {
+            messageId: newMessage.id,
+            channel: conversation.channel
+          });
+
+          try {
+            const adapter = adapterManager.getAdapter(conversation.channel as any);
+            if (adapter) {
+              // Construir envelope para envío
+              const sendEnvelope: any = {
+                id: newMessage.id,
+                conversationId: id,
+                type: 'outgoing',
+                channel: conversation.channel,
+                content: newMessage.content,
+                metadata: newMessage.metadata,
+                statusChain: newMessage.statusChain || [],
+                context: newMessage.context || {}
+              };
+
+              const sendResult = await adapter.sendMessage(sendEnvelope);
+              console.log('✅ [POST MESSAGES] Message sent through adapter', {
+                success: sendResult.success,
+                platformMessageId: sendResult.platformMessageId
+              });
+            } else {
+              console.warn('⚠️ [POST MESSAGES] No adapter found for channel', {
+                channel: conversation.channel
+              });
+            }
+          } catch (sendError) {
+            console.error('❌ [POST MESSAGES] Failed to send through adapter', sendError);
+            // No fallar el request completo, solo loggear
+          }
+        }
+
         return createSuccessResponse({
           message: {
             id: newMessage.id,
@@ -554,8 +612,14 @@ export const adminConversationsRoutes = new Elysia({ prefix: '/admin/conversatio
           },
         });
       } catch (err: any) {
-        console.error('Create message error:', err);
-        return error(500, createErrorResponse('CREATE_FAILED', 'Failed to create message'));
+        console.error('❌ [POST MESSAGES] Create message error:', {
+          error: err.message || err,
+          stack: err.stack,
+          conversationId: id,
+          type
+        });
+        set.status = 500;
+        return createErrorResponse('CREATE_FAILED', err.message || 'Failed to create message');
       }
     },
     {

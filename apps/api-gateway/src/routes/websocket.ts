@@ -35,7 +35,6 @@
 import { Elysia } from 'elysia';
 import { logger } from '../middleware/logger';
 import type { WebSocketDTO } from '../types/api';
-import { setBroadcastFunction } from './simulation';
 import { notifications, ownerChecker, messageCore, rateLimiter, planResolver } from '../services';
 import { validateWebSocketMessage, validateMessageSize } from '../middleware/websocketValidation';
 
@@ -97,9 +96,6 @@ export function broadcastToAll(data: unknown) {
     errorCount
   });
 }
-
-// Inyectar función de broadcast en el módulo de simulación
-setBroadcastFunction(broadcastToAll);
 
 export const websocketRoutes = new Elysia()
   // WebSocket /realtime - Comunicación en tiempo real
